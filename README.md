@@ -17,10 +17,10 @@ Backend SmartBank dibangun menggunakan teknologi modern:
 
 ## ✨ Fitur Utama
 1. **User Management Berbasis Tier:** Mendukung 4 jenis *Role* (`NASABAH`, `ADMIN`, `TELLER`, `MANAGER`) dan 3 tingkatan *Tier* (`REGULER`, `GOLD`, `PRIORITAS`).
-2. **Subsidi Modal:** Semua *user* yang mendaftar secara otomatis mendapat saldo awal Rp 50.000 tanpa memandang Role/Tier.
+2. **Kontrol Ekonomi Makro (Money Supply & UBI):** Semua *user* baru disubsidi modal Rp 50.000. Terdapat batas maksimal (Hard Cap) *Total Money Supply* Rp 1.000.000.000 untuk mencegah hiperinflasi.
 3. **Manajemen Saldo:** Pengecekan saldo dan riwayat 10 transaksi terakhir secara _real-time_.
-4. **Transfer Aman (ACID):** Menggunakan fitur **MySQL Transaction** untuk transfer antar pengguna (dikenakan 1% fee bank & 2% pajak sistem) sehingga uang anti-hilang/nyangkut.
-5. **Pembayaran Terpusat:** Memproses pembayaran lintas aplikasi (Marketplace, POS, dll) dengan potongan *fee* yang dinamis.
+4. **Transfer Aman (ACID) & Anti-Spam:** Menggunakan *MySQL Transaction* untuk proteksi uang. Dilengkapi dengan batasan transaksi maksimal 10x/hari dan *cooldown* antar transaksi 10 detik.
+5. **Pembayaran Ekosistem Terpusat:** Memproses pembayaran lintas aplikasi (Marketplace, POS, Logistik, dsb) dengan potongan *fee* yang akurat.
 6. **Pinjaman (Loan):** Pengguna dapat meminjam dana darurat hingga Rp 100.000 dengan sistem bunga 10%.
 7. **Ledger Transaksi:** Pencatatan komprehensif seluruh rekam jejak arus kas dalam ekosistem.
 

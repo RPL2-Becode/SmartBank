@@ -13,15 +13,23 @@ exports.register = async (req, res) => {
             return res.status(400).json({ status: 'error', message: 'User ID sudah terdaftar!' });
         }
 
+        // Aturan 1: Total Money Supply maksimal 1.000.000.000
+        const [supplyResult] = await db.query('SELECT SUM(balance) as totalMoney FROM users');
+        const currentSupply = supplyResult[0].totalMoney || 0;
+        
+        // Aturan: Saldo awal setiap user tetap 50.000 tanpa memandang Role/Tier
+        const initialBalance = 50000;
+
+        if (Number(currentSupply) + initialBalance > 1000000000) {
+            return res.status(400).json({ status: 'error', message: 'Bank Reserve Limit tercapai! Tidak dapat membuat uang baru (Inflasi dicegah).' });
+        }
+
         // Enkripsi Password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const finalRole = role || 'NASABAH';
         const finalTier = finalRole === 'NASABAH' ? (tier || 'REGULER') : 'REGULER';
-        
-        // Aturan: Saldo awal setiap user tetap 50.000 tanpa memandang Role/Tier
-        const initialBalance = 50000;
 
         // Simpan ke Database MySQL
         await db.query(

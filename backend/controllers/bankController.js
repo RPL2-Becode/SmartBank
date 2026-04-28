@@ -37,6 +37,22 @@ exports.transfer = async (req, res) => {
 
         if (amount <= 0) return res.status(400).json({ status: 'error', message: 'Jumlah tidak valid' });
 
+        // --- Aturan Anti Spam & Max Limit (Rule 15 & 16) ---
+        const [todayTx] = await connection.query('SELECT COUNT(*) as total FROM transactions WHERE fromUserId = ? AND DATE(created_at) = CURDATE()', [fromUserId]);
+        if (todayTx[0].total >= 10) {
+            return res.status(400).json({ status: 'error', message: 'Limit 10 transaksi per hari telah tercapai.' });
+        }
+
+        const [lastTx] = await connection.query('SELECT created_at FROM transactions WHERE fromUserId = ? ORDER BY created_at DESC LIMIT 1', [fromUserId]);
+        if (lastTx.length > 0) {
+            const lastTime = new Date(lastTx[0].created_at).getTime();
+            const now = new Date().getTime();
+            if (now - lastTime < 10000) { // 10 detik
+                return res.status(400).json({ status: 'error', message: 'Harap tunggu 10 detik antar transaksi (Cooldown).' });
+            }
+        }
+        // ---------------------------------------------------
+
         await connection.beginTransaction();
 
         const [senders] = await connection.query('SELECT balance FROM users WHERE userId = ? FOR UPDATE', [fromUserId]);
@@ -86,6 +102,22 @@ exports.payment = async (req, res) => {
 
         if (amount <= 0) return res.status(400).json({ status: 'error', message: 'Jumlah tidak valid' });
 
+        // --- Aturan Anti Spam & Max Limit (Rule 15 & 16) ---
+        const [todayTx] = await connection.query('SELECT COUNT(*) as total FROM transactions WHERE fromUserId = ? AND DATE(created_at) = CURDATE()', [fromUserId]);
+        if (todayTx[0].total >= 10) {
+            return res.status(400).json({ status: 'error', message: 'Limit 10 transaksi per hari telah tercapai.' });
+        }
+
+        const [lastTx] = await connection.query('SELECT created_at FROM transactions WHERE fromUserId = ? ORDER BY created_at DESC LIMIT 1', [fromUserId]);
+        if (lastTx.length > 0) {
+            const lastTime = new Date(lastTx[0].created_at).getTime();
+            const now = new Date().getTime();
+            if (now - lastTime < 10000) { // 10 detik
+                return res.status(400).json({ status: 'error', message: 'Harap tunggu 10 detik antar transaksi (Cooldown).' });
+            }
+        }
+        // ---------------------------------------------------
+
         await connection.beginTransaction();
 
         const [senders] = await connection.query('SELECT balance FROM users WHERE userId = ? FOR UPDATE', [fromUserId]);
@@ -100,6 +132,8 @@ exports.payment = async (req, res) => {
         if (type === 'PAYMENT_MARKETPLACE') appFee = amount * 0.02;
         else if (type === 'PAYMENT_POS') appFee = amount * 0.01;
         else if (type === 'PAYMENT_SUPPLIER') appFee = amount * 0.03;
+        else if (type === 'PAYMENT_LOGISTIC') appFee = amount * 0.05; // Rule 8: Biaya Logistik 5%
+        else if (type === 'PAYMENT_INSIGHT') appFee = 10000; // Rule 12: Biaya flat 10rb
 
         const bankFee = amount * 0.01;
         const gatewayFee = amount * 0.005;
