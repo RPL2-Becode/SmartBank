@@ -1,39 +1,43 @@
-const User = require('../models/User');
+const db = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+// 1. REGISTRASI USER
 exports.register = async (req, res) => {
     try {
-        const { userId, name, password, role } = req.body;
+        const { userId, name, password, role, tier } = req.body;
 
-        const existingUser = await User.findOne({ userId });
-        if (existingUser) {
+        // Cek apakah user ID sudah dipakai
+        const [existingUser] = await db.query('SELECT * FROM users WHERE userId = ?', [userId]);
+        if (existingUser.length > 0) {
             return res.status(400).json({ status: 'error', message: 'User ID sudah terdaftar!' });
         }
 
+        // Enkripsi Password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const initialBalance = (role === 'MERCHANT' || role === 'ADMIN') ? 0 : 50000;
+        const finalRole = role || 'NASABAH';
+        const finalTier = finalRole === 'NASABAH' ? (tier || 'REGULER') : 'REGULER';
+        
+        // Aturan: Saldo awal setiap user tetap 50.000 tanpa memandang Role/Tier
+        const initialBalance = 50000;
 
-        const newUser = new User({
-            userId,
-            name,
-            password: hashedPassword,
-            role: role || 'USER',
-            balance: initialBalance
-        });
-
-        await newUser.save();
+        // Simpan ke Database MySQL
+        await db.query(
+            'INSERT INTO users (userId, name, password, role, tier, balance) VALUES (?, ?, ?, ?, ?, ?)',
+            [userId, name, hashedPassword, finalRole, finalTier, initialBalance]
+        );
 
         res.status(201).json({
             status: 'success',
             message: 'Registrasi berhasil!',
             data: {
-                userId: newUser.userId,
-                name: newUser.name,
-                role: newUser.role,
-                balance: newUser.balance
+                userId,
+                name,
+                role: finalRole,
+                tier: finalTier,
+                balance: initialBalance
             }
         });
 
@@ -42,22 +46,29 @@ exports.register = async (req, res) => {
     }
 };
 
+// 2. LOGIN USER & GENERATE JWT TOKEN
 exports.login = async (req, res) => {
     try {
         const { userId, password } = req.body;
 
-        const user = await User.findOne({ userId });
-        if (!user) {
+        // Cari user di Database MySQL
+        const [users] = await db.query('SELECT * FROM users WHERE userId = ?', [userId]);
+        
+        if (users.length === 0) {
             return res.status(404).json({ status: 'error', message: 'User tidak ditemukan!' });
         }
 
+        const user = users[0];
+
+        // Cek kecocokan password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ status: 'error', message: 'Password salah!' });
         }
 
+        // Generate Token JWT
         const token = jwt.sign(
-            { id: user._id, userId: user.userId, role: user.role },
+            { id: user.id, userId: user.userId, role: user.role, tier: user.tier },
             process.env.JWT_SECRET,
             { expiresIn: '1d' }
         );
@@ -69,6 +80,8 @@ exports.login = async (req, res) => {
             data: {
                 userId: user.userId,
                 name: user.name,
+                role: user.role,
+                tier: user.tier,
                 balance: user.balance
             }
         });

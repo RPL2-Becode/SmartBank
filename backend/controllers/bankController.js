@@ -1,24 +1,25 @@
-const User = require('../models/User');
-const Transaction = require('../models/Transaction');
-const Loan = require('../models/Loan');
+const db = require('../config/db');
 
 const generateTxId = () => 'TX-' + Date.now();
 
+// 1. Get Balance & Transaction History
 exports.getBalance = async (req, res) => {
     try {
         const userId = req.user.userId;
-        const user = await User.findOne({ userId });
-        if (!user) return res.status(404).json({ status: 'error', message: 'User tidak ditemukan' });
-
-        const history = await Transaction.find({
-            $or: [{ fromUserId: userId }, { toUserId: userId }]
-        }).sort({ createdAt: -1 }).limit(10);
+        
+        const [users] = await db.query('SELECT balance, loan FROM users WHERE userId = ?', [userId]);
+        if (users.length === 0) return res.status(404).json({ status: 'error', message: 'User tidak ditemukan' });
+        
+        const [history] = await db.query(
+            'SELECT * FROM transactions WHERE fromUserId = ? OR toUserId = ? ORDER BY created_at DESC LIMIT 10', 
+            [userId, userId]
+        );
 
         res.status(200).json({
             status: 'success',
             data: {
-                balance: user.balance,
-                loan: user.loan,
+                balance: users[0].balance,
+                loan: users[0].loan,
                 history
             }
         });
@@ -27,61 +28,73 @@ exports.getBalance = async (req, res) => {
     }
 };
 
+// 2. Transfer Saldo Antar User
 exports.transfer = async (req, res) => {
+    const connection = await db.getConnection();
     try {
         const fromUserId = req.user.userId;
         const { toUserId, amount } = req.body;
 
         if (amount <= 0) return res.status(400).json({ status: 'error', message: 'Jumlah tidak valid' });
 
-        const sender = await User.findOne({ userId: fromUserId });
-        const receiver = await User.findOne({ userId: toUserId });
+        await connection.beginTransaction();
 
-        if (!sender || !receiver) return res.status(404).json({ status: 'error', message: 'User tidak ditemukan' });
-        
+        const [senders] = await connection.query('SELECT balance FROM users WHERE userId = ? FOR UPDATE', [fromUserId]);
+        const [receivers] = await connection.query('SELECT balance FROM users WHERE userId = ? FOR UPDATE', [toUserId]);
+
+        if (senders.length === 0 || receivers.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ status: 'error', message: 'User tidak ditemukan' });
+        }
+
+        const sender = senders[0];
         const bankFee = amount * 0.01;
         const tax = amount * 0.02;
         const totalDeducted = amount + bankFee + tax;
 
         if (sender.balance < totalDeducted) {
+            await connection.rollback();
             return res.status(400).json({ status: 'error', message: 'Saldo tidak mencukupi (termasuk biaya admin & pajak)' });
         }
 
-        sender.balance -= totalDeducted;
-        receiver.balance += amount;
+        // Proses mutasi
+        await connection.query('UPDATE users SET balance = balance - ? WHERE userId = ?', [totalDeducted, fromUserId]);
+        await connection.query('UPDATE users SET balance = balance + ? WHERE userId = ?', [amount, toUserId]);
 
-        await sender.save();
-        await receiver.save();
+        const txId = generateTxId();
+        await connection.query(
+            'INSERT INTO transactions (refId, type, fromUserId, toUserId, baseAmount, tax, fee, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [txId, 'TRANSFER', fromUserId, toUserId, amount, tax, bankFee, 'Transfer antar user']
+        );
 
-        const tx = new Transaction({
-            refId: generateTxId(),
-            type: 'TRANSFER',
-            fromUserId,
-            toUserId,
-            baseAmount: amount,
-            tax,
-            fee: bankFee,
-            description: 'Transfer antar user'
-        });
-        await tx.save();
-
-        res.status(200).json({ status: 'success', message: 'Transfer berhasil', data: tx });
+        await connection.commit();
+        res.status(200).json({ status: 'success', message: 'Transfer berhasil', data: { refId: txId, amount } });
     } catch (error) {
+        await connection.rollback();
         res.status(500).json({ status: 'error', message: error.message });
+    } finally {
+        connection.release();
     }
 };
 
+// 3. Pembayaran dari Aplikasi (Marketplace, POS, dll)
 exports.payment = async (req, res) => {
+    const connection = await db.getConnection();
     try {
         const fromUserId = req.body.fromUserId || req.user.userId; 
         const { toUserId, amount, type, description } = req.body;
 
         if (amount <= 0) return res.status(400).json({ status: 'error', message: 'Jumlah tidak valid' });
 
-        const sender = await User.findOne({ userId: fromUserId });
-        const receiver = await User.findOne({ userId: toUserId });
+        await connection.beginTransaction();
 
-        if (!sender || !receiver) return res.status(404).json({ status: 'error', message: 'User tidak ditemukan' });
+        const [senders] = await connection.query('SELECT balance FROM users WHERE userId = ? FOR UPDATE', [fromUserId]);
+        const [receivers] = await connection.query('SELECT balance FROM users WHERE userId = ? FOR UPDATE', [toUserId]);
+
+        if (senders.length === 0 || receivers.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ status: 'error', message: 'User tidak ditemukan' });
+        }
 
         let appFee = 0;
         if (type === 'PAYMENT_MARKETPLACE') appFee = amount * 0.02;
@@ -95,35 +108,33 @@ exports.payment = async (req, res) => {
         const totalFee = appFee + bankFee + gatewayFee + tax;
         const totalDeducted = amount + totalFee;
 
-        if (sender.balance < totalDeducted) {
+        if (senders[0].balance < totalDeducted) {
+            await connection.rollback();
             return res.status(400).json({ status: 'error', message: 'Saldo tidak mencukupi (termasuk fee & pajak)' });
         }
 
-        sender.balance -= totalDeducted;
-        receiver.balance += amount;
+        await connection.query('UPDATE users SET balance = balance - ? WHERE userId = ?', [totalDeducted, fromUserId]);
+        await connection.query('UPDATE users SET balance = balance + ? WHERE userId = ?', [amount, toUserId]);
 
-        await sender.save();
-        await receiver.save();
+        const txId = generateTxId();
+        await connection.query(
+            'INSERT INTO transactions (refId, type, fromUserId, toUserId, baseAmount, tax, fee, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [txId, type || 'PAYMENT', fromUserId, toUserId, amount, tax, totalFee, description || 'Pembayaran layanan']
+        );
 
-        const tx = new Transaction({
-            refId: generateTxId(),
-            type: type || 'PAYMENT',
-            fromUserId,
-            toUserId,
-            baseAmount: amount,
-            tax,
-            fee: totalFee,
-            description: description || 'Pembayaran layanan'
-        });
-        await tx.save();
-
-        res.status(200).json({ status: 'success', message: 'Pembayaran berhasil', data: tx });
+        await connection.commit();
+        res.status(200).json({ status: 'success', message: 'Pembayaran berhasil', data: { refId: txId, amount } });
     } catch (error) {
+        await connection.rollback();
         res.status(500).json({ status: 'error', message: error.message });
+    } finally {
+        connection.release();
     }
 };
 
+// 4. Request Loan (Pinjaman)
 exports.requestLoan = async (req, res) => {
+    const connection = await db.getConnection();
     try {
         const userId = req.user.userId;
         const { amount } = req.body;
@@ -132,46 +143,44 @@ exports.requestLoan = async (req, res) => {
             return res.status(400).json({ status: 'error', message: 'Jumlah pinjaman maksimal 100.000' });
         }
 
-        const user = await User.findOne({ userId });
-        if (!user) return res.status(404).json({ status: 'error', message: 'User tidak ditemukan' });
+        await connection.beginTransaction();
+
+        const [users] = await connection.query('SELECT balance, loan FROM users WHERE userId = ? FOR UPDATE', [userId]);
+        if (users.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ status: 'error', message: 'User tidak ditemukan' });
+        }
 
         const interestRate = 0.10;
         const totalDue = amount + (amount * interestRate);
 
-        const newLoan = new Loan({
-            userId,
-            amount,
-            interestRate,
-            totalDue,
-            status: 'APPROVED'
-        });
-        await newLoan.save();
+        await connection.query(
+            'INSERT INTO loans (userId, amount, interestRate, totalDue, status) VALUES (?, ?, ?, ?, ?)',
+            [userId, amount, interestRate, totalDue, 'APPROVED']
+        );
 
-        user.balance += amount;
-        user.loan += totalDue;
-        await user.save();
+        await connection.query('UPDATE users SET balance = balance + ?, loan = loan + ? WHERE userId = ?', [amount, totalDue, userId]);
 
-        const tx = new Transaction({
-            refId: generateTxId(),
-            type: 'LOAN_DISBURSEMENT',
-            fromUserId: 'SYSTEM_BANK',
-            toUserId: userId,
-            baseAmount: amount,
-            fee: 0,
-            tax: 0,
-            description: 'Pencairan pinjaman'
-        });
-        await tx.save();
+        const txId = generateTxId();
+        await connection.query(
+            'INSERT INTO transactions (refId, type, fromUserId, toUserId, baseAmount, tax, fee, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [txId, 'LOAN_DISBURSEMENT', 'SYSTEM_BANK', userId, amount, 0, 0, 'Pencairan pinjaman']
+        );
 
-        res.status(200).json({ status: 'success', message: 'Pinjaman disetujui', data: newLoan });
+        await connection.commit();
+        res.status(200).json({ status: 'success', message: 'Pinjaman disetujui', data: { amount, totalDue } });
     } catch (error) {
+        await connection.rollback();
         res.status(500).json({ status: 'error', message: error.message });
+    } finally {
+        connection.release();
     }
 };
 
+// 5. Get Ledger (Admin/Insight Analytics)
 exports.getLedger = async (req, res) => {
     try {
-        const transactions = await Transaction.find().sort({ createdAt: -1 }).limit(100);
+        const [transactions] = await db.query('SELECT * FROM transactions ORDER BY created_at DESC LIMIT 100');
         res.status(200).json({ status: 'success', data: transactions });
     } catch (error) {
         res.status(500).json({ status: 'error', message: error.message });
