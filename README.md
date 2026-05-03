@@ -1,6 +1,6 @@
 # SmartBank Web
 
-Frontend portal SmartBank Payment Gateway untuk tugas besar RPL II. Aplikasi ini dibangun dengan React + Vite + TypeScript dan menyediakan dashboard role-based untuk user, merchant, admin, developer, dan analytics viewer.
+Frontend portal SmartBank untuk tugas besar RPL II. Aplikasi ini dibangun dengan React + Vite + TypeScript dan saat ini difokuskan pada tampilan bank profesional: login, register, dan dashboard role-based.
 
 ## Menjalankan lokal
 
@@ -27,13 +27,11 @@ VITE_ENABLE_MOCK_API=true
 
 ## Demo login
 
-Halaman `/auth/login` menyediakan pilihan role demo:
+Halaman `/` langsung membuka login. Role demo tersedia:
 
-- User / Mahasiswa
-- Merchant / UMKM
-- Supplier
-- Admin SmartBank
-- Developer / Integrator
-- Analytics Viewer
+- Nasabah Individu
+- Teller Cabang
+- Operasional Bank
+- Manajer / Approver
 
-Catatan: data transaksi saat ini memakai state mock di browser agar flow presentasi bisa langsung dijalankan. Integrasi backend nyata dapat diarahkan melalui `VITE_API_BASE_URL`.
+Catatan: data saat ini memakai state mock di browser agar desain dan flow presentasi bisa langsung dijalankan. Integrasi backend nyata dapat diarahkan melalui `VITE_API_BASE_URL`.

@@ -6,20 +6,20 @@ Target backend: `VITE_API_BASE_URL=http://localhost:3000/api/v1`
 
 ## Arah Visual
 
-Redesign terbaru memakai arah **Enterprise Gateway / SmartBank Command Center**: dark glass interface, aksen teal-amber-violet, panel transparan berlapis, grid background, status pulse, entrance motion, shimmer navigation, scan rail, dan animated meter untuk data finansial. Motion dibatasi pada `transform` dan `opacity`, serta menghormati `prefers-reduced-motion`.
+Redesign terbaru memakai arah **Modern Retail Banking Console**: tampilan bank profesional berbasis putih-biru, struktur bersih, kartu finansial besar, panel operasional ringkas, dan aksen oranye sebagai penanda aksi penting. Inspirasi visualnya adalah portal internet banking modern: tenang, tepercaya, dan tidak dekoratif berlebihan.
 
-Dashboard role utama kemudian dirapikan ke gaya **iOS Glassmorphism**: satu kartu utama untuk informasi terpenting, tiga metrik prioritas, dan shortcut aksi inti. Tabel transaksi, ledger, webhook, dan detail operasional dipindahkan ke halaman masing-masing agar dashboard tetap bersih.
+Landing page dihapus dari flow utama. Route `/` langsung membuka login/register, lalu pengguna masuk ke dashboard. Role disederhanakan menjadi 4 role bank: Nasabah Individu, Teller Cabang, Operasional Bank, dan Manajer / Approver.
 
 ## Ringkasan
 
-Implementasi ini merealisasikan MVP frontend berdasarkan `implementation_plan.md` dalam bentuk portal operasional SmartBank Payment Gateway. Fokus utama adalah demo end-to-end untuk role user, merchant, admin, developer, dan analytics viewer dengan route guard, tampilan finansial, fee breakdown, idempotency key, status transaksi, receipt, ledger, webhook, dan rekonsiliasi.
+Implementasi terbaru memprioritaskan tampilan frontend terlebih dahulu dalam bentuk portal bank profesional. Fokus utama adalah flow login/register dan dashboard untuk empat role bank nyata: nasabah, teller, operasional, dan manajer/approver.
 
 Frontend belum menjadi trusted system. Semua perhitungan final saldo, fee, limit, dan ledger tetap diasumsikan milik backend SmartBank. Data yang ada di aplikasi adalah mock state untuk kebutuhan demo lokal.
 
 ## File Utama
 
-- `src/App.tsx`: routing, state demo, role guard, layout, halaman, tabel, form transfer/payment, admin/developer/analytics views.
-- `src/styles.css`: desain visual responsif, app shell, tabel, form, badge status, receipt, dashboard cards.
+- `src/App.tsx`: routing, state demo, role guard, layout auth, register, dan dashboard role-based.
+- `src/styles.css`: desain visual responsif, auth screen, banking dashboard cards, form, badge status, dan komponen dasar.
 - `src/main.tsx`: entry React.
 - `.env.example`: konfigurasi base URL API dan Swagger.
 - `package.json`: script dev/build dan dependency frontend.
@@ -28,79 +28,31 @@ Frontend belum menjadi trusted system. Semua perhitungan final saldo, fee, limit
 
 ### Public dan Auth
 
-- Landing page SmartBank.
+- Tidak ada landing page; `/` langsung menampilkan login.
 - Login demo dengan pemilihan role, field email/password, validasi dasar, kredensial demo, dan redirect sesuai role.
-- Register demo user/merchant/supplier dengan validasi nama, email, password, persetujuan prinsip backend-trusted, pembuatan account mock, dan auto-login.
+- Register demo untuk empat role bank dengan validasi nama, email, password, persetujuan prinsip backend-trusted, pembuatan account mock, dan auto-login.
 - Unauthorized page (`/403`) dan not found (`/404`).
 - Session demo disimpan di `localStorage` sebagai profil role.
 
-### User Wallet
+### Dashboard Empat Role
 
-- Dashboard user dengan saldo, transaksi, pending status, dan daily limit.
-- Balance page dengan account code dan token internal masked.
-- Transaction list dan transaction detail/receipt.
-- Transfer flow input, preview fee, idempotency key, konfirmasi, result.
-- Payment request flow dengan source app, channel, debtor, creditor, JSON preview, fee breakdown, idempotency key.
-- Loans, apply loan, subscription mandate, dan SmartQR pay.
-
-### Merchant dan Supplier
-
-- Merchant dashboard.
-- Incoming payments.
-- SmartQR create dan SmartQR list.
-- Settlement history.
-- Fee summary.
-- Supplier memakai akses merchant dashboard dan incoming payments.
-
-### Admin SmartBank
-
-- Admin dashboard untuk money supply, reserve, success rate, webhook retry.
-- Accounts.
-- Ledger debit/kredit.
-- Payment requests.
-- Transactions.
-- Fee rules editable.
-- Money supply visualization.
-- Loan monitor.
-- Applications.
-- Webhook deliveries dengan retry action.
-- Audit logs.
-- Reconciliation debit/kredit.
-
-### Developer / Integrator
-
-- Developer dashboard.
-- API clients.
-- Test payment.
-- Idempotency inspector.
-- Webhook endpoints.
-- Webhook test payload.
-- Swagger docs link/iframe melalui `VITE_SWAGGER_URL`.
-
-### Analytics Viewer
-
-- UMKM Insight dashboard read-only.
-- Sales analytics.
-- Cashflow analytics.
-- Fee analytics.
-- Export report list.
+- Nasabah Individu: saldo, mutasi, pending transaction, limit, dan aksi utama.
+- Teller Cabang: antrian, setoran, validasi identitas, dan aksi counter.
+- Operasional Bank: settlement, exception, SLA, dan pekerjaan rekonsiliasi.
+- Manajer / Approver: reserve, approval queue, risk score, volume, dan aksi review.
 
 ## Route Penting
 
 | Area | Route |
 |---|---|
 | Public | `/`, `/auth/login`, `/auth/register` |
-| User | `/dashboard`, `/wallet/balance`, `/wallet/transactions`, `/wallet/transfer`, `/payments/new` |
-| Merchant | `/merchant/dashboard`, `/merchant/payments`, `/merchant/smartqr/create`, `/merchant/settlements` |
-| Admin | `/admin`, `/admin/accounts`, `/admin/ledger`, `/admin/fee-rules`, `/admin/reconciliation` |
-| Developer | `/developer`, `/developer/test-payment`, `/developer/idempotency`, `/developer/api-docs` |
-| Analytics | `/analytics/dashboard`, `/analytics/sales`, `/analytics/cashflow`, `/analytics/fees` |
+| Dashboard | `/dashboard` |
 
 ## Prinsip Keamanan yang Diterapkan
 
 - Tidak ada client secret di source frontend.
-- Idempotency key dibuat di browser untuk transaksi mutasi.
-- UI menampilkan peringatan bahwa HMAC produksi harus dibuat server-side/BFF.
+- Frontend tidak menyimpan secret produksi.
+- UI menampilkan peringatan bahwa otorisasi final tetap berada di backend.
 - Route guard membatasi halaman berdasarkan role.
 - Account token ditampilkan dalam bentuk masked.
 - Error transaksi gagal tidak mengubah ledger mock.
@@ -110,7 +62,7 @@ Frontend belum menjadi trusted system. Semua perhitungan final saldo, fee, limit
 - API backend belum dipanggil secara nyata; data masih mock di state React.
 - Route guard frontend hanya UX guard, backend tetap wajib validasi authorization.
 - Build sudah sukses, tetapi verifikasi visual browser belum mencakup automated E2E.
-- Swagger iframe bergantung pada backend yang berjalan di URL environment.
+- Fokus saat ini adalah desain frontend; halaman transaksi/detail lama tidak menjadi navigasi utama.
 
 ## Cara Verifikasi
 
@@ -122,14 +74,11 @@ npm run dev
 
 Flow demo yang disarankan:
 
-1. Login sebagai User.
-2. Buka dashboard, balance, dan transaksi.
-3. Jalankan transfer dengan preview fee dan konfirmasi.
-4. Buat payment request dan lihat JSON preview.
-5. Login sebagai Admin, buka ledger dan reconciliation.
-6. Login sebagai Developer, buka test payment dan Swagger docs.
-7. Login sebagai Merchant, buat SmartQR.
-8. Login sebagai Analytics Viewer, lihat dashboard read-only.
+1. Buka `/` dan pastikan langsung tampil login.
+2. Login sebagai Nasabah Individu dan cek dashboard.
+3. Logout, lalu login sebagai Teller Cabang.
+4. Ulangi untuk Operasional Bank dan Manajer / Approver.
+5. Buka `/auth/register` dan coba register role baru.
 
 ## Hasil Build
 
@@ -137,9 +86,7 @@ Perintah `npm run build` berhasil pada 2026-05-03. Output produksi dibuat di `di
 
 ## Rekomendasi Lanjutan
 
-- Pisahkan `src/App.tsx` menjadi modul `features`, `components`, `api`, dan `lib` sesuai struktur di `implementation_plan.md`.
-- Ganti mock state dengan API client typed dari OpenAPI/Swagger.
-- Tambahkan React Query untuk server state saat backend tersedia.
-- Tambahkan React Hook Form + Zod untuk validasi form transaksi.
-- Tambahkan test unit untuk money formatter, fee breakdown, status badge, route guard, dan idempotency hook.
-- Tambahkan E2E Playwright untuk register-login-transfer-payment-admin-ledger.
+- Pisahkan `src/App.tsx` menjadi modul `features/auth`, `features/dashboard`, `components/ui`, dan `lib`.
+- Tambahkan React Hook Form + Zod untuk validasi login/register.
+- Hubungkan login/register ke backend auth saat API tersedia.
+- Tambahkan E2E Playwright untuk login empat role dan register.

@@ -41,7 +41,7 @@ import type { LucideIcon } from 'lucide-react';
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 
-type Role = 'USER' | 'MERCHANT' | 'SUPPLIER' | 'ADMIN' | 'DEVELOPER' | 'ANALYTICS';
+type Role = 'CUSTOMER' | 'TELLER' | 'OPERATIONS' | 'MANAGER';
 type TxStatus = 'PENDING' | 'PROCESSING' | 'SUCCESS' | 'FAILED' | 'CANCELED' | 'REVERSED';
 type LedgerDirection = 'DEBIT' | 'CREDIT';
 
@@ -127,31 +127,27 @@ type WebhookDelivery = {
 };
 
 const roleLabels: Record<Role, string> = {
-  USER: 'User / Mahasiswa',
-  MERCHANT: 'Merchant / UMKM',
-  SUPPLIER: 'Supplier',
-  ADMIN: 'Admin SmartBank',
-  DEVELOPER: 'Developer / Integrator',
-  ANALYTICS: 'Analytics Viewer',
+  CUSTOMER: 'Nasabah Individu',
+  TELLER: 'Teller Cabang',
+  OPERATIONS: 'Operasional Bank',
+  MANAGER: 'Manajer / Approver',
 };
 
 const demoUsers: User[] = [
-  { id: 'u-001', name: 'Raka Pratama', email: 'raka@smartbank.test', role: 'USER', accountCode: 'ACC-USER-001' },
-  { id: 'm-001', name: 'PasarKita Store', email: 'merchant@smartbank.test', role: 'MERCHANT', accountCode: 'ACC-MERCHANT-001' },
-  { id: 's-001', name: 'SupplierHub Utama', email: 'supplier@smartbank.test', role: 'SUPPLIER', accountCode: 'ACC-SUPPLIER-001' },
-  { id: 'a-001', name: 'Nadia Admin', email: 'admin@smartbank.test', role: 'ADMIN', accountCode: 'ACC-RESERVE' },
-  { id: 'd-001', name: 'Dev Integrator', email: 'dev@smartbank.test', role: 'DEVELOPER', accountCode: 'ACC-DEVELOPER-001' },
-  { id: 'an-001', name: 'UMKM Insight', email: 'insight@smartbank.test', role: 'ANALYTICS', accountCode: 'ACC-ANALYTICS-001' },
+  { id: 'c-001', name: 'Raka Pratama', email: 'nasabah@smartbank.test', role: 'CUSTOMER', accountCode: 'ACC-CUST-001' },
+  { id: 't-001', name: 'Maya Teller', email: 'teller@smartbank.test', role: 'TELLER', accountCode: 'ACC-TELLER-001' },
+  { id: 'o-001', name: 'Dimas Operasional', email: 'ops@smartbank.test', role: 'OPERATIONS', accountCode: 'ACC-OPS-001' },
+  { id: 'm-001', name: 'Nadia Manajer', email: 'manager@smartbank.test', role: 'MANAGER', accountCode: 'ACC-MGR-001' },
 ];
 
 const now = new Date('2026-05-03T13:30:00+07:00');
 const iso = (minutesAgo: number) => new Date(now.getTime() - minutesAgo * 60_000).toISOString();
 
 const initialAccounts: Account[] = [
-  { code: 'ACC-USER-001', owner: 'Raka Pratama', role: 'USER', balance: 150000, token: 'tok_usr_7A91****', status: 'ACTIVE' },
-  { code: 'ACC-MERCHANT-001', owner: 'PasarKita Store', role: 'MERCHANT', balance: 457500, token: 'tok_mch_44B0****', status: 'ACTIVE' },
-  { code: 'ACC-SUPPLIER-001', owner: 'SupplierHub Utama', role: 'SUPPLIER', balance: 610000, token: 'tok_sup_19F2****', status: 'ACTIVE' },
-  { code: 'ACC-ANALYTICS-001', owner: 'UMKM Insight', role: 'ANALYTICS', balance: 0, token: 'tok_ro_0031****', status: 'ACTIVE' },
+  { code: 'ACC-CUST-001', owner: 'Raka Pratama', role: 'CUSTOMER', balance: 15000000, token: 'tok_cust_7A91****', status: 'ACTIVE' },
+  { code: 'ACC-TELLER-001', owner: 'Maya Teller', role: 'TELLER', balance: 0, token: 'tok_teller_44B0****', status: 'ACTIVE' },
+  { code: 'ACC-OPS-001', owner: 'Dimas Operasional', role: 'OPERATIONS', balance: 0, token: 'tok_ops_19F2****', status: 'ACTIVE' },
+  { code: 'ACC-MGR-001', owner: 'Nadia Manajer', role: 'MANAGER', balance: 0, token: 'tok_mgr_0031****', status: 'ACTIVE' },
   { code: 'ACC-RESERVE', owner: 'Bank Reserve', role: 'SYSTEM', balance: 980000000, token: 'system_reserve', status: 'ACTIVE' },
   { code: 'ACC-FEE', owner: 'Fee Collector', role: 'SYSTEM', balance: 2250000, token: 'system_fee', status: 'ACTIVE' },
   { code: 'ACC-TAX', owner: 'Tax Sink', role: 'SYSTEM', balance: 2000000, token: 'system_tax', status: 'ACTIVE' },
@@ -161,51 +157,51 @@ const initialTransactions: Transaction[] = [
   {
     code: 'TRX-20260503-0004',
     paymentCode: 'PAY-20260503-0004',
-    from: 'ACC-USER-001',
-    to: 'ACC-MERCHANT-001',
-    amount: 75000,
+    from: 'ACC-CUST-001',
+    to: 'ACC-RESERVE',
+    amount: 1250000,
     fee: 2625,
     tax: 1500,
     status: 'SUCCESS',
-    channel: 'SMARTQR_DYNAMIC',
-    description: 'Pembayaran SmartQR PasarKita',
+    channel: 'MOBILE_TRANSFER',
+    description: 'Transfer antar rekening SmartBank',
     createdAt: iso(35),
   },
   {
     code: 'TRX-20260503-0003',
     paymentCode: 'PAY-20260503-0003',
-    from: 'ACC-USER-001',
-    to: 'ACC-SUPPLIER-001',
-    amount: 100000,
+    from: 'ACC-CUST-001',
+    to: 'ACC-FEE',
+    amount: 2500000,
     fee: 3500,
     tax: 2000,
     status: 'PROCESSING',
-    channel: 'MARKETPLACE_CHECKOUT',
-    description: 'Checkout bahan baku SupplierHub',
+    channel: 'BI_FAST',
+    description: 'Transfer BI-Fast menunggu settlement',
     createdAt: iso(54),
   },
   {
     code: 'TRX-20260503-0002',
-    from: 'ACC-MERCHANT-001',
-    to: 'ACC-SUPPLIER-001',
-    amount: 250000,
+    from: 'ACC-CUST-001',
+    to: 'ACC-TAX',
+    amount: 750000,
     fee: 2500,
     tax: 0,
     status: 'SUCCESS',
-    channel: 'INTERNAL_TRANSFER',
-    description: 'Pembayaran invoice bahan',
+    channel: 'VIRTUAL_ACCOUNT',
+    description: 'Pembayaran virtual account',
     createdAt: iso(160),
   },
   {
     code: 'TRX-20260503-0001',
-    from: 'ACC-USER-001',
-    to: 'ACC-MERCHANT-001',
-    amount: 45000,
+    from: 'ACC-CUST-001',
+    to: 'ACC-RESERVE',
+    amount: 450000,
     fee: 1575,
     tax: 900,
     status: 'FAILED',
-    channel: 'POS_CHECKOUT',
-    description: 'Saldo tidak cukup saat POS checkout',
+    channel: 'CARDLESS_WITHDRAWAL',
+    description: 'Tarik tunai tanpa kartu gagal',
     createdAt: iso(220),
   },
 ];
@@ -214,7 +210,7 @@ const initialLedger: LedgerEntry[] = [
   {
     id: 'LED-001',
     transactionCode: 'TRX-20260503-0004',
-    accountCode: 'ACC-USER-001',
+    accountCode: 'ACC-CUST-001',
     direction: 'DEBIT',
     amount: 79125,
     balanceBefore: 229125,
@@ -227,7 +223,7 @@ const initialLedger: LedgerEntry[] = [
   {
     id: 'LED-002',
     transactionCode: 'TRX-20260503-0004',
-    accountCode: 'ACC-MERCHANT-001',
+    accountCode: 'ACC-RESERVE',
     direction: 'CREDIT',
     amount: 75000,
     balanceBefore: 382500,
@@ -270,9 +266,9 @@ const initialPayments: Payment[] = [
     code: 'PAY-20260503-0004',
     sourceApp: 'PASARKITA',
     channel: 'SMARTQR_DYNAMIC',
-    debtor: 'ACC-USER-001',
-    creditor: 'ACC-MERCHANT-001',
-    baseAmount: 75000,
+    debtor: 'ACC-CUST-001',
+    creditor: 'ACC-RESERVE',
+    baseAmount: 1250000,
     marketplaceFee: 1500,
     bankFee: 750,
     gatewayFee: 375,
@@ -286,9 +282,9 @@ const initialPayments: Payment[] = [
     code: 'PAY-20260503-0003',
     sourceApp: 'MARKETPLACE',
     channel: 'MARKETPLACE_CHECKOUT',
-    debtor: 'ACC-USER-001',
-    creditor: 'ACC-SUPPLIER-001',
-    baseAmount: 100000,
+    debtor: 'ACC-CUST-001',
+    creditor: 'ACC-FEE',
+    baseAmount: 2500000,
     marketplaceFee: 2000,
     bankFee: 1000,
     gatewayFee: 500,
@@ -489,52 +485,12 @@ type Route = {
 };
 
 const routes: Route[] = [
-  { path: '/', label: 'Beranda', section: 'Public', icon: Home, public: true, render: (ctx) => <LandingPage {...ctx} /> },
+  { path: '/', label: 'Login', section: 'Public', icon: LogIn, public: true, render: (ctx) => <LoginPage {...ctx} /> },
   { path: '/auth/login', label: 'Login', section: 'Public', icon: LogIn, public: true, render: (ctx) => <LoginPage {...ctx} /> },
   { path: '/auth/register', label: 'Register', section: 'Public', icon: Users, public: true, render: (ctx) => <RegisterPage {...ctx} /> },
   { path: '/403', label: 'Unauthorized', section: 'Public', icon: Lock, public: true, detail: true, render: (ctx) => <UnauthorizedPage {...ctx} /> },
   { path: '/404', label: 'Not Found', section: 'Public', icon: AlertTriangle, public: true, detail: true, render: (ctx) => <NotFoundPage {...ctx} /> },
-  { path: '/dashboard', label: 'Dashboard', section: 'Wallet', icon: Gauge, roles: ['USER'], render: (ctx) => <UserDashboardPage {...ctx} /> },
-  { path: '/wallet/balance', label: 'Saldo', section: 'Wallet', icon: WalletCards, roles: ['USER'], render: (ctx) => <BalancePage {...ctx} /> },
-  { path: '/wallet/transactions', label: 'Riwayat Transaksi', section: 'Wallet', icon: History, roles: ['USER'], render: (ctx) => <TransactionsPage {...ctx} /> },
-  { path: '/wallet/transactions/:transactionCode', label: 'Detail Transaksi', section: 'Wallet', icon: ReceiptText, roles: ['USER', 'ADMIN'], detail: true, render: (ctx, params) => <TransactionDetailPage {...ctx} transactionCode={params.transactionCode} /> },
-  { path: '/wallet/transfer', label: 'Transfer', section: 'Wallet', icon: Send, roles: ['USER'], render: (ctx) => <TransferPage {...ctx} /> },
-  { path: '/payments/new', label: 'Payment Request', section: 'Wallet', icon: CreditCard, roles: ['USER', 'DEVELOPER'], render: (ctx) => <NewPaymentPage {...ctx} /> },
-  { path: '/payments/:paymentCode', label: 'Status Payment', section: 'Wallet', icon: ReceiptText, roles: ['USER', 'DEVELOPER', 'ADMIN'], detail: true, render: (ctx, params) => <PaymentDetailPage {...ctx} paymentCode={params.paymentCode} /> },
-  { path: '/loans', label: 'Pinjaman', section: 'Wallet', icon: Landmark, roles: ['USER'], render: (ctx) => <LoansPage {...ctx} /> },
-  { path: '/loans/apply', label: 'Ajukan Pinjaman', section: 'Wallet', icon: FileText, roles: ['USER'], render: () => <ApplyLoanPage /> },
-  { path: '/subscriptions', label: 'Subscription', section: 'Wallet', icon: BellRing, roles: ['USER'], render: () => <SubscriptionsPage /> },
-  { path: '/smartqr/pay', label: 'Bayar SmartQR', section: 'Wallet', icon: QrCode, roles: ['USER'], render: (ctx) => <SmartQRPayPage {...ctx} /> },
-  { path: '/merchant/dashboard', label: 'Dashboard Merchant', section: 'Merchant', icon: Building2, roles: ['MERCHANT', 'SUPPLIER'], render: (ctx) => <MerchantDashboardPage {...ctx} /> },
-  { path: '/merchant/payments', label: 'Incoming Payments', section: 'Merchant', icon: ReceiptText, roles: ['MERCHANT', 'SUPPLIER'], render: (ctx) => <MerchantPaymentsPage {...ctx} /> },
-  { path: '/merchant/smartqr/create', label: 'Buat SmartQR', section: 'Merchant', icon: QrCode, roles: ['MERCHANT'], render: () => <SmartQRCreatePage /> },
-  { path: '/merchant/smartqr', label: 'Daftar SmartQR', section: 'Merchant', icon: QrCode, roles: ['MERCHANT'], render: () => <SmartQRListPage /> },
-  { path: '/merchant/settlements', label: 'Settlement', section: 'Merchant', icon: ClipboardCheck, roles: ['MERCHANT', 'SUPPLIER'], render: (ctx) => <SettlementPage {...ctx} /> },
-  { path: '/merchant/fees', label: 'Ringkasan Fee', section: 'Merchant', icon: SlidersHorizontal, roles: ['MERCHANT'], render: (ctx) => <MerchantFeesPage {...ctx} /> },
-  { path: '/admin', label: 'Admin Dashboard', section: 'Admin', icon: Gauge, roles: ['ADMIN'], render: (ctx) => <AdminDashboardPage {...ctx} /> },
-  { path: '/admin/accounts', label: 'Accounts', section: 'Admin', icon: Users, roles: ['ADMIN'], render: (ctx) => <AccountsPage {...ctx} /> },
-  { path: '/admin/ledger', label: 'Ledger', section: 'Admin', icon: BookOpen, roles: ['ADMIN'], render: (ctx) => <LedgerPage {...ctx} /> },
-  { path: '/admin/payments', label: 'Payment Requests', section: 'Admin', icon: CreditCard, roles: ['ADMIN'], render: (ctx) => <AdminPaymentsPage {...ctx} /> },
-  { path: '/admin/transactions', label: 'Transactions', section: 'Admin', icon: History, roles: ['ADMIN'], render: (ctx) => <AdminTransactionsPage {...ctx} /> },
-  { path: '/admin/fee-rules', label: 'Fee Rules', section: 'Admin', icon: SlidersHorizontal, roles: ['ADMIN'], render: (ctx) => <FeeRulesPage {...ctx} /> },
-  { path: '/admin/money-supply', label: 'Money Supply', section: 'Admin', icon: Banknote, roles: ['ADMIN'], render: (ctx) => <MoneySupplyPage {...ctx} /> },
-  { path: '/admin/loans', label: 'Loan Monitor', section: 'Admin', icon: Landmark, roles: ['ADMIN'], render: () => <AdminLoansPage /> },
-  { path: '/admin/applications', label: 'Applications', section: 'Admin', icon: Boxes, roles: ['ADMIN'], render: () => <ApplicationsPage /> },
-  { path: '/admin/webhooks', label: 'Webhook Deliveries', section: 'Admin', icon: Webhook, roles: ['ADMIN'], render: (ctx) => <WebhookDeliveriesPage {...ctx} /> },
-  { path: '/admin/audit-logs', label: 'Audit Logs', section: 'Admin', icon: ShieldCheck, roles: ['ADMIN'], render: () => <AuditLogsPage /> },
-  { path: '/admin/reconciliation', label: 'Reconciliation', section: 'Admin', icon: ClipboardCheck, roles: ['ADMIN'], render: (ctx) => <ReconciliationPage {...ctx} /> },
-  { path: '/developer', label: 'Developer Dashboard', section: 'Developer', icon: Code2, roles: ['DEVELOPER'], render: (ctx) => <DeveloperDashboardPage {...ctx} /> },
-  { path: '/developer/api-clients', label: 'API Clients', section: 'Developer', icon: KeyRound, roles: ['DEVELOPER'], render: () => <ApiClientsPage /> },
-  { path: '/developer/test-payment', label: 'Test Payment', section: 'Developer', icon: FileCode2, roles: ['DEVELOPER'], render: (ctx) => <NewPaymentPage {...ctx} developerMode /> },
-  { path: '/developer/idempotency', label: 'Idempotency', section: 'Developer', icon: RefreshCw, roles: ['DEVELOPER'], render: (ctx) => <IdempotencyPage {...ctx} /> },
-  { path: '/developer/webhook-endpoints', label: 'Webhook Endpoints', section: 'Developer', icon: Webhook, roles: ['DEVELOPER'], render: () => <WebhookEndpointsPage /> },
-  { path: '/developer/webhook-test', label: 'Webhook Test', section: 'Developer', icon: Activity, roles: ['DEVELOPER'], render: (ctx) => <WebhookTestPage {...ctx} /> },
-  { path: '/developer/api-docs', label: 'Swagger Docs', section: 'Developer', icon: BookOpen, roles: ['DEVELOPER'], render: () => <ApiDocsPage /> },
-  { path: '/analytics/dashboard', label: 'Analytics Dashboard', section: 'Analytics', icon: BarChart3, roles: ['ANALYTICS'], render: (ctx) => <AnalyticsDashboardPage {...ctx} /> },
-  { path: '/analytics/sales', label: 'Sales Analytics', section: 'Analytics', icon: LineChart, roles: ['ANALYTICS'], render: (ctx) => <SalesAnalyticsPage {...ctx} /> },
-  { path: '/analytics/cashflow', label: 'Cashflow', section: 'Analytics', icon: Activity, roles: ['ANALYTICS'], render: (ctx) => <CashflowPage {...ctx} /> },
-  { path: '/analytics/fees', label: 'Fee Analytics', section: 'Analytics', icon: SlidersHorizontal, roles: ['ANALYTICS'], render: (ctx) => <FeeAnalyticsPage {...ctx} /> },
-  { path: '/analytics/reports', label: 'Export Report', section: 'Analytics', icon: FileText, roles: ['ANALYTICS'], render: () => <ReportsPage /> },
+  { path: '/dashboard', label: 'Dashboard', section: 'Banking', icon: Gauge, roles: ['CUSTOMER', 'TELLER', 'OPERATIONS', 'MANAGER'], render: (ctx) => <BankDashboardPage {...ctx} /> },
 ];
 
 function matchRoute(pathname: string) {
@@ -560,7 +516,9 @@ export function App() {
   const [mobileNav, setMobileNav] = useState(false);
   const [user, setUser] = useState<User | null>(() => {
     const stored = window.localStorage.getItem('smartbank:user');
-    return stored ? (JSON.parse(stored) as User) : null;
+    if (!stored) return null;
+    const parsed = JSON.parse(stored) as User;
+    return parsed.role in roleLabels ? parsed : null;
   });
   const [state, setState] = useState<AppState>({
     accounts: initialAccounts,
@@ -596,10 +554,11 @@ export function App() {
   const page = blocked ? <UnauthorizedPage {...ctx} /> : route.render(ctx, params);
   const visibleRoutes = routes.filter((item) => !item.detail && !item.public && user && item.roles?.includes(user.role));
   const sections = Array.from(new Set(visibleRoutes.map((item) => item.section)));
+  const isAuthScreen = !user && (route.path === '/' || route.path.startsWith('/auth'));
 
   return (
-    <div className="app">
-      {user && (
+    <div className={cx('app', isAuthScreen && 'auth-app')}>
+      {user && visibleRoutes.length > 1 && (
         <aside className={cx('sidebar', mobileNav && 'open')}>
           <div className="brand" onClick={() => navigate(defaultPathForRole(user.role))} role="button" tabIndex={0}>
             <div className="brand-mark"><Landmark size={22} /></div>
@@ -627,7 +586,7 @@ export function App() {
         </aside>
       )}
       <div className="workspace">
-        <header className="topbar">
+        {!isAuthScreen && <header className="topbar">
           <button className="icon-button mobile-only" aria-label="Buka menu" onClick={() => setMobileNav(true)}><Menu size={20} /></button>
           <div>
             <p className="eyebrow">{route.section}</p>
@@ -649,7 +608,7 @@ export function App() {
               <button className="button primary" onClick={() => navigate('/auth/login')}><LogIn size={17} /> Login</button>
             )}
           </div>
-        </header>
+        </header>}
         {mobileNav && <button className="nav-backdrop" aria-label="Tutup menu" onClick={() => setMobileNav(false)}><X size={24} /></button>}
         <main>{page}</main>
       </div>
@@ -659,41 +618,16 @@ export function App() {
 
 function defaultPathForRole(role: Role) {
   return {
-    USER: '/dashboard',
-    MERCHANT: '/merchant/dashboard',
-    SUPPLIER: '/merchant/dashboard',
-    ADMIN: '/admin',
-    DEVELOPER: '/developer',
-    ANALYTICS: '/analytics/dashboard',
+    CUSTOMER: '/dashboard',
+    TELLER: '/dashboard',
+    OPERATIONS: '/dashboard',
+    MANAGER: '/dashboard',
   }[role];
 }
 
-function LandingPage({ navigate }: AppContext) {
-  return (
-    <div className="public-page">
-      <section className="hero-panel">
-        <div>
-          <p className="eyebrow">SmartBank Payment Gateway</p>
-          <h2>Portal operasional untuk transaksi, ledger, integrasi, dan demo RPL.</h2>
-          <p className="lead">Setiap mutasi saldo tetap melewati backend SmartBank. Frontend ini menonjolkan preview fee, idempotency key, status payment, receipt, dan audit ledger.</p>
-          <div className="button-row">
-            <button className="button primary" onClick={() => navigate('/auth/login')}><LogIn size={17} /> Masuk Demo</button>
-            <button className="button secondary" onClick={() => navigate('/auth/register')}><Users size={17} /> Register</button>
-          </div>
-        </div>
-        <div className="hero-ledger">
-          <StatCard label="Total supply" value="SC980.000.000" icon={Banknote} tone="teal" />
-          <StatCard label="Webhook pending" value="2 event" icon={Webhook} tone="amber" />
-          <StatCard label="Ledger status" value="Balanced" icon={BadgeCheck} tone="green" />
-        </div>
-      </section>
-    </div>
-  );
-}
-
 function LoginPage({ setUser, navigate }: AppContext) {
-  const [role, setRole] = useState<Role>('USER');
-  const [email, setEmail] = useState(demoUsers.find((demo) => demo.role === 'USER')!.email);
+  const [role, setRole] = useState<Role>('CUSTOMER');
+  const [email, setEmail] = useState(demoUsers.find((demo) => demo.role === 'CUSTOMER')!.email);
   const [password, setPassword] = useState('demo-smartbank');
   const [error, setError] = useState('');
   const selected = demoUsers.find((demo) => demo.role === role)!;
@@ -722,9 +656,9 @@ function LoginPage({ setUser, navigate }: AppContext) {
       <section className="auth-card">
         <form className="form-panel auth-form" onSubmit={submit}>
           <div>
-            <p className="eyebrow">Masuk Portal</p>
-            <h2>Login SmartBank</h2>
-            <p className="muted">Pilih role demo, lalu masuk ke dashboard sesuai permission.</p>
+            <p className="eyebrow">SmartBank Secure Access</p>
+            <h2>Masuk ke Internet Banking</h2>
+            <p className="muted">Pilih salah satu dari empat akses bank untuk melihat rancangan dashboard frontend.</p>
           </div>
           <div className="role-picker" aria-label="Pilih role demo">
             {demoUsers.map((demo) => (
@@ -751,8 +685,8 @@ function LoginPage({ setUser, navigate }: AppContext) {
             <input autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} type="password" />
           </label>
           {error && <div className="callout danger"><AlertTriangle size={18} /> {error}</div>}
-          <button className="button primary" type="submit"><ShieldCheck size={17} /> Masuk ke Dashboard</button>
-          <p className="auth-switch">Belum punya akun? <button className="link-button" onClick={() => navigate('/auth/register')} type="button">Daftar sekarang</button></p>
+          <button className="button primary" type="submit"><ShieldCheck size={17} /> Masuk Aman</button>
+          <p className="auth-switch">Belum terdaftar? <button className="link-button" onClick={() => navigate('/auth/register')} type="button">Buat akses baru</button></p>
         </form>
       </section>
       <AuthSidePanel selected={selected} />
@@ -761,11 +695,11 @@ function LoginPage({ setUser, navigate }: AppContext) {
 }
 
 function RegisterPage({ setUser, setState, navigate }: AppContext) {
-  const [name, setName] = useState('Mahasiswa Baru');
-  const [email, setEmail] = useState('mahasiswa@smartbank.test');
+  const [name, setName] = useState('Nasabah Baru');
+  const [email, setEmail] = useState('nasabah.baru@smartbank.test');
   const [password, setPassword] = useState('demo-smartbank');
   const [confirmPassword, setConfirmPassword] = useState('demo-smartbank');
-  const [role, setRole] = useState<Role>('USER');
+  const [role, setRole] = useState<Role>('CUSTOMER');
   const [accepted, setAccepted] = useState(true);
   const [error, setError] = useState('');
   const submit = (event: FormEvent) => {
@@ -801,7 +735,7 @@ function RegisterPage({ setUser, setState, navigate }: AppContext) {
           code: accountCode,
           owner: nextUser.name,
           role,
-          balance: role === 'USER' ? 50000 : 0,
+          balance: role === 'CUSTOMER' ? 5000000 : 0,
           token: `tok_${role.toLowerCase()}_${crypto.randomUUID().slice(0, 4)}****`,
           status: 'ACTIVE',
         },
@@ -816,17 +750,18 @@ function RegisterPage({ setUser, setState, navigate }: AppContext) {
       <section className="auth-card">
         <form className="form-panel auth-form" onSubmit={submit}>
           <div>
-            <p className="eyebrow">Registrasi</p>
-            <h2>Buat Akun SmartBank</h2>
-            <p className="muted">Akun demo langsung mendapat account internal untuk menjalankan flow presentasi.</p>
+            <p className="eyebrow">Pembukaan Akses</p>
+            <h2>Registrasi SmartBank</h2>
+            <p className="muted">Buat akses frontend untuk role nasabah atau petugas bank.</p>
           </div>
           <label>Nama lengkap<input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} /></label>
           <label>Email<input autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
           <label>Role akun
             <select value={role} onChange={(event) => setRole(event.target.value as Role)}>
-              <option value="USER">User / Mahasiswa</option>
-              <option value="MERCHANT">Merchant / UMKM</option>
-              <option value="SUPPLIER">Supplier</option>
+              <option value="CUSTOMER">Nasabah Individu</option>
+              <option value="TELLER">Teller Cabang</option>
+              <option value="OPERATIONS">Operasional Bank</option>
+              <option value="MANAGER">Manajer / Approver</option>
             </select>
           </label>
           <div className="two-col">
@@ -835,12 +770,12 @@ function RegisterPage({ setUser, setState, navigate }: AppContext) {
           </div>
           <label className="check-row">
             <input checked={accepted} onChange={(event) => setAccepted(event.target.checked)} type="checkbox" />
-            <span>Saya paham frontend hanya membuat request; backend tetap menghitung saldo, fee, dan ledger final.</span>
+            <span>Saya memahami validasi transaksi final tetap dilakukan oleh sistem backend bank.</span>
           </label>
-          <div className="callout"><WalletCards size={18} /> User demo menerima saldo awal SC50.000. Merchant dan Supplier dibuat dengan saldo awal SC0.</div>
+          <div className="callout"><WalletCards size={18} /> Nasabah demo menerima saldo awal SC5.000.000. Role internal dibuat sebagai akses operasional tanpa saldo pribadi.</div>
           {error && <div className="callout danger"><AlertTriangle size={18} /> {error}</div>}
-          <button className="button primary" type="submit"><Users size={17} /> Buat Akun dan Masuk</button>
-          <p className="auth-switch">Sudah punya akun? <button className="link-button" onClick={() => navigate('/auth/login')} type="button">Login</button></p>
+          <button className="button primary" type="submit"><Users size={17} /> Buat Akses</button>
+          <p className="auth-switch">Sudah punya akses? <button className="link-button" onClick={() => navigate('/auth/login')} type="button">Login</button></p>
         </form>
       </section>
       <section className="auth-info panel">
@@ -850,7 +785,7 @@ function RegisterPage({ setUser, setState, navigate }: AppContext) {
           <span>Route guard <strong>aktif sesuai role</strong></span>
           <span>Session demo <strong>tersimpan lokal</strong></span>
         </div>
-        <div className="callout warning"><Lock size={18} /> Produksi tetap membutuhkan endpoint `POST /auth/register`, validasi backend, dan refresh token HttpOnly.</div>
+        <div className="callout warning"><Lock size={18} /> Produksi tetap membutuhkan validasi backend, approval role internal, dan refresh token HttpOnly.</div>
       </section>
     </div>
   );
@@ -859,14 +794,14 @@ function RegisterPage({ setUser, setState, navigate }: AppContext) {
 function AuthSidePanel({ selected }: { selected: User }) {
   return (
     <section className="auth-info panel">
-      <h3>Kredensial demo</h3>
+      <h3>Akses simulasi</h3>
       <div className="detail-list">
         <span>Email <strong>{selected.email}</strong></span>
         <span>Password <strong>demo-smartbank</strong></span>
         <span>Redirect <strong>{defaultPathForRole(selected.role)}</strong></span>
       </div>
-      <div className="callout warning"><Lock size={18} /> Client secret dan HMAC produksi tidak pernah disimpan di browser.</div>
-      <p className="muted">Untuk produksi, form ini tinggal diarahkan ke `POST /auth/login`, lalu profil user diambil dari `GET /auth/me`.</p>
+      <div className="callout warning"><Lock size={18} /> Frontend hanya menampilkan pengalaman. Otorisasi final tetap berada di backend.</div>
+      <p className="muted">Untuk produksi, form ini dapat diarahkan ke `POST /auth/login`, lalu profil user diambil dari `GET /auth/me`.</p>
     </section>
   );
 }
@@ -901,31 +836,117 @@ function userTransactions(ctx: AppContext) {
   return ctx.state.transactions.filter((tx) => tx.from === ctx.user?.accountCode || tx.to === ctx.user?.accountCode);
 }
 
-function UserDashboardPage(ctx: AppContext) {
+function BankDashboardPage(ctx: AppContext) {
   const account = currentAccount(ctx)!;
   const transactions = userTransactions(ctx);
   const pending = transactions.filter((tx) => tx.status === 'PENDING' || tx.status === 'PROCESSING').length;
   const latest = transactions[0];
+  const role = ctx.user!.role;
+  const profile = {
+    CUSTOMER: {
+      eyebrow: 'Portfolio Nasabah',
+      title: formatMoney(account.balance),
+      subtitle: 'Saldo rekening utama',
+      icon: WalletCards,
+      tone: 'customer',
+      metrics: [
+        { label: 'Mutasi', value: `${transactions.length}`, hint: 'aktivitas bulan ini', icon: History, tone: 'blue' },
+        { label: 'Pending', value: `${pending}`, hint: 'transaksi berjalan', icon: Activity, tone: 'amber' },
+        { label: 'Limit', value: formatMoney(3500000), hint: 'tersisa hari ini', icon: ShieldCheck, tone: 'green' },
+      ],
+      actions: ['Transfer', 'Bayar', 'e-Statement'],
+    },
+    TELLER: {
+      eyebrow: 'Layanan Cabang',
+      title: '32',
+      subtitle: 'transaksi counter siap diproses',
+      icon: Users,
+      tone: 'teller',
+      metrics: [
+        { label: 'Antrian', value: '12', hint: 'nasabah menunggu', icon: Users, tone: 'blue' },
+        { label: 'Setoran', value: formatMoney(18400000), hint: 'hari ini', icon: Banknote, tone: 'green' },
+        { label: 'Butuh cek', value: '3', hint: 'validasi identitas', icon: AlertTriangle, tone: 'amber' },
+      ],
+      actions: ['Setoran', 'Tarik Tunai', 'Verifikasi'],
+    },
+    OPERATIONS: {
+      eyebrow: 'Operasional Bank',
+      title: '98.7%',
+      subtitle: 'settlement success rate',
+      icon: Activity,
+      tone: 'operations',
+      metrics: [
+        { label: 'Settlement', value: '147', hint: 'batch selesai', icon: ClipboardCheck, tone: 'green' },
+        { label: 'Exception', value: '5', hint: 'perlu follow up', icon: AlertTriangle, tone: 'amber' },
+        { label: 'SLA', value: '14m', hint: 'rata-rata proses', icon: Gauge, tone: 'blue' },
+      ],
+      actions: ['Rekonsiliasi', 'Exception', 'Audit Trail'],
+    },
+    MANAGER: {
+      eyebrow: 'Approval & Risiko',
+      title: formatMoney(980000000),
+      subtitle: 'reserve dalam pengawasan',
+      icon: ShieldCheck,
+      tone: 'manager',
+      metrics: [
+        { label: 'Approval', value: '8', hint: 'menunggu keputusan', icon: BadgeCheck, tone: 'amber' },
+        { label: 'Risk score', value: 'Low', hint: 'stabil hari ini', icon: ShieldCheck, tone: 'green' },
+        { label: 'Volume', value: formatMoney(245000000), hint: 'transaksi harian', icon: BarChart3, tone: 'blue' },
+      ],
+      actions: ['Approve', 'Risk Review', 'Laporan'],
+    },
+  }[role];
+  const HeroIcon = profile.icon;
   return (
-    <div className="ios-dashboard">
-      <section className="ios-balance-card">
-        <div>
-          <p className="eyebrow">Saldo aktif</p>
-          <h2>{formatMoney(account.balance)}</h2>
-          <span>{account.code}</span>
+    <div className="bank-dashboard">
+      <section className={cx('bank-hero-card', profile.tone)}>
+        <div className="bank-hero-copy">
+          <p className="eyebrow">{profile.eyebrow}</p>
+          <h2>{profile.title}</h2>
+          <span>{profile.subtitle}</span>
         </div>
-        <WalletCards size={44} />
+        <div className="bank-hero-symbol">
+          <HeroIcon size={46} />
+        </div>
       </section>
-      <section className="ios-metric-grid">
-        <DashboardMetric label="Pending" value={`${pending}`} hint="transaksi diproses" icon={Activity} tone="amber" />
-        <DashboardMetric label="Limit" value={formatMoney(350000)} hint="tersisa hari ini" icon={ShieldCheck} tone="green" />
-        <DashboardMetric label="Terakhir" value={latest ? formatMoney(latest.amount) : '-'} hint={latest ? statusLabel(latest.status) : 'belum ada transaksi'} icon={History} tone="blue" />
+      <section className="bank-metric-row">
+        {profile.metrics.map((metric) => (
+          <DashboardMetric
+            key={metric.label}
+            label={metric.label}
+            value={metric.value}
+            hint={metric.hint}
+            icon={metric.icon}
+            tone={metric.tone}
+          />
+        ))}
       </section>
-      <section className="ios-strip">
-        <DashboardAction icon={Send} label="Transfer" onClick={() => ctx.navigate('/wallet/transfer')} />
-        <DashboardAction icon={CreditCard} label="Payment" onClick={() => ctx.navigate('/payments/new')} />
-        <DashboardAction icon={QrCode} label="SmartQR" onClick={() => ctx.navigate('/smartqr/pay')} />
-        <DashboardAction icon={History} label="Riwayat" onClick={() => ctx.navigate('/wallet/transactions')} />
+      <section className="bank-workbench">
+        <div className="bank-summary-card">
+          <div className="panel-head">
+            <h2>Ringkasan hari ini</h2>
+            <StatusBadge status={pending ? 'PROCESSING' : 'SUCCESS'} />
+          </div>
+          <div className="bank-summary-list">
+            <span>Role aktif <strong>{roleLabels[role]}</strong></span>
+            <span>Account <strong>{account.code}</strong></span>
+            <span>Aktivitas terakhir <strong>{latest ? latest.description : 'Belum ada aktivitas'}</strong></span>
+          </div>
+        </div>
+        <div className="bank-actions-card">
+          <h2>Aksi utama</h2>
+          <div className="bank-action-grid">
+            {profile.actions.map((action, index) => (
+              <button className="bank-action" key={action}>
+                {[Send, ReceiptText, FileText][index] && (() => {
+                  const Icon = [Send, ReceiptText, FileText][index];
+                  return <Icon size={18} />;
+                })()}
+                <span>{action}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </section>
     </div>
   );
@@ -1157,7 +1178,7 @@ function FeeBreakdown({
 function NewPaymentPage(ctx: AppContext & { developerMode?: boolean }) {
   const [sourceApp, setSourceApp] = useState('MARKETPLACE');
   const [channel, setChannel] = useState('MARKETPLACE_CHECKOUT');
-  const [debtor, setDebtor] = useState(ctx.user?.role === 'USER' ? ctx.user.accountCode : 'ACC-USER-001');
+  const [debtor, setDebtor] = useState(ctx.user?.role === 'CUSTOMER' ? ctx.user.accountCode : 'ACC-CUST-001');
   const [creditor, setCreditor] = useState('ACC-MERCHANT-001');
   const [amount, setAmount] = useState(100000);
   const [idempotencyKey, setIdempotencyKey] = useState(makeIdempotencyKey);
