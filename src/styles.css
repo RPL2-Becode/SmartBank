@@ -3117,3 +3117,419 @@ main {
     overflow-x: auto;
   }
 }
+
+/* Route-based fixed banking shell */
+.banking-shell .workspace {
+  min-height: 100dvh;
+  background: #0b1120;
+}
+
+.banking-shell main {
+  padding: 0;
+  animation: none;
+}
+
+.banking-app-shell {
+  min-height: 100dvh;
+  padding-left: 280px;
+  color: #edf4ff;
+  background:
+    radial-gradient(circle at 78% 0%, rgb(245 158 11 / 12%), transparent 28%),
+    radial-gradient(circle at 18% 24%, rgb(59 130 246 / 12%), transparent 30%),
+    linear-gradient(135deg, #09111f 0%, #101827 54%, #080c14 100%);
+}
+
+.banking-fixed-sidebar {
+  position: fixed;
+  inset: 16px auto 16px 16px;
+  z-index: 40;
+  width: 248px;
+  padding: 16px;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 16px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 24px;
+  background: rgb(12 20 33 / 92%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%), 0 24px 70px rgb(0 0 0 / 34%);
+  backdrop-filter: blur(18px);
+}
+
+.banking-fixed-sidebar .finance-nav {
+  overflow: hidden;
+}
+
+.banking-page {
+  min-width: 0;
+  min-height: 100dvh;
+  padding: 20px 24px 28px;
+}
+
+.banking-page-topbar {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: minmax(190px, 0.7fr) minmax(260px, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+}
+
+.banking-page-topbar p,
+.banking-page-topbar h1 {
+  margin: 0;
+}
+
+.banking-page-topbar p {
+  color: rgb(237 244 255 / 58%);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.banking-page-topbar h1 {
+  color: #ffffff;
+  font-family: "IBM Plex Sans", "Rubik", "Nunito Sans", system-ui, sans-serif;
+  font-size: clamp(1.7rem, 3vw, 2.45rem);
+  line-height: 1;
+}
+
+.banking-page-topbar .finance-search {
+  width: 100%;
+  max-width: none;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 7%);
+}
+
+.banking-route-content {
+  margin-top: 20px;
+}
+
+.bank-route-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.route-card {
+  min-width: 0;
+  padding: clamp(16px, 2.4vw, 24px);
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 22px;
+  background: rgb(255 255 255 / 7%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 7%), 0 20px 54px rgb(0 0 0 / 22%);
+}
+
+.route-card-hero,
+.route-card-wide {
+  grid-column: span 8;
+}
+
+.overview-route .route-card:not(.route-card-hero),
+.two-panel-route .route-card,
+.insight-route .route-card,
+.table-route .route-card:not(.route-card-wide) {
+  grid-column: span 4;
+}
+
+.table-route .route-card-wide {
+  grid-column: span 12;
+}
+
+.route-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.route-card-head.compact {
+  align-items: center;
+}
+
+.route-card p,
+.route-card h2,
+.route-card h3 {
+  margin: 0;
+}
+
+.route-kicker,
+.route-card-head > div > p,
+.route-card-head > p {
+  color: rgb(237 244 255 / 62%);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.route-card h2 {
+  margin-top: 10px;
+  color: #ffffff;
+  font-family: "IBM Plex Sans", "Rubik", "Nunito Sans", system-ui, sans-serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 0.96;
+}
+
+.route-card h3 {
+  color: #ffffff;
+  font-size: 1.2rem;
+  line-height: 1.25;
+}
+
+.route-card > p,
+.route-muted {
+  margin-top: 12px;
+  color: rgb(237 244 255 / 64%);
+  line-height: 1.55;
+}
+
+.account-detail-list,
+.compact-data-grid {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.account-detail-list span,
+.compact-data-grid span {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  color: rgb(237 244 255 / 62%);
+  background: rgb(255 255 255 / 7%);
+}
+
+.account-detail-list strong,
+.compact-data-grid strong {
+  color: #ffffff;
+  text-align: right;
+}
+
+.card-page-preview .bank-card-preview {
+  min-height: 260px;
+}
+
+.route-activity-list .activity-row {
+  grid-template-columns: 44px minmax(0, 1fr) minmax(120px, auto);
+}
+
+.auth-shell.auth-card-only {
+  color: #edf4ff;
+  background:
+    radial-gradient(circle at 76% 4%, rgb(245 158 11 / 18%), transparent 30%),
+    radial-gradient(circle at 8% 18%, rgb(59 130 246 / 15%), transparent 28%),
+    linear-gradient(135deg, #09111f 0%, #101827 56%, #080c14 100%);
+}
+
+.auth-card.auth-card-modern {
+  border-color: rgb(255 255 255 / 10%);
+  background: rgb(12 20 33 / 92%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%), 0 26px 80px rgb(0 0 0 / 34%);
+  backdrop-filter: blur(18px);
+}
+
+.auth-card-modern .auth-form h2 {
+  color: #ffffff;
+}
+
+.auth-card-modern .muted {
+  color: rgb(237 244 255 / 64%);
+}
+
+.auth-card-modern label {
+  color: rgb(237 244 255 / 78%);
+}
+
+.auth-card-modern input,
+.auth-card-modern select,
+.auth-card-modern textarea {
+  border-color: rgb(255 255 255 / 12%);
+  background: rgb(255 255 255 / 8%);
+  color: #ffffff;
+}
+
+.auth-card-modern input:focus,
+.auth-card-modern select:focus,
+.auth-card-modern textarea:focus {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 4px rgb(245 158 11 / 16%);
+}
+
+.auth-card-modern .role-option {
+  color: rgb(237 244 255 / 76%);
+  border-color: rgb(255 255 255 / 10%);
+  background: rgb(255 255 255 / 7%);
+}
+
+.auth-card-modern .role-option strong {
+  color: #ffffff;
+}
+
+.auth-card-modern .role-option.active {
+  color: #ffffff;
+  border-color: rgb(245 158 11 / 60%);
+  background: rgb(245 158 11 / 14%);
+  box-shadow: inset 0 0 0 1px rgb(245 158 11 / 12%);
+}
+
+.auth-card-modern .button.primary {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #111827;
+}
+
+.auth-card-modern .auth-card-note,
+.auth-card-modern .callout {
+  border-color: rgb(255 255 255 / 10%);
+  color: rgb(237 244 255 / 70%);
+  background: rgb(255 255 255 / 7%);
+}
+
+.auth-card-modern .auth-card-note span:first-child,
+.auth-card-modern .link-button,
+.auth-card-modern .eyebrow {
+  color: #fbbf24;
+}
+
+.auth-card-modern .auth-card-note strong {
+  color: #ffffff;
+}
+
+@media (max-width: 1180px) {
+  .banking-app-shell {
+    padding-left: 104px;
+  }
+
+  .banking-fixed-sidebar {
+    width: 72px;
+    padding: 10px;
+    border-radius: 20px;
+  }
+
+  .banking-fixed-sidebar .finance-brand-button,
+  .banking-fixed-sidebar .finance-nav-item,
+  .banking-fixed-sidebar .sidebar-logout {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .banking-fixed-sidebar .finance-brand-button span:last-child,
+  .banking-fixed-sidebar .finance-nav-item span,
+  .banking-fixed-sidebar .sidebar-logout {
+    font-size: 0;
+  }
+
+  .banking-fixed-sidebar .sidebar-status-card {
+    display: none;
+  }
+
+  .bank-route-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+
+  .route-card-hero,
+  .route-card-wide,
+  .table-route .route-card-wide {
+    grid-column: span 8;
+  }
+
+  .overview-route .route-card:not(.route-card-hero),
+  .two-panel-route .route-card,
+  .insight-route .route-card,
+  .table-route .route-card:not(.route-card-wide) {
+    grid-column: span 4;
+  }
+}
+
+@media (max-width: 780px) {
+  .banking-app-shell {
+    padding-left: 84px;
+  }
+
+  .banking-fixed-sidebar {
+    inset: 10px auto 10px 10px;
+    width: 62px;
+    padding: 8px;
+    gap: 10px;
+    border-radius: 18px;
+  }
+
+  .banking-page {
+    padding: 12px 12px 18px;
+  }
+
+  .banking-page-topbar {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .banking-page-topbar .finance-user {
+    display: none;
+  }
+
+  .bank-route-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .route-card-hero,
+  .route-card-wide,
+  .overview-route .route-card:not(.route-card-hero),
+  .two-panel-route .route-card,
+  .insight-route .route-card,
+  .table-route .route-card,
+  .table-route .route-card-wide {
+    grid-column: span 1;
+  }
+
+  .route-card-head,
+  .route-card-head.compact {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .route-activity-list .activity-row,
+  .activity-row {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .activity-row > div:last-child {
+    grid-column: 2;
+    justify-items: start;
+  }
+}
+
+@media (max-width: 430px) {
+  .banking-app-shell {
+    padding-left: 76px;
+  }
+
+  .banking-fixed-sidebar {
+    width: 56px;
+  }
+
+  .banking-fixed-sidebar .rail-logo,
+  .banking-fixed-sidebar .finance-nav-item,
+  .banking-fixed-sidebar .sidebar-logout {
+    width: 40px;
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .route-card {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .account-detail-list span,
+  .compact-data-grid span {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

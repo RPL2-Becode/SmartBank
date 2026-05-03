@@ -6,7 +6,7 @@ Target backend tetap dikonfigurasi lewat environment, tetapi URL teknis tidak di
 
 ## Arah Visual
 
-Redesign terbaru memakai arah **Clean Bento Banking Dashboard**: aplikasi langsung masuk ke login/register lalu dashboard, tanpa landing page. Dashboard utama memakai background gelap profesional, sidebar berlabel yang dapat membuka section informasi, bento grid 12 kolom, panel saldo besar dengan grafik, kartu aktif, transaksi terbaru, insight role, aksi cepat, investasi, dan kontrol sistem.
+Redesign terbaru memakai arah **Route-Based Dark Banking App**: aplikasi langsung masuk ke login/register lalu app banking, tanpa landing page. Dashboard tidak lagi menampung semua informasi dalam satu halaman. Sidebar fixed di kiri membuka route terpisah untuk overview, rekening, transaksi, kartu, insight, dan kontrol sistem.
 
 Landing page dihapus dari flow utama. Route `/` langsung membuka login/register, lalu pengguna masuk ke dashboard. Role disederhanakan menjadi 4 role bank: Nasabah Individu, Teller Cabang, Operasional Bank, dan Manajer / Approver.
 
@@ -18,8 +18,8 @@ Frontend belum menjadi trusted system. Semua perhitungan final saldo, fee, limit
 
 ## File Utama
 
-- `src/App.tsx`: routing, state demo, role guard, layout auth, register, dan dashboard role-based.
-- `src/styles.css`: desain visual responsif, auth card-only, dashboard bento dark mode, sidebar navigasi, kartu, chart, motion, form, badge status, dan komponen dasar.
+- `src/App.tsx`: routing, state demo, role guard, layout auth/register, fixed banking shell, dan route informasi role-based.
+- `src/styles.css`: desain visual responsif, auth dark card, fixed sidebar, route cards, kartu, chart, motion, form, badge status, dan komponen dasar.
 - `src/main.tsx`: entry React.
 - `.env.example`: konfigurasi base URL API dan Swagger.
 - `package.json`: script dev/build dan dependency frontend.
@@ -31,17 +31,19 @@ Frontend belum menjadi trusted system. Semua perhitungan final saldo, fee, limit
 - Tidak ada landing page; `/` langsung menampilkan login.
 - Login demo dengan pemilihan role, field email/password, validasi dasar, kredensial demo, dan redirect sesuai role.
 - Register demo untuk empat role bank dengan validasi nama, email, password, persetujuan prinsip backend-trusted, pembuatan account mock, dan auto-login.
-- Tampilan login/register memakai satu card utama yang terpusat, tanpa panel samping, agar flow masuk lebih sederhana.
+- Tampilan login/register memakai satu card utama bertema dark dashboard, tanpa panel samping, agar flow masuk lebih sederhana dan konsisten.
 - Unauthorized page (`/403`) dan not found (`/404`).
 - Session demo disimpan di `localStorage` sebagai profil role.
 
 ### Dashboard Empat Role
 
-- Nasabah Individu: total saldo, kartu aktif, transaksi terbaru, dan ringkasan investasi.
-- Teller Cabang: volume counter, kartu kerja teller, aktivitas masuk, dan status layanan.
-- Operasional Bank: rasio settlement, kartu settlement desk, dan aktivitas operasional.
-- Manajer / Approver: posisi reserve, kartu executive, dan ringkasan transaksi penting.
-- Sidebar dashboard berisi navigasi Overview, Rekening, Transaksi, Kartu, Insight, dan Kontrol. Setiap item mengarah ke bento section terkait.
+- `/dashboard`: overview ringkas sesuai role.
+- `/rekening`: detail rekening, status, saldo, token, dan reserve model.
+- `/transaksi`: daftar aktivitas transaksi.
+- `/kartu`: kartu aktif dan kontrol limit.
+- `/insight`: metrik role dan grafik investasi.
+- `/kontrol`: prinsip backend-trusted, fee, dan webhook.
+- Sidebar fixed di kiri pada desktop, tablet, dan mobile. Pada viewport kecil sidebar menjadi icon rail, tetap di kiri dan tidak turun ke bawah.
 
 ## Perubahan Copy dan Informasi Teknis
 
@@ -54,7 +56,7 @@ Frontend belum menjadi trusted system. Semua perhitungan final saldo, fee, limit
 | Area | Route |
 |---|---|
 | Public | `/`, `/auth/login`, `/auth/register` |
-| Dashboard | `/dashboard` |
+| Banking | `/dashboard`, `/rekening`, `/transaksi`, `/kartu`, `/insight`, `/kontrol` |
 
 ## Prinsip Keamanan yang Diterapkan
 
@@ -69,7 +71,7 @@ Frontend belum menjadi trusted system. Semua perhitungan final saldo, fee, limit
 
 - API backend belum dipanggil secara nyata; data masih mock di state React.
 - Route guard frontend hanya UX guard, backend tetap wajib validasi authorization.
-- Build sudah sukses, tetapi verifikasi visual browser belum mencakup automated E2E.
+- Build sudah sukses dan verifikasi visual dilakukan dengan Chrome headless untuk desktop 1440px dan mobile 390px.
 - Fokus saat ini adalah desain frontend; halaman transaksi/detail lama tidak menjadi navigasi utama.
 
 ## Cara Verifikasi

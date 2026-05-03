@@ -524,13 +524,23 @@ type Route = {
   render: (ctx: AppContext, params: Record<string, string>) => ReactNode;
 };
 
+type BankingView = 'overview' | 'rekening' | 'transaksi' | 'kartu' | 'insight' | 'kontrol';
+
+const bankingRoles: Role[] = ['CUSTOMER', 'TELLER', 'OPERATIONS', 'MANAGER'];
+const bankingRoutePaths = ['/dashboard', '/rekening', '/transaksi', '/kartu', '/insight', '/kontrol'];
+
 const routes: Route[] = [
   { path: '/', label: 'Login', section: 'Public', icon: LogIn, public: true, render: (ctx) => <LoginPage {...ctx} /> },
   { path: '/auth/login', label: 'Login', section: 'Public', icon: LogIn, public: true, render: (ctx) => <LoginPage {...ctx} /> },
   { path: '/auth/register', label: 'Register', section: 'Public', icon: Users, public: true, render: (ctx) => <RegisterPage {...ctx} /> },
   { path: '/403', label: 'Unauthorized', section: 'Public', icon: Lock, public: true, detail: true, render: (ctx) => <UnauthorizedPage {...ctx} /> },
   { path: '/404', label: 'Not Found', section: 'Public', icon: AlertTriangle, public: true, detail: true, render: (ctx) => <NotFoundPage {...ctx} /> },
-  { path: '/dashboard', label: 'Dashboard', section: 'Banking', icon: Gauge, roles: ['CUSTOMER', 'TELLER', 'OPERATIONS', 'MANAGER'], render: (ctx) => <BentoDashboardPage {...ctx} /> },
+  { path: '/dashboard', label: 'Dashboard', section: 'Banking', icon: Gauge, roles: bankingRoles, render: (ctx) => <BankingShellPage {...ctx} view="overview" /> },
+  { path: '/rekening', label: 'Rekening', section: 'Banking', icon: WalletCards, roles: bankingRoles, render: (ctx) => <BankingShellPage {...ctx} view="rekening" /> },
+  { path: '/transaksi', label: 'Transaksi', section: 'Banking', icon: ReceiptText, roles: bankingRoles, render: (ctx) => <BankingShellPage {...ctx} view="transaksi" /> },
+  { path: '/kartu', label: 'Kartu', section: 'Banking', icon: CreditCard, roles: bankingRoles, render: (ctx) => <BankingShellPage {...ctx} view="kartu" /> },
+  { path: '/insight', label: 'Insight', section: 'Banking', icon: BarChart3, roles: bankingRoles, render: (ctx) => <BankingShellPage {...ctx} view="insight" /> },
+  { path: '/kontrol', label: 'Kontrol', section: 'Banking', icon: ShieldCheck, roles: bankingRoles, render: (ctx) => <BankingShellPage {...ctx} view="kontrol" /> },
 ];
 
 function matchRoute(pathname: string) {
@@ -595,11 +605,11 @@ export function App() {
   const visibleRoutes = routes.filter((item) => !item.detail && !item.public && user && item.roles?.includes(user.role));
   const sections = Array.from(new Set(visibleRoutes.map((item) => item.section)));
   const isAuthScreen = !user && (route.path === '/' || route.path.startsWith('/auth'));
-  const hasEmbeddedDashboardChrome = Boolean(user && route.path === '/dashboard');
+  const hasEmbeddedDashboardChrome = Boolean(user && bankingRoutePaths.includes(route.path));
 
   return (
-    <div className={cx('app', isAuthScreen && 'auth-app', hasEmbeddedDashboardChrome && 'dashboard-shell')}>
-      {user && visibleRoutes.length > 1 && (
+    <div className={cx('app', isAuthScreen && 'auth-app', hasEmbeddedDashboardChrome && 'dashboard-shell', hasEmbeddedDashboardChrome && 'banking-shell')}>
+      {user && visibleRoutes.length > 1 && !hasEmbeddedDashboardChrome && (
         <aside className={cx('sidebar', mobileNav && 'open')}>
           <div className="brand" onClick={() => navigate(defaultPathForRole(user.role))} role="button" tabIndex={0}>
             <div className="brand-mark"><Landmark size={22} /></div>
@@ -868,6 +878,345 @@ function currentAccount(ctx: AppContext) {
 
 function userTransactions(ctx: AppContext) {
   return ctx.state.transactions.filter((tx) => tx.from === ctx.user?.accountCode || tx.to === ctx.user?.accountCode);
+}
+
+function BankingShellPage(props: AppContext & { view: BankingView }) {
+  const ctx: AppContext = props;
+  const { view } = props;
+  const account = currentAccount(ctx)!;
+  const transactions = userTransactions(ctx);
+  const visibleTransactions = (transactions.length ? transactions : ctx.state.transactions).slice(0, 6);
+  const pending = transactions.filter((tx) => tx.status === 'PENDING' || tx.status === 'PROCESSING').length;
+  const role = ctx.user!.role;
+  const profile = {
+    CUSTOMER: {
+      headline: 'Total saldo',
+      amount: formatMoney(account.balance),
+      delta: '+ 2,92%',
+      roleNote: 'Personal banking',
+      cardName: 'SmartBank Platinum',
+      cardBalance: formatMoney(12850000),
+      health: 'Akun aktif',
+      nextReview: 'Limit harian tersisa 82%',
+      metrics: [
+        { label: 'Mutasi bulan ini', value: `${transactions.length}`, tone: 'blue' },
+        { label: 'Transaksi berjalan', value: `${pending}`, tone: 'amber' },
+        { label: 'Limit tersedia', value: formatMoney(3500000), tone: 'green' },
+      ],
+      actions: ['Transfer', 'Bayar tagihan', 'e-Statement'],
+    },
+    TELLER: {
+      headline: 'Volume counter',
+      amount: '32 transaksi',
+      delta: '+ 8,10%',
+      roleNote: 'Branch service',
+      cardName: 'Teller Workbench',
+      cardBalance: formatMoney(18400000),
+      health: 'Counter normal',
+      nextReview: '3 validasi identitas',
+      metrics: [
+        { label: 'Antrian aktif', value: '12', tone: 'blue' },
+        { label: 'Setoran hari ini', value: formatMoney(18400000), tone: 'green' },
+        { label: 'Butuh validasi', value: '3', tone: 'amber' },
+      ],
+      actions: ['Setoran', 'Tarik tunai', 'Verifikasi'],
+    },
+    OPERATIONS: {
+      headline: 'Rasio settlement',
+      amount: '98,7%',
+      delta: '+ 1,52%',
+      roleNote: 'Operations control',
+      cardName: 'Settlement Desk',
+      cardBalance: formatMoney(245000000),
+      health: 'SLA aman',
+      nextReview: '5 exception terbuka',
+      metrics: [
+        { label: 'Batch selesai', value: '147', tone: 'green' },
+        { label: 'Exception', value: '5', tone: 'amber' },
+        { label: 'Rata-rata SLA', value: '14m', tone: 'blue' },
+      ],
+      actions: ['Rekonsiliasi', 'Exception', 'Audit trail'],
+    },
+    MANAGER: {
+      headline: 'Posisi reserve',
+      amount: formatMoney(980000000),
+      delta: '+ 3,52%',
+      roleNote: 'Approval & risk',
+      cardName: 'Executive Card',
+      cardBalance: formatMoney(245000000),
+      health: 'Risiko rendah',
+      nextReview: '8 approval pending',
+      metrics: [
+        { label: 'Approval', value: '8', tone: 'amber' },
+        { label: 'Risk score', value: 'Low', tone: 'green' },
+        { label: 'Volume harian', value: formatMoney(245000000), tone: 'blue' },
+      ],
+      actions: ['Approve', 'Risk review', 'Laporan'],
+    },
+  }[role];
+  const navItems: Array<{ view: BankingView; path: string; label: string; hint: string; icon: LucideIcon }> = [
+    { view: 'overview', path: '/dashboard', label: 'Dashboard', hint: profile.health, icon: Home },
+    { view: 'rekening', path: '/rekening', label: 'Rekening', hint: account.code, icon: WalletCards },
+    { view: 'transaksi', path: '/transaksi', label: 'Transaksi', hint: `${visibleTransactions.length} aktivitas`, icon: ReceiptText },
+    { view: 'kartu', path: '/kartu', label: 'Kartu', hint: profile.cardName, icon: CreditCard },
+    { view: 'insight', path: '/insight', label: 'Insight', hint: profile.nextReview, icon: BarChart3 },
+    { view: 'kontrol', path: '/kontrol', label: 'Kontrol', hint: 'Backend trusted', icon: ShieldCheck },
+  ];
+  const current = navItems.find((item) => item.view === view)!;
+  const actionIcons = [Send, ReceiptText, BadgeCheck];
+
+  const renderOverview = () => (
+    <div className="bank-route-grid overview-route">
+      <section className="route-card route-card-hero">
+        <div className="route-card-head">
+          <div>
+            <p>{profile.headline}</p>
+            <h2>{profile.amount}</h2>
+            <span className="positive-chip">{profile.delta} hari ini</span>
+          </div>
+          <div className="period-tabs">
+            <button type="button">1 tahun</button>
+            <button className="active" type="button">6 bulan</button>
+            <button type="button">1 bulan</button>
+          </div>
+        </div>
+        <FinanceLineChart />
+      </section>
+      <section className="route-card">
+        <p className="route-kicker">Ringkasan role</p>
+        <div className="metric-stack">
+          {profile.metrics.map((metric) => (
+            <div className={cx('metric-pill', metric.tone)} key={metric.label}>
+              <span>{metric.label}</span>
+              <strong>{metric.value}</strong>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="route-card">
+        <p className="route-kicker">Aksi cepat</p>
+        <div className="bento-action-list">
+          {profile.actions.map((action, index) => {
+            const Icon = actionIcons[index] || FileText;
+            return (
+              <button key={action} type="button">
+                <Icon size={18} />
+                <span>{action}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+    </div>
+  );
+
+  const renderRekening = () => (
+    <div className="bank-route-grid two-panel-route">
+      <section className="route-card account-detail-card">
+        <div className="route-card-head compact">
+          <p className="route-kicker">Rekening utama</p>
+          <WalletCards size={20} />
+        </div>
+        <h2>{account.code}</h2>
+        <p>{account.owner}</p>
+        <div className="account-detail-list">
+          <span>Role <strong>{roleLabels[role]}</strong></span>
+          <span>Status <StatusBadge status="SUCCESS" /></span>
+          <span>Saldo <strong>{formatMoney(account.balance)}</strong></span>
+          <span>Token <strong>{account.token}</strong></span>
+        </div>
+      </section>
+      <section className="route-card">
+        <p className="route-kicker">Model reserve</p>
+        <h3>Core banking yang menentukan saldo final</h3>
+        <div className="control-flow">
+          <span>Frontend UI</span>
+          <span>Core banking</span>
+          <span>Ledger</span>
+          <span>Receipt</span>
+        </div>
+      </section>
+    </div>
+  );
+
+  const renderTransaksi = () => (
+    <div className="bank-route-grid table-route">
+      <section className="route-card route-card-wide">
+        <div className="route-card-head compact">
+          <div>
+            <p className="route-kicker">Transaksi terbaru</p>
+            <h3>Aktivitas rekening</h3>
+          </div>
+          <button type="button">Filter</button>
+        </div>
+        <div className="activity-list route-activity-list">
+          {visibleTransactions.map((tx) => (
+            <div className="activity-row" key={tx.code}>
+              <span><ReceiptText size={18} /></span>
+              <div>
+                <strong>{tx.description}</strong>
+                <small>{tx.channel} - {formatDate(tx.createdAt)}</small>
+              </div>
+              <div>
+                <strong>{formatMoney(tx.amount)}</strong>
+                <StatusBadge status={tx.status} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+
+  const renderKartu = () => (
+    <div className="bank-route-grid two-panel-route">
+      <section className="route-card card-page-preview">
+        <p className="route-kicker">Kartu aktif</p>
+        <div className="bank-card-preview">
+          <span>VISA</span>
+          <i />
+          <p>{profile.cardName}</p>
+          <strong>{profile.cardBalance}</strong>
+        </div>
+      </section>
+      <section className="route-card">
+        <p className="route-kicker">Kontrol kartu</p>
+        <div className="account-detail-list">
+          <span>Limit harian <strong>{formatMoney(7500000)}</strong></span>
+          <span>Status online <strong>Aktif</strong></span>
+          <span>Tarik tunai <strong>Nonaktif</strong></span>
+          <span>Notifikasi <strong>Realtime</strong></span>
+        </div>
+      </section>
+    </div>
+  );
+
+  const renderInsight = () => (
+    <div className="bank-route-grid insight-route">
+      <section className="route-card">
+        <p className="route-kicker">Insight role</p>
+        <div className="metric-stack">
+          {profile.metrics.map((metric) => (
+            <div className={cx('metric-pill', metric.tone)} key={metric.label}>
+              <span>{metric.label}</span>
+              <strong>{metric.value}</strong>
+            </div>
+          ))}
+        </div>
+      </section>
+      <section className="route-card route-card-wide">
+        <div className="route-card-head compact">
+          <div>
+            <p className="route-kicker">Investasi</p>
+            <h3>{formatMoney(3200000)} <span>+1,52%</span></h3>
+          </div>
+          <button type="button">Bulanan</button>
+        </div>
+        <FinanceBars />
+      </section>
+    </div>
+  );
+
+  const renderKontrol = () => (
+    <div className="bank-route-grid table-route">
+      <section className="route-card">
+        <p className="route-kicker">Kontrol sistem</p>
+        <h3>Authorization tetap divalidasi backend</h3>
+        <p className="route-muted">Frontend hanya menampilkan pengalaman. Limit, saldo, fee, ledger, dan approval final tetap berada di sistem bank.</p>
+        <div className="control-flow">
+          <span>Auth role</span>
+          <span>Limit check</span>
+          <span>Ledger hash</span>
+          <span>Webhook</span>
+        </div>
+      </section>
+      <section className="route-card route-card-wide">
+        <div className="route-card-head compact">
+          <p className="route-kicker">Fee & webhook</p>
+          <PackageCheck size={20} />
+        </div>
+        <div className="compact-data-grid">
+          {ctx.state.feeRules.slice(0, 4).map((fee) => (
+            <span key={fee.id}>{fee.name}<strong>{fee.percent}%</strong></span>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+
+  const content = {
+    overview: renderOverview,
+    rekening: renderRekening,
+    transaksi: renderTransaksi,
+    kartu: renderKartu,
+    insight: renderInsight,
+    kontrol: renderKontrol,
+  }[view]();
+
+  return (
+    <div className="banking-app-shell">
+      <aside className="banking-fixed-sidebar" aria-label="Navigasi dashboard">
+        <button className="finance-brand-button" type="button" onClick={() => ctx.navigate('/dashboard')}>
+          <span className="rail-logo"><Landmark size={24} /></span>
+          <span>
+            <strong>SmartBank</strong>
+            <small>{roleLabels[role]}</small>
+          </span>
+        </button>
+        <nav className="finance-nav" aria-label="Menu banking">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                aria-current={view === item.view ? 'page' : undefined}
+                className={cx('finance-nav-item', view === item.view && 'active')}
+                key={item.path}
+                onClick={() => ctx.navigate(item.path)}
+                type="button"
+              >
+                <Icon size={19} />
+                <span>
+                  <strong>{item.label}</strong>
+                  <small>{item.hint}</small>
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+        <div className="sidebar-status-card">
+          <span>Status role</span>
+          <strong>{profile.health}</strong>
+          <small>{profile.nextReview}</small>
+        </div>
+        <button className="sidebar-logout" type="button" onClick={() => { ctx.setUser(null); ctx.navigate('/auth/login'); }}>
+          <LogOut size={18} />
+          Keluar
+        </button>
+      </aside>
+      <section className="banking-page">
+        <header className="banking-page-topbar">
+          <div>
+            <p>{profile.roleNote}</p>
+            <h1>{current.label}</h1>
+          </div>
+          <label className="finance-search">
+            <Search size={18} />
+            <input placeholder="Cari transaksi, rekening, atau kontrol" aria-label="Cari halaman banking" />
+          </label>
+          <div className="finance-user">
+            <button className="finance-icon" aria-label="Refresh"><RefreshCw size={18} /></button>
+            <button className="finance-icon" aria-label="Notifikasi"><BellRing size={18} /></button>
+            <div className="finance-avatar">{ctx.user!.name.slice(0, 1)}</div>
+            <div>
+              <strong>{ctx.user!.name}</strong>
+              <span>{roleLabels[role]}</span>
+            </div>
+          </div>
+        </header>
+        <div className="banking-route-content">{content}</div>
+      </section>
+    </div>
+  );
 }
 
 function BentoDashboardPage(ctx: AppContext) {
@@ -1222,7 +1571,7 @@ function BankDashboardPage(ctx: AppContext) {
             <Search size={18} />
             <input placeholder="Cari" aria-label="Cari dashboard" />
           </label>
-          <div className="finance-shortcut">⌘ + Space</div>
+          <div className="finance-shortcut">Ctrl K</div>
           <div className="finance-user">
             <button className="finance-icon" aria-label="Refresh"><RefreshCw size={18} /></button>
             <button className="finance-icon" aria-label="Notifications"><BellRing size={18} /></button>

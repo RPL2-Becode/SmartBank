@@ -1,6 +1,6 @@
 # SmartBank Web
 
-Frontend portal SmartBank untuk tugas besar RPL II. Aplikasi ini dibangun dengan React + Vite + TypeScript dan saat ini difokuskan pada tampilan bank profesional: login/register card-only dan dashboard bento dark mode role-based.
+Frontend portal SmartBank untuk tugas besar RPL II. Aplikasi ini dibangun dengan React + Vite + TypeScript dan saat ini difokuskan pada tampilan bank profesional: login/register dark card dan app banking responsive dengan fixed sidebar.
 
 ## Menjalankan lokal
 
@@ -34,4 +34,13 @@ Halaman `/` langsung membuka login. Role demo tersedia:
 - Operasional Bank
 - Manajer / Approver
 
-Catatan: data saat ini memakai state mock di browser agar desain dan flow presentasi bisa langsung dijalankan. Integrasi backend nyata dapat diarahkan melalui `VITE_API_BASE_URL`, tetapi URL API tidak ditampilkan di UI. Dashboard memakai sidebar section dan bento card untuk overview, rekening, transaksi, kartu, insight, dan kontrol sistem.
+Route utama setelah login:
+
+- `/dashboard` untuk overview ringkas
+- `/rekening` untuk detail rekening
+- `/transaksi` untuk aktivitas transaksi
+- `/kartu` untuk kartu dan limit
+- `/insight` untuk metrik role
+- `/kontrol` untuk kontrol sistem
+
+Catatan: data saat ini memakai state mock di browser agar desain dan flow presentasi bisa langsung dijalankan. Integrasi backend nyata dapat diarahkan melalui `VITE_API_BASE_URL`, tetapi URL API tidak ditampilkan di UI.
