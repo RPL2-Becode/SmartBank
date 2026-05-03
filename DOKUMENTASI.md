@@ -4,6 +4,10 @@ Tanggal implementasi: 2026-05-03
 Stack: React 19, Vite, TypeScript, CSS custom, lucide-react  
 Target backend: `VITE_API_BASE_URL=http://localhost:3000/api/v1`
 
+## Arah Visual
+
+Redesign terbaru memakai arah **Enterprise Gateway / SmartBank Command Center**: dark glass interface, aksen teal-amber-violet, panel transparan berlapis, grid background, status pulse, entrance motion, shimmer navigation, scan rail, dan animated meter untuk data finansial. Motion dibatasi pada `transform` dan `opacity`, serta menghormati `prefers-reduced-motion`.
+
 ## Ringkasan
 
 Implementasi ini merealisasikan MVP frontend berdasarkan `implementation_plan.md` dalam bentuk portal operasional SmartBank Payment Gateway. Fokus utama adalah demo end-to-end untuk role user, merchant, admin, developer, dan analytics viewer dengan route guard, tampilan finansial, fee breakdown, idempotency key, status transaksi, receipt, ledger, webhook, dan rekonsiliasi.
