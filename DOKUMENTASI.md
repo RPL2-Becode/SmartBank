@@ -2,11 +2,11 @@
 
 Tanggal implementasi: 2026-05-03  
 Stack: React 19, Vite, TypeScript, CSS custom, lucide-react  
-Target backend: `VITE_API_BASE_URL=http://localhost:3000/api/v1`
+Target backend tetap dikonfigurasi lewat environment, tetapi URL teknis tidak ditampilkan pada UI.
 
 ## Arah Visual
 
-Redesign terbaru memakai arah **Modern Retail Banking Console**: tampilan bank profesional berbasis putih-biru, struktur bersih, kartu finansial besar, panel operasional ringkas, dan aksen oranye sebagai penanda aksi penting. Inspirasi visualnya adalah portal internet banking modern: tenang, tepercaya, dan tidak dekoratif berlebihan.
+Redesign terbaru memakai arah **Dark Premium Banking Dashboard**: aplikasi langsung masuk ke login/register lalu dashboard, tanpa landing page. Dashboard utama mengikuti referensi finance app modern dengan background gelap, rail navigation kompak, panel saldo besar dengan grafik, stacked card, transaksi terbaru, dan aksen oranye-hijau yang terasa premium tetapi tetap profesional.
 
 Landing page dihapus dari flow utama. Route `/` langsung membuka login/register, lalu pengguna masuk ke dashboard. Role disederhanakan menjadi 4 role bank: Nasabah Individu, Teller Cabang, Operasional Bank, dan Manajer / Approver.
 
@@ -19,7 +19,7 @@ Frontend belum menjadi trusted system. Semua perhitungan final saldo, fee, limit
 ## File Utama
 
 - `src/App.tsx`: routing, state demo, role guard, layout auth, register, dan dashboard role-based.
-- `src/styles.css`: desain visual responsif, auth screen, banking dashboard cards, form, badge status, dan komponen dasar.
+- `src/styles.css`: desain visual responsif, auth screen, dashboard finance dark mode, kartu, chart, motion, form, badge status, dan komponen dasar.
 - `src/main.tsx`: entry React.
 - `.env.example`: konfigurasi base URL API dan Swagger.
 - `package.json`: script dev/build dan dependency frontend.
@@ -36,10 +36,16 @@ Frontend belum menjadi trusted system. Semua perhitungan final saldo, fee, limit
 
 ### Dashboard Empat Role
 
-- Nasabah Individu: saldo, mutasi, pending transaction, limit, dan aksi utama.
-- Teller Cabang: antrian, setoran, validasi identitas, dan aksi counter.
-- Operasional Bank: settlement, exception, SLA, dan pekerjaan rekonsiliasi.
-- Manajer / Approver: reserve, approval queue, risk score, volume, dan aksi review.
+- Nasabah Individu: total saldo, kartu aktif, transaksi terbaru, dan ringkasan investasi.
+- Teller Cabang: volume counter, kartu kerja teller, aktivitas masuk, dan status layanan.
+- Operasional Bank: rasio settlement, kartu settlement desk, dan aktivitas operasional.
+- Manajer / Approver: posisi reserve, kartu executive, dan ringkasan transaksi penting.
+
+## Perubahan Copy dan Informasi Teknis
+
+- Label URL API seperti `http://localhost:3000/api/v1` tidak lagi muncul di header atau dashboard.
+- Label teknis di halaman saldo diganti menjadi `Core banking service`.
+- Copy dashboard dibuat lebih singkat, natural, dan fokus pada istilah perbankan.
 
 ## Route Penting
 

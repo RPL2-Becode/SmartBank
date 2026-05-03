@@ -7,6 +7,7 @@ import {
   BellRing,
   BookOpen,
   Boxes,
+  Briefcase,
   Building2,
   CheckCircle2,
   ClipboardCheck,
@@ -310,7 +311,6 @@ const initialWebhooks: WebhookDelivery[] = [
 ];
 
 const swaggerUrl = import.meta.env.VITE_SWAGGER_URL || 'http://localhost:3000/api-docs';
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
 
 function formatMoney(amount: number) {
   return new Intl.NumberFormat('id-ID', {
@@ -410,6 +410,46 @@ function DashboardAction({ icon: Icon, label, onClick }: { icon: LucideIcon; lab
       <Icon size={18} />
       <span>{label}</span>
     </button>
+  );
+}
+
+function FinanceLineChart() {
+  const points = '0,118 42,112 84,128 126,96 168,88 210,110 252,118 294,104 336,112 378,92 420,118 462,106 504,116 546,88 588,96 630,78';
+  return (
+    <div className="finance-chart" aria-label="Grafik saldo enam bulan">
+      <svg viewBox="0 0 640 170" role="img">
+        <defs>
+          <linearGradient id="balanceFill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#ff7a2f" stopOpacity="0.62" />
+            <stop offset="100%" stopColor="#0f0b08" stopOpacity="0.04" />
+          </linearGradient>
+        </defs>
+        <path d={`M0,170 L${points} L640,170 Z`} fill="url(#balanceFill)" />
+        <polyline points={points} fill="none" stroke="#ffb37d" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="462" cy="106" r="5" fill="#ffffff" />
+      </svg>
+      <div className="chart-tooltip">
+        <strong>09 Dec, 2026</strong>
+        <span>SC9.780.900</span>
+      </div>
+      <div className="chart-axis">
+        <span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span><span>Jan</span><span>Feb</span>
+      </div>
+    </div>
+  );
+}
+
+function FinanceBars() {
+  const bars = [38, 52, 56, 78, 48];
+  return (
+    <div className="finance-bars">
+      {bars.map((height, index) => (
+        <span key={index}>
+          <i style={{ height: `${height}%` }} />
+          <em>{['Sep', 'Oct', 'Nov', 'Jan', 'Feb'][index]}</em>
+        </span>
+      ))}
+    </div>
   );
 }
 
@@ -555,9 +595,10 @@ export function App() {
   const visibleRoutes = routes.filter((item) => !item.detail && !item.public && user && item.roles?.includes(user.role));
   const sections = Array.from(new Set(visibleRoutes.map((item) => item.section)));
   const isAuthScreen = !user && (route.path === '/' || route.path.startsWith('/auth'));
+  const hasEmbeddedDashboardChrome = Boolean(user && route.path === '/dashboard');
 
   return (
-    <div className={cx('app', isAuthScreen && 'auth-app')}>
+    <div className={cx('app', isAuthScreen && 'auth-app', hasEmbeddedDashboardChrome && 'dashboard-shell')}>
       {user && visibleRoutes.length > 1 && (
         <aside className={cx('sidebar', mobileNav && 'open')}>
           <div className="brand" onClick={() => navigate(defaultPathForRole(user.role))} role="button" tabIndex={0}>
@@ -586,14 +627,13 @@ export function App() {
         </aside>
       )}
       <div className="workspace">
-        {!isAuthScreen && <header className="topbar">
+        {!isAuthScreen && !hasEmbeddedDashboardChrome && <header className="topbar">
           <button className="icon-button mobile-only" aria-label="Buka menu" onClick={() => setMobileNav(true)}><Menu size={20} /></button>
           <div>
             <p className="eyebrow">{route.section}</p>
             <h1>{route.label}</h1>
           </div>
           <div className="topbar-actions">
-            <span className="api-chip">{apiBaseUrl}</span>
             {user ? (
               <>
                 <div className="user-chip">
@@ -840,116 +880,156 @@ function BankDashboardPage(ctx: AppContext) {
   const account = currentAccount(ctx)!;
   const transactions = userTransactions(ctx);
   const pending = transactions.filter((tx) => tx.status === 'PENDING' || tx.status === 'PROCESSING').length;
-  const latest = transactions[0];
   const role = ctx.user!.role;
   const profile = {
     CUSTOMER: {
-      eyebrow: 'Portfolio Nasabah',
-      title: formatMoney(account.balance),
-      subtitle: 'Saldo rekening utama',
-      icon: WalletCards,
-      tone: 'customer',
-      metrics: [
-        { label: 'Mutasi', value: `${transactions.length}`, hint: 'aktivitas bulan ini', icon: History, tone: 'blue' },
-        { label: 'Pending', value: `${pending}`, hint: 'transaksi berjalan', icon: Activity, tone: 'amber' },
-        { label: 'Limit', value: formatMoney(3500000), hint: 'tersisa hari ini', icon: ShieldCheck, tone: 'green' },
-      ],
-      actions: ['Transfer', 'Bayar', 'e-Statement'],
+      headline: 'Total saldo',
+      amount: formatMoney(account.balance),
+      delta: '+ 2,92%',
+      roleNote: 'Personal banking',
+      cardName: 'SmartBank Platinum',
+      cardBalance: formatMoney(12850000),
     },
     TELLER: {
-      eyebrow: 'Layanan Cabang',
-      title: '32',
-      subtitle: 'transaksi counter siap diproses',
-      icon: Users,
-      tone: 'teller',
-      metrics: [
-        { label: 'Antrian', value: '12', hint: 'nasabah menunggu', icon: Users, tone: 'blue' },
-        { label: 'Setoran', value: formatMoney(18400000), hint: 'hari ini', icon: Banknote, tone: 'green' },
-        { label: 'Butuh cek', value: '3', hint: 'validasi identitas', icon: AlertTriangle, tone: 'amber' },
-      ],
-      actions: ['Setoran', 'Tarik Tunai', 'Verifikasi'],
+      headline: 'Volume counter',
+      amount: '32 transaksi',
+      delta: '+ 8,10%',
+      roleNote: 'Branch service',
+      cardName: 'Teller Workbench',
+      cardBalance: formatMoney(18400000),
     },
     OPERATIONS: {
-      eyebrow: 'Operasional Bank',
-      title: '98.7%',
-      subtitle: 'settlement success rate',
-      icon: Activity,
-      tone: 'operations',
-      metrics: [
-        { label: 'Settlement', value: '147', hint: 'batch selesai', icon: ClipboardCheck, tone: 'green' },
-        { label: 'Exception', value: '5', hint: 'perlu follow up', icon: AlertTriangle, tone: 'amber' },
-        { label: 'SLA', value: '14m', hint: 'rata-rata proses', icon: Gauge, tone: 'blue' },
-      ],
-      actions: ['Rekonsiliasi', 'Exception', 'Audit Trail'],
+      headline: 'Rasio settlement',
+      amount: '98,7%',
+      delta: '+ 1,52%',
+      roleNote: 'Operations control',
+      cardName: 'Settlement Desk',
+      cardBalance: formatMoney(245000000),
     },
     MANAGER: {
-      eyebrow: 'Approval & Risiko',
-      title: formatMoney(980000000),
-      subtitle: 'reserve dalam pengawasan',
-      icon: ShieldCheck,
-      tone: 'manager',
-      metrics: [
-        { label: 'Approval', value: '8', hint: 'menunggu keputusan', icon: BadgeCheck, tone: 'amber' },
-        { label: 'Risk score', value: 'Low', hint: 'stabil hari ini', icon: ShieldCheck, tone: 'green' },
-        { label: 'Volume', value: formatMoney(245000000), hint: 'transaksi harian', icon: BarChart3, tone: 'blue' },
-      ],
-      actions: ['Approve', 'Risk Review', 'Laporan'],
+      headline: 'Posisi reserve',
+      amount: formatMoney(980000000),
+      delta: '+ 3,52%',
+      roleNote: 'Approval & risk',
+      cardName: 'Executive Card',
+      cardBalance: formatMoney(245000000),
     },
   }[role];
-  const HeroIcon = profile.icon;
+  const recentRows = [
+    { name: 'Lucas Bennett', desc: 'Transfer masuk', amount: '+SC25.000', tone: 'positive', icon: Users },
+    { name: 'Google Workspace', desc: 'Autodebit bulanan', amount: '-SC5.000', tone: 'negative', icon: Boxes },
+    { name: 'Kartu Debit', desc: 'Pembayaran merchant', amount: '-SC55.000', tone: 'negative', icon: CreditCard },
+  ];
   return (
-    <div className="bank-dashboard">
-      <section className={cx('bank-hero-card', profile.tone)}>
-        <div className="bank-hero-copy">
-          <p className="eyebrow">{profile.eyebrow}</p>
-          <h2>{profile.title}</h2>
-          <span>{profile.subtitle}</span>
-        </div>
-        <div className="bank-hero-symbol">
-          <HeroIcon size={46} />
-        </div>
-      </section>
-      <section className="bank-metric-row">
-        {profile.metrics.map((metric) => (
-          <DashboardMetric
-            key={metric.label}
-            label={metric.label}
-            value={metric.value}
-            hint={metric.hint}
-            icon={metric.icon}
-            tone={metric.tone}
-          />
+    <div className="finance-app">
+      <aside className="finance-rail" aria-label="Navigasi utama">
+        <div className="rail-logo"><Landmark size={24} /></div>
+        {[Home, BarChart3, WalletCards, ReceiptText, CreditCard, BriefcaseIcon, FileText].map((Icon, index) => (
+          <button className={cx('rail-button', index === 0 && 'active')} key={index} aria-label={`Menu ${index + 1}`}>
+            <Icon size={19} />
+          </button>
         ))}
-      </section>
-      <section className="bank-workbench">
-        <div className="bank-summary-card">
-          <div className="panel-head">
-            <h2>Ringkasan hari ini</h2>
-            <StatusBadge status={pending ? 'PROCESSING' : 'SUCCESS'} />
+        <button className="rail-button rail-bottom" aria-label="Keluar" onClick={() => { ctx.setUser(null); ctx.navigate('/auth/login'); }}>
+          <LogOut size={19} />
+        </button>
+      </aside>
+      <section className="finance-main">
+        <header className="finance-topbar">
+          <label className="finance-search">
+            <Search size={18} />
+            <input placeholder="Cari" aria-label="Cari dashboard" />
+          </label>
+          <div className="finance-shortcut">⌘ + Space</div>
+          <div className="finance-user">
+            <button className="finance-icon" aria-label="Refresh"><RefreshCw size={18} /></button>
+            <button className="finance-icon" aria-label="Notifications"><BellRing size={18} /></button>
+            <div className="finance-avatar">{ctx.user!.name.slice(0, 1)}</div>
+            <div>
+              <strong>{ctx.user!.name}</strong>
+              <span>{roleLabels[role]}</span>
+            </div>
           </div>
-          <div className="bank-summary-list">
-            <span>Role aktif <strong>{roleLabels[role]}</strong></span>
-            <span>Account <strong>{account.code}</strong></span>
-            <span>Aktivitas terakhir <strong>{latest ? latest.description : 'Belum ada aktivitas'}</strong></span>
-          </div>
-        </div>
-        <div className="bank-actions-card">
-          <h2>Aksi utama</h2>
-          <div className="bank-action-grid">
-            {profile.actions.map((action, index) => (
-              <button className="bank-action" key={action}>
-                {[Send, ReceiptText, FileText][index] && (() => {
-                  const Icon = [Send, ReceiptText, FileText][index];
-                  return <Icon size={18} />;
-                })()}
-                <span>{action}</span>
-              </button>
-            ))}
-          </div>
+        </header>
+        <div className="finance-content-grid">
+          <section className="balance-panel-card">
+            <div className="finance-section-head">
+              <div>
+                <p>{profile.headline}</p>
+                <h2>{profile.amount} <span>{profile.delta}</span></h2>
+              </div>
+              <div className="period-tabs">
+                <button>1 tahun</button>
+                <button className="active">6 bulan</button>
+                <button>3 bulan</button>
+                <button>1 bulan</button>
+              </div>
+            </div>
+            <FinanceLineChart />
+          </section>
+          <aside className="cards-panel">
+            <div className="finance-section-head compact">
+              <h3>Kartu saya</h3>
+              <button>+ Kartu baru</button>
+            </div>
+            <div className="card-stack">
+              <div className="mini-card one"><span>VISA</span><strong>{formatMoney(6150000)}</strong></div>
+              <div className="mini-card two"><span>MC</span><strong>{formatMoney(3140000)}</strong></div>
+              <div className="main-card">
+                <span>VISA</span>
+                <i />
+                <p>Balance</p>
+                <strong>{profile.cardBalance}</strong>
+                <em>{profile.delta}</em>
+              </div>
+            </div>
+            <div className="card-actions">
+              <button>Ajukan</button>
+              <button className="primary">Transfer</button>
+            </div>
+            <div className="recent-panel">
+              <div className="finance-section-head compact">
+                <h3>Transaksi terbaru</h3>
+                <button>Lihat semua</button>
+              </div>
+              {recentRows.map((row) => {
+                const Icon = row.icon;
+                return (
+                  <div className="recent-row" key={row.name}>
+                    <span><Icon size={20} /></span>
+                    <div>
+                      <strong>{row.name}</strong>
+                      <small>{row.desc}</small>
+                    </div>
+                    <em className={row.tone}>{row.amount}</em>
+                  </div>
+                );
+              })}
+            </div>
+          </aside>
+          <section className="join-card">
+            <h3>Layanan prioritas untuk nasabah aktif</h3>
+            <p>Akses aman, cepat, dan dirancang untuk kebutuhan finansial modern.</p>
+            <div className="avatar-row"><span>AR</span><span>MK</span><span>NV</span><button>+</button></div>
+            <button>Ajukan</button>
+          </section>
+          <section className="investment-card">
+            <div className="finance-section-head compact">
+              <div>
+                <h3>Investasi</h3>
+                <strong>{formatMoney(3200000)} <span>+1,52%</span></strong>
+              </div>
+              <button>Bulanan</button>
+            </div>
+            <FinanceBars />
+          </section>
         </div>
       </section>
     </div>
   );
+}
+
+function BriefcaseIcon({ size = 19 }: { size?: number }) {
+  return <Briefcase size={size} />;
 }
 
 function BalancePage(ctx: AppContext) {
@@ -970,7 +1050,7 @@ function BalancePage(ctx: AppContext) {
         <p className="muted">Saldo tidak diubah langsung oleh frontend. Transfer dan payment membuat request ke backend, backend mencatat debit/kredit ledger, lalu UI mengambil status terbaru.</p>
         <div className="flow-list">
           <span>Frontend form</span>
-          <span>API /api/v1</span>
+          <span>Core banking service</span>
           <span>Ledger MySQL</span>
           <span>Receipt</span>
         </div>
