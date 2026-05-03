@@ -2498,3 +2498,622 @@ main {
     overflow-x: auto;
   }
 }
+
+/* Clean bento banking dashboard */
+.auth-shell.auth-card-only {
+  min-height: 100dvh;
+  padding: clamp(20px, 5vw, 56px);
+  display: grid;
+  grid-template-columns: minmax(320px, 480px);
+  place-content: center;
+  background:
+    linear-gradient(135deg, rgb(239 246 255 / 94%), rgb(255 255 255 / 98) 42%, rgb(255 247 237 / 92)),
+    #f5f8fc;
+}
+
+.auth-card.auth-card-modern {
+  width: 100%;
+  border: 1px solid #dce7f5;
+  border-radius: 24px;
+  padding: clamp(22px, 4vw, 34px);
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 24px 70px rgb(24 55 104 / 14%);
+}
+
+.auth-card-modern .form-panel {
+  gap: 18px;
+}
+
+.auth-card-modern .auth-form h2 {
+  font-size: clamp(2rem, 7vw, 2.75rem);
+  letter-spacing: 0;
+}
+
+.auth-card-modern .role-picker {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.auth-card-modern .role-option {
+  align-items: flex-start;
+  min-height: 76px;
+  border-radius: 16px;
+  padding: 13px;
+}
+
+.auth-card-modern .role-option span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-card-note {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #dce7f5;
+  border-radius: 16px;
+  color: #516179;
+  background: #f8fbff;
+  font-size: 0.86rem;
+}
+
+.auth-card-note span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #0066b3;
+  font-weight: 800;
+}
+
+.auth-card-note strong {
+  color: #172033;
+}
+
+.bento-dashboard {
+  grid-template-columns: 284px minmax(0, 1fr);
+  gap: 20px;
+  color: #edf4ff;
+  background:
+    linear-gradient(135deg, #09111f 0%, #101b2e 48%, #0b0f17 100%);
+}
+
+.finance-sidebar {
+  min-height: calc(100dvh - 40px);
+  padding: 16px;
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  gap: 16px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 24px;
+  background: rgb(12 20 33 / 88%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 8%), 0 24px 70px rgb(0 0 0 / 30%);
+}
+
+.finance-brand-button {
+  min-height: 58px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  color: #ffffff;
+  background: transparent;
+  text-align: left;
+}
+
+.finance-brand-button span:last-child,
+.finance-nav-item span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.finance-brand-button strong,
+.finance-nav-item strong {
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.finance-brand-button small,
+.finance-nav-item small,
+.sidebar-status-card small {
+  color: rgb(237 244 255 / 58%);
+  line-height: 1.25;
+}
+
+.finance-nav {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}
+
+.finance-nav-item,
+.sidebar-logout {
+  min-height: 58px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  color: rgb(237 244 255 / 72%);
+  background: transparent;
+  text-align: left;
+}
+
+.finance-nav-item {
+  padding: 10px 12px;
+}
+
+.finance-nav-item svg,
+.sidebar-logout svg {
+  flex: 0 0 auto;
+}
+
+.finance-nav-item:hover,
+.finance-nav-item.active {
+  color: #ffffff;
+  border-color: rgb(255 255 255 / 10%);
+  background: rgb(255 255 255 / 8%);
+  box-shadow: inset 3px 0 0 #f59e0b;
+}
+
+.finance-nav-item:focus-visible,
+.sidebar-logout:focus-visible,
+.bento-card button:focus-visible,
+.finance-brand-button:focus-visible {
+  outline: 3px solid rgb(251 191 36 / 42%);
+  outline-offset: 3px;
+}
+
+.sidebar-status-card {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgb(245 158 11 / 18%), rgb(255 255 255 / 5%));
+}
+
+.sidebar-status-card span {
+  color: rgb(237 244 255 / 60%);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.sidebar-status-card strong {
+  color: #ffffff;
+}
+
+.sidebar-logout {
+  justify-content: center;
+  padding: 0 14px;
+  color: #fecaca;
+  background: rgb(248 113 113 / 10%);
+}
+
+.bento-dashboard .finance-main {
+  gap: 18px;
+}
+
+.bento-topbar {
+  padding: 0 2px;
+  grid-template-columns: minmax(260px, 1fr) auto auto;
+}
+
+.bento-topbar .finance-search {
+  max-width: 520px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 7%);
+}
+
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-rows: minmax(150px, auto);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.bento-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 22px;
+  background: rgb(255 255 255 / 7%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 7%), 0 20px 54px rgb(0 0 0 / 22%);
+  scroll-margin-top: 20px;
+}
+
+.bento-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.bento-card-head.compact {
+  align-items: center;
+}
+
+.bento-card h2,
+.bento-card h3,
+.bento-card p {
+  margin: 0;
+}
+
+.bento-kicker {
+  color: rgb(237 244 255 / 62%);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.bento-card h2 {
+  margin-top: 8px;
+  color: #ffffff;
+  font-family: "IBM Plex Sans", "Rubik", "Nunito Sans", system-ui, sans-serif;
+  font-size: clamp(2.2rem, 5vw, 4.4rem);
+  line-height: 0.95;
+}
+
+.bento-card h3 {
+  color: #ffffff;
+  font-size: 1.15rem;
+}
+
+.bento-card > p,
+.bento-security p {
+  margin-top: 12px;
+  color: rgb(237 244 255 / 64%);
+  line-height: 1.55;
+}
+
+.positive-chip {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: #7cf4ae;
+  background: rgb(34 197 94 / 12%);
+  font-weight: 900;
+}
+
+.bento-hero {
+  grid-column: span 8;
+  grid-row: span 2;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgb(245 158 11 / 20%), rgb(255 255 255 / 7%) 34%, rgb(15 23 42 / 34));
+}
+
+.bento-account,
+.bento-card-preview {
+  grid-column: span 4;
+}
+
+.bento-metrics,
+.bento-actions,
+.bento-chart,
+.bento-security {
+  grid-column: span 4;
+}
+
+.bento-activity {
+  grid-column: span 8;
+  grid-row: span 2;
+}
+
+.bento-account > strong {
+  display: block;
+  margin-top: 28px;
+  color: #ffffff;
+  font-size: 1.45rem;
+}
+
+.bento-account > span {
+  display: block;
+  margin-top: 6px;
+  color: rgb(237 244 255 / 62%);
+}
+
+.account-state {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bento-card .badge {
+  background: rgb(34 197 94 / 12%);
+  border-color: rgb(34 197 94 / 24%);
+  color: #86efac;
+}
+
+.bento-card button {
+  min-height: 38px;
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 999px;
+  color: #ffffff;
+  background: rgb(255 255 255 / 8%);
+  font-weight: 900;
+}
+
+.bank-card-preview {
+  min-height: 192px;
+  margin-top: 18px;
+  padding: 20px;
+  position: relative;
+  display: grid;
+  align-content: end;
+  gap: 6px;
+  border-radius: 20px;
+  color: #fffaf5;
+  background: linear-gradient(145deg, #2b211c, #51301d 58%, #f59e0b);
+  box-shadow: 0 24px 44px rgb(0 0 0 / 28%);
+}
+
+.bank-card-preview > span {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  font-weight: 900;
+}
+
+.bank-card-preview i {
+  position: absolute;
+  top: 55px;
+  right: 20px;
+  width: 42px;
+  height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #fff4dd, #a99580);
+}
+
+.bank-card-preview p {
+  color: rgb(255 255 255 / 72%);
+}
+
+.bank-card-preview strong {
+  color: #ffffff;
+  font-size: 1.55rem;
+}
+
+.metric-stack,
+.bento-action-list,
+.activity-list,
+.control-flow {
+  display: grid;
+  gap: 10px;
+}
+
+.metric-stack {
+  margin-top: 18px;
+}
+
+.metric-pill {
+  min-height: 58px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 7%);
+}
+
+.metric-pill span {
+  color: rgb(237 244 255 / 62%);
+}
+
+.metric-pill strong {
+  color: #ffffff;
+  text-align: right;
+}
+
+.metric-pill.green strong {
+  color: #86efac;
+}
+
+.metric-pill.amber strong {
+  color: #fbbf24;
+}
+
+.metric-pill.blue strong {
+  color: #93c5fd;
+}
+
+.bento-action-list {
+  margin-top: 18px;
+}
+
+.bento-action-list button {
+  min-height: 52px;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 0 14px;
+  display: flex;
+}
+
+.activity-list {
+  margin-top: 16px;
+}
+
+.activity-row {
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 18px;
+  background: rgb(255 255 255 / 7%);
+}
+
+.activity-row > span {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: #fbbf24;
+  background: rgb(245 158 11 / 12%);
+}
+
+.activity-row strong,
+.activity-row small {
+  display: block;
+}
+
+.activity-row small {
+  color: rgb(237 244 255 / 54%);
+}
+
+.activity-row > div:last-child {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+.bento-chart .finance-bars {
+  height: 150px;
+}
+
+.bento-chart h3 span {
+  color: #86efac;
+  font-size: 0.92rem;
+}
+
+.control-flow {
+  margin-top: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.control-flow span {
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: rgb(237 244 255 / 72%);
+  background: rgb(255 255 255 / 7%);
+  font-weight: 800;
+}
+
+@media (max-width: 1180px) {
+  .bento-dashboard {
+    grid-template-columns: 232px minmax(0, 1fr);
+  }
+
+  .bento-grid {
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+  }
+
+  .bento-hero,
+  .bento-activity {
+    grid-column: span 8;
+  }
+
+  .bento-account,
+  .bento-card-preview,
+  .bento-metrics,
+  .bento-actions,
+  .bento-chart,
+  .bento-security {
+    grid-column: span 4;
+  }
+}
+
+@media (max-width: 860px) {
+  .auth-card-modern .role-picker,
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .bento-dashboard {
+    margin: -18px;
+    padding: 14px;
+    grid-template-columns: 1fr;
+  }
+
+  .finance-sidebar {
+    min-height: auto;
+    grid-template-rows: auto auto auto;
+  }
+
+  .finance-nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sidebar-status-card {
+    display: none;
+  }
+
+  .bento-topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .finance-user {
+    justify-content: flex-start;
+  }
+
+  .bento-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bento-hero,
+  .bento-activity,
+  .bento-account,
+  .bento-card-preview,
+  .bento-metrics,
+  .bento-actions,
+  .bento-chart,
+  .bento-security {
+    grid-column: span 1;
+  }
+
+  .activity-row {
+    grid-template-columns: 44px minmax(0, 1fr);
+  }
+
+  .activity-row > div:last-child {
+    grid-column: 2;
+    justify-items: start;
+  }
+}
+
+@media (max-width: 520px) {
+  .auth-shell.auth-card-only {
+    padding: 14px;
+  }
+
+  .auth-card.auth-card-modern,
+  .bento-card {
+    border-radius: 18px;
+  }
+
+  .auth-card-note,
+  .bento-card-head,
+  .account-state {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .finance-nav {
+    grid-template-columns: 1fr;
+  }
+
+  .period-tabs {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}

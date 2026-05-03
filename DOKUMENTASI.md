@@ -6,7 +6,7 @@ Target backend tetap dikonfigurasi lewat environment, tetapi URL teknis tidak di
 
 ## Arah Visual
 
-Redesign terbaru memakai arah **Dark Premium Banking Dashboard**: aplikasi langsung masuk ke login/register lalu dashboard, tanpa landing page. Dashboard utama mengikuti referensi finance app modern dengan background gelap, rail navigation kompak, panel saldo besar dengan grafik, stacked card, transaksi terbaru, dan aksen oranye-hijau yang terasa premium tetapi tetap profesional.
+Redesign terbaru memakai arah **Clean Bento Banking Dashboard**: aplikasi langsung masuk ke login/register lalu dashboard, tanpa landing page. Dashboard utama memakai background gelap profesional, sidebar berlabel yang dapat membuka section informasi, bento grid 12 kolom, panel saldo besar dengan grafik, kartu aktif, transaksi terbaru, insight role, aksi cepat, investasi, dan kontrol sistem.
 
 Landing page dihapus dari flow utama. Route `/` langsung membuka login/register, lalu pengguna masuk ke dashboard. Role disederhanakan menjadi 4 role bank: Nasabah Individu, Teller Cabang, Operasional Bank, dan Manajer / Approver.
 
@@ -19,7 +19,7 @@ Frontend belum menjadi trusted system. Semua perhitungan final saldo, fee, limit
 ## File Utama
 
 - `src/App.tsx`: routing, state demo, role guard, layout auth, register, dan dashboard role-based.
-- `src/styles.css`: desain visual responsif, auth screen, dashboard finance dark mode, kartu, chart, motion, form, badge status, dan komponen dasar.
+- `src/styles.css`: desain visual responsif, auth card-only, dashboard bento dark mode, sidebar navigasi, kartu, chart, motion, form, badge status, dan komponen dasar.
 - `src/main.tsx`: entry React.
 - `.env.example`: konfigurasi base URL API dan Swagger.
 - `package.json`: script dev/build dan dependency frontend.
@@ -31,6 +31,7 @@ Frontend belum menjadi trusted system. Semua perhitungan final saldo, fee, limit
 - Tidak ada landing page; `/` langsung menampilkan login.
 - Login demo dengan pemilihan role, field email/password, validasi dasar, kredensial demo, dan redirect sesuai role.
 - Register demo untuk empat role bank dengan validasi nama, email, password, persetujuan prinsip backend-trusted, pembuatan account mock, dan auto-login.
+- Tampilan login/register memakai satu card utama yang terpusat, tanpa panel samping, agar flow masuk lebih sederhana.
 - Unauthorized page (`/403`) dan not found (`/404`).
 - Session demo disimpan di `localStorage` sebagai profil role.
 
@@ -40,6 +41,7 @@ Frontend belum menjadi trusted system. Semua perhitungan final saldo, fee, limit
 - Teller Cabang: volume counter, kartu kerja teller, aktivitas masuk, dan status layanan.
 - Operasional Bank: rasio settlement, kartu settlement desk, dan aktivitas operasional.
 - Manajer / Approver: posisi reserve, kartu executive, dan ringkasan transaksi penting.
+- Sidebar dashboard berisi navigasi Overview, Rekening, Transaksi, Kartu, Insight, dan Kontrol. Setiap item mengarah ke bento section terkait.
 
 ## Perubahan Copy dan Informasi Teknis
 

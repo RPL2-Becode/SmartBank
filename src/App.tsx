@@ -530,7 +530,7 @@ const routes: Route[] = [
   { path: '/auth/register', label: 'Register', section: 'Public', icon: Users, public: true, render: (ctx) => <RegisterPage {...ctx} /> },
   { path: '/403', label: 'Unauthorized', section: 'Public', icon: Lock, public: true, detail: true, render: (ctx) => <UnauthorizedPage {...ctx} /> },
   { path: '/404', label: 'Not Found', section: 'Public', icon: AlertTriangle, public: true, detail: true, render: (ctx) => <NotFoundPage {...ctx} /> },
-  { path: '/dashboard', label: 'Dashboard', section: 'Banking', icon: Gauge, roles: ['CUSTOMER', 'TELLER', 'OPERATIONS', 'MANAGER'], render: (ctx) => <BankDashboardPage {...ctx} /> },
+  { path: '/dashboard', label: 'Dashboard', section: 'Banking', icon: Gauge, roles: ['CUSTOMER', 'TELLER', 'OPERATIONS', 'MANAGER'], render: (ctx) => <BentoDashboardPage {...ctx} /> },
 ];
 
 function matchRoute(pathname: string) {
@@ -692,13 +692,13 @@ function LoginPage({ setUser, navigate }: AppContext) {
     navigate(defaultPathForRole(selected.role));
   };
   return (
-    <div className="auth-shell">
-      <section className="auth-card">
+    <div className="auth-shell auth-card-only">
+      <section className="auth-card auth-card-modern">
         <form className="form-panel auth-form" onSubmit={submit}>
           <div>
             <p className="eyebrow">SmartBank Secure Access</p>
-            <h2>Masuk ke Internet Banking</h2>
-            <p className="muted">Pilih salah satu dari empat akses bank untuk melihat rancangan dashboard frontend.</p>
+            <h2>Masuk ke Dashboard</h2>
+            <p className="muted">Pilih role demo, lalu masuk untuk melihat tampilan bank sesuai akses.</p>
           </div>
           <div className="role-picker" aria-label="Pilih role demo">
             {demoUsers.map((demo) => (
@@ -726,10 +726,13 @@ function LoginPage({ setUser, navigate }: AppContext) {
           </label>
           {error && <div className="callout danger"><AlertTriangle size={18} /> {error}</div>}
           <button className="button primary" type="submit"><ShieldCheck size={17} /> Masuk Aman</button>
+          <div className="auth-card-note">
+            <span><Lock size={16} /> Demo frontend</span>
+            <span>Password: <strong>demo-smartbank</strong></span>
+          </div>
           <p className="auth-switch">Belum terdaftar? <button className="link-button" onClick={() => navigate('/auth/register')} type="button">Buat akses baru</button></p>
         </form>
       </section>
-      <AuthSidePanel selected={selected} />
     </div>
   );
 }
@@ -786,13 +789,13 @@ function RegisterPage({ setUser, setState, navigate }: AppContext) {
     navigate(defaultPathForRole(role));
   };
   return (
-    <div className="auth-shell">
-      <section className="auth-card">
+    <div className="auth-shell auth-card-only">
+      <section className="auth-card auth-card-modern register-card">
         <form className="form-panel auth-form" onSubmit={submit}>
           <div>
             <p className="eyebrow">Pembukaan Akses</p>
-            <h2>Registrasi SmartBank</h2>
-            <p className="muted">Buat akses frontend untuk role nasabah atau petugas bank.</p>
+            <h2>Registrasi Akun</h2>
+            <p className="muted">Buat akses demo untuk nasabah, teller, operasional, atau approver.</p>
           </div>
           <label>Nama lengkap<input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} /></label>
           <label>Email<input autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
@@ -817,15 +820,6 @@ function RegisterPage({ setUser, setState, navigate }: AppContext) {
           <button className="button primary" type="submit"><Users size={17} /> Buat Akses</button>
           <p className="auth-switch">Sudah punya akses? <button className="link-button" onClick={() => navigate('/auth/login')} type="button">Login</button></p>
         </form>
-      </section>
-      <section className="auth-info panel">
-        <h3>Setelah register</h3>
-        <div className="detail-list">
-          <span>Account internal <strong>dibuat otomatis</strong></span>
-          <span>Route guard <strong>aktif sesuai role</strong></span>
-          <span>Session demo <strong>tersimpan lokal</strong></span>
-        </div>
-        <div className="callout warning"><Lock size={18} /> Produksi tetap membutuhkan validasi backend, approval role internal, dan refresh token HttpOnly.</div>
       </section>
     </div>
   );
@@ -874,6 +868,295 @@ function currentAccount(ctx: AppContext) {
 
 function userTransactions(ctx: AppContext) {
   return ctx.state.transactions.filter((tx) => tx.from === ctx.user?.accountCode || tx.to === ctx.user?.accountCode);
+}
+
+function BentoDashboardPage(ctx: AppContext) {
+  const account = currentAccount(ctx)!;
+  const transactions = userTransactions(ctx);
+  const pending = transactions.filter((tx) => tx.status === 'PENDING' || tx.status === 'PROCESSING').length;
+  const [activeSection, setActiveSection] = useState('overview');
+  const role = ctx.user!.role;
+  const profile = {
+    CUSTOMER: {
+      headline: 'Total saldo',
+      amount: formatMoney(account.balance),
+      delta: '+ 2,92%',
+      roleNote: 'Personal banking',
+      cardName: 'SmartBank Platinum',
+      cardBalance: formatMoney(12850000),
+      focus: 'Kontrol saldo dan transaksi harian nasabah.',
+      sidebarMetric: formatMoney(account.balance),
+      health: 'Akun aktif',
+      nextReview: 'Limit harian tersisa 82%',
+      metrics: [
+        { label: 'Mutasi bulan ini', value: `${transactions.length}`, tone: 'blue' },
+        { label: 'Transaksi berjalan', value: `${pending}`, tone: 'amber' },
+        { label: 'Limit tersedia', value: formatMoney(3500000), tone: 'green' },
+      ],
+      actions: ['Transfer', 'Bayar tagihan', 'e-Statement'],
+    },
+    TELLER: {
+      headline: 'Volume counter',
+      amount: '32 transaksi',
+      delta: '+ 8,10%',
+      roleNote: 'Branch service',
+      cardName: 'Teller Workbench',
+      cardBalance: formatMoney(18400000),
+      focus: 'Ringkasan layanan cabang dan transaksi loket.',
+      sidebarMetric: '32 tiket',
+      health: 'Counter normal',
+      nextReview: '3 validasi identitas',
+      metrics: [
+        { label: 'Antrian aktif', value: '12', tone: 'blue' },
+        { label: 'Setoran hari ini', value: formatMoney(18400000), tone: 'green' },
+        { label: 'Butuh validasi', value: '3', tone: 'amber' },
+      ],
+      actions: ['Setoran', 'Tarik tunai', 'Verifikasi'],
+    },
+    OPERATIONS: {
+      headline: 'Rasio settlement',
+      amount: '98,7%',
+      delta: '+ 1,52%',
+      roleNote: 'Operations control',
+      cardName: 'Settlement Desk',
+      cardBalance: formatMoney(245000000),
+      focus: 'Kontrol batch, exception, dan settlement bank.',
+      sidebarMetric: '147 batch',
+      health: 'SLA aman',
+      nextReview: '5 exception terbuka',
+      metrics: [
+        { label: 'Batch selesai', value: '147', tone: 'green' },
+        { label: 'Exception', value: '5', tone: 'amber' },
+        { label: 'Rata-rata SLA', value: '14m', tone: 'blue' },
+      ],
+      actions: ['Rekonsiliasi', 'Exception', 'Audit trail'],
+    },
+    MANAGER: {
+      headline: 'Posisi reserve',
+      amount: formatMoney(980000000),
+      delta: '+ 3,52%',
+      roleNote: 'Approval & risk',
+      cardName: 'Executive Card',
+      cardBalance: formatMoney(245000000),
+      focus: 'Ringkasan approval, reserve, dan risiko operasional.',
+      sidebarMetric: formatMoney(980000000),
+      health: 'Risiko rendah',
+      nextReview: '8 approval pending',
+      metrics: [
+        { label: 'Approval', value: '8', tone: 'amber' },
+        { label: 'Risk score', value: 'Low', tone: 'green' },
+        { label: 'Volume harian', value: formatMoney(245000000), tone: 'blue' },
+      ],
+      actions: ['Approve', 'Risk review', 'Laporan'],
+    },
+  }[role];
+  const navItems = [
+    { id: 'overview', label: 'Overview', hint: profile.health, icon: Home },
+    { id: 'accounts', label: 'Rekening', hint: profile.sidebarMetric, icon: WalletCards },
+    { id: 'activity', label: 'Transaksi', hint: `${transactions.length || initialTransactions.length} aktivitas`, icon: ReceiptText },
+    { id: 'cards', label: 'Kartu', hint: profile.cardName, icon: CreditCard },
+    { id: 'insight', label: 'Insight', hint: profile.nextReview, icon: BarChart3 },
+    { id: 'security', label: 'Kontrol', hint: 'Backend trusted', icon: ShieldCheck },
+  ];
+  const transactionRows = (transactions.length ? transactions : initialTransactions).slice(0, 4);
+  const actionIcons = [Send, ReceiptText, BadgeCheck];
+  const jumpTo = (id: string) => {
+    setActiveSection(id);
+    const target = document.getElementById(`finance-${id}`);
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    target?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+  };
+
+  return (
+    <div className="finance-app bento-dashboard">
+      <aside className="finance-sidebar" aria-label="Navigasi dashboard">
+        <button className="finance-brand-button" type="button" onClick={() => jumpTo('overview')}>
+          <span className="rail-logo"><Landmark size={24} /></span>
+          <span>
+            <strong>SmartBank</strong>
+            <small>{roleLabels[role]}</small>
+          </span>
+        </button>
+        <nav className="finance-nav" aria-label="Section dashboard">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <button
+                aria-current={activeSection === item.id ? 'page' : undefined}
+                className={cx('finance-nav-item', activeSection === item.id && 'active')}
+                key={item.id}
+                onClick={() => jumpTo(item.id)}
+                type="button"
+              >
+                <Icon size={19} />
+                <span>
+                  <strong>{item.label}</strong>
+                  <small>{item.hint}</small>
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+        <div className="sidebar-status-card">
+          <span>Status role</span>
+          <strong>{profile.health}</strong>
+          <small>{profile.nextReview}</small>
+        </div>
+        <button className="sidebar-logout" type="button" onClick={() => { ctx.setUser(null); ctx.navigate('/auth/login'); }}>
+          <LogOut size={18} />
+          Keluar
+        </button>
+      </aside>
+
+      <section className="finance-main">
+        <header className="finance-topbar bento-topbar">
+          <label className="finance-search">
+            <Search size={18} />
+            <input placeholder="Cari transaksi, kartu, atau laporan" aria-label="Cari dashboard" />
+          </label>
+          <div className="finance-shortcut">Ctrl K</div>
+          <div className="finance-user">
+            <button className="finance-icon" aria-label="Refresh"><RefreshCw size={18} /></button>
+            <button className="finance-icon" aria-label="Notifikasi"><BellRing size={18} /></button>
+            <div className="finance-avatar">{ctx.user!.name.slice(0, 1)}</div>
+            <div>
+              <strong>{ctx.user!.name}</strong>
+              <span>{profile.roleNote}</span>
+            </div>
+          </div>
+        </header>
+
+        <div className="bento-grid">
+          <section className="bento-card bento-hero" id="finance-overview">
+            <div className="bento-card-head">
+              <div>
+                <p className="bento-kicker">{profile.headline}</p>
+                <h2>{profile.amount}</h2>
+                <span className="positive-chip">{profile.delta} hari ini</span>
+              </div>
+              <div className="period-tabs">
+                <button type="button">1 tahun</button>
+                <button className="active" type="button">6 bulan</button>
+                <button type="button">3 bulan</button>
+                <button type="button">1 bulan</button>
+              </div>
+            </div>
+            <p>{profile.focus}</p>
+            <FinanceLineChart />
+          </section>
+
+          <section className="bento-card bento-account" id="finance-accounts">
+            <div className="bento-card-head compact">
+              <p className="bento-kicker">Rekening utama</p>
+              <WalletCards size={20} />
+            </div>
+            <strong>{account.code}</strong>
+            <span>{account.owner}</span>
+            <div className="account-state">
+              <small>Status</small>
+              <StatusBadge status="SUCCESS" />
+            </div>
+          </section>
+
+          <section className="bento-card bento-card-preview" id="finance-cards">
+            <div className="bento-card-head compact">
+              <p className="bento-kicker">Kartu aktif</p>
+              <button type="button">Kelola</button>
+            </div>
+            <div className="bank-card-preview">
+              <span>VISA</span>
+              <i />
+              <p>{profile.cardName}</p>
+              <strong>{profile.cardBalance}</strong>
+            </div>
+          </section>
+
+          <section className="bento-card bento-metrics" id="finance-insight">
+            <div className="bento-card-head compact">
+              <p className="bento-kicker">Insight role</p>
+              <BarChart3 size={20} />
+            </div>
+            <div className="metric-stack">
+              {profile.metrics.map((metric) => (
+                <div className={cx('metric-pill', metric.tone)} key={metric.label}>
+                  <span>{metric.label}</span>
+                  <strong>{metric.value}</strong>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="bento-card bento-actions">
+            <div className="bento-card-head compact">
+              <p className="bento-kicker">Aksi cepat</p>
+              <SlidersHorizontal size={20} />
+            </div>
+            <div className="bento-action-list">
+              {profile.actions.map((action, index) => {
+                const Icon = actionIcons[index] || FileText;
+                return (
+                  <button key={action} type="button">
+                    <Icon size={18} />
+                    <span>{action}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="bento-card bento-activity" id="finance-activity">
+            <div className="bento-card-head compact">
+              <div>
+                <p className="bento-kicker">Transaksi terbaru</p>
+                <h3>Aktivitas rekening</h3>
+              </div>
+              <button type="button">Lihat semua</button>
+            </div>
+            <div className="activity-list">
+              {transactionRows.map((tx) => (
+                <div className="activity-row" key={tx.code}>
+                  <span><ReceiptText size={18} /></span>
+                  <div>
+                    <strong>{tx.description}</strong>
+                    <small>{tx.channel} - {formatDate(tx.createdAt)}</small>
+                  </div>
+                  <div>
+                    <strong>{formatMoney(tx.amount)}</strong>
+                    <StatusBadge status={tx.status} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="bento-card bento-chart">
+            <div className="bento-card-head compact">
+              <div>
+                <p className="bento-kicker">Investasi</p>
+                <h3>{formatMoney(3200000)} <span>+1,52%</span></h3>
+              </div>
+              <button type="button">Bulanan</button>
+            </div>
+            <FinanceBars />
+          </section>
+
+          <section className="bento-card bento-security" id="finance-security">
+            <div className="bento-card-head compact">
+              <p className="bento-kicker">Kontrol sistem</p>
+              <ShieldCheck size={20} />
+            </div>
+            <div className="control-flow">
+              <span>Frontend UI</span>
+              <span>Core banking</span>
+              <span>Ledger</span>
+              <span>Receipt</span>
+            </div>
+            <p>UI hanya menampilkan pengalaman. Validasi otorisasi, limit, saldo, dan ledger final tetap berada di backend bank.</p>
+          </section>
+        </div>
+      </section>
+    </div>
+  );
 }
 
 function BankDashboardPage(ctx: AppContext) {
