@@ -608,6 +608,202 @@ main {
   font-variant-numeric: tabular-nums;
 }
 
+.ios-dashboard {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  gap: 18px;
+}
+
+.ios-balance-card,
+.ios-metric,
+.ios-strip {
+  border: 1px solid rgb(255 255 255 / 18%);
+  background:
+    linear-gradient(145deg, rgb(255 255 255 / 18%), rgb(255 255 255 / 7%)),
+    rgb(15 23 42 / 34%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 22%),
+    0 24px 70px rgb(0 0 0 / 24%);
+  backdrop-filter: blur(24px) saturate(1.25);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ios-balance-card::before,
+.ios-metric::before,
+.ios-strip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 0%, rgb(255 255 255 / 28%), transparent 28%),
+    linear-gradient(110deg, rgb(255 255 255 / 14%), transparent 42%);
+  opacity: 0.7;
+}
+
+.ios-balance-card {
+  min-height: 230px;
+  padding: clamp(22px, 5vw, 42px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  animation: rise-in 460ms ease-out both;
+}
+
+.ios-balance-card.merchant {
+  background:
+    linear-gradient(145deg, rgb(45 212 191 / 20%), rgb(255 255 255 / 7%)),
+    rgb(15 23 42 / 34%);
+}
+
+.ios-balance-card.admin {
+  background:
+    linear-gradient(145deg, rgb(167 139 250 / 22%), rgb(255 255 255 / 7%)),
+    rgb(15 23 42 / 34%);
+}
+
+.ios-balance-card.developer {
+  background:
+    linear-gradient(145deg, rgb(96 165 250 / 22%), rgb(255 255 255 / 7%)),
+    rgb(15 23 42 / 34%);
+}
+
+.ios-balance-card.analytics {
+  background:
+    linear-gradient(145deg, rgb(245 158 11 / 20%), rgb(255 255 255 / 7%)),
+    rgb(15 23 42 / 34%);
+}
+
+.ios-balance-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ios-balance-card h2 {
+  margin: 0;
+  font-size: clamp(2.4rem, 7vw, 5.8rem);
+  line-height: 0.95;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  text-wrap: balance;
+}
+
+.ios-balance-card span {
+  display: block;
+  margin-top: 10px;
+  color: rgb(226 232 240 / 78%);
+  font-weight: 700;
+}
+
+.ios-balance-card svg {
+  flex: 0 0 auto;
+  color: rgb(255 255 255 / 72%);
+  filter: drop-shadow(0 14px 28px rgb(0 0 0 / 24%));
+}
+
+.ios-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.ios-metric {
+  min-height: 140px;
+  padding: 16px;
+  display: grid;
+  align-content: space-between;
+  animation: rise-in 420ms ease-out both;
+}
+
+.ios-metric:nth-child(2) {
+  animation-delay: 70ms;
+}
+
+.ios-metric:nth-child(3) {
+  animation-delay: 140ms;
+}
+
+.ios-metric > * {
+  position: relative;
+  z-index: 1;
+}
+
+.ios-metric-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: rgb(226 232 240 / 74%);
+  font-weight: 800;
+}
+
+.ios-metric strong {
+  display: block;
+  margin-top: 18px;
+  font-size: clamp(1.45rem, 3vw, 2.2rem);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.ios-metric p {
+  margin: 8px 0 0;
+  color: rgb(203 213 225 / 72%);
+}
+
+.ios-metric.teal svg,
+.ios-metric.teal strong {
+  color: var(--teal-dark);
+}
+
+.ios-metric.blue svg,
+.ios-metric.blue strong {
+  color: var(--blue);
+}
+
+.ios-metric.green svg,
+.ios-metric.green strong {
+  color: var(--green);
+}
+
+.ios-metric.amber svg,
+.ios-metric.amber strong {
+  color: var(--amber);
+}
+
+.ios-strip {
+  min-height: 82px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  animation: rise-in 500ms ease-out both;
+}
+
+.ios-action {
+  position: relative;
+  z-index: 1;
+  min-height: 58px;
+  border: 1px solid rgb(255 255 255 / 14%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 10%);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.ios-action:hover {
+  background: rgb(255 255 255 / 16%);
+  border-color: rgb(255 255 255 / 26%);
+  transform: translateY(-2px);
+}
+
 .muted {
   color: var(--muted);
   text-wrap: pretty;
@@ -1171,6 +1367,10 @@ tr:last-child td {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .ios-metric-grid {
+    grid-template-columns: 1fr;
+  }
+
   .api-chip {
     display: none;
   }
@@ -1228,6 +1428,7 @@ tr:last-child td {
   .two-col,
   .quick-actions,
   .role-picker,
+  .ios-metric-grid,
   .receipt-grid,
   .editable-rules,
   .recon {
@@ -1236,6 +1437,12 @@ tr:last-child td {
 
   .hero-panel {
     padding: 22px;
+  }
+
+  .ios-balance-card {
+    min-height: 210px;
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .bar-list span {

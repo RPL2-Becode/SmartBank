@@ -8,6 +8,8 @@ Target backend: `VITE_API_BASE_URL=http://localhost:3000/api/v1`
 
 Redesign terbaru memakai arah **Enterprise Gateway / SmartBank Command Center**: dark glass interface, aksen teal-amber-violet, panel transparan berlapis, grid background, status pulse, entrance motion, shimmer navigation, scan rail, dan animated meter untuk data finansial. Motion dibatasi pada `transform` dan `opacity`, serta menghormati `prefers-reduced-motion`.
 
+Dashboard role utama kemudian dirapikan ke gaya **iOS Glassmorphism**: satu kartu utama untuk informasi terpenting, tiga metrik prioritas, dan shortcut aksi inti. Tabel transaksi, ledger, webhook, dan detail operasional dipindahkan ke halaman masing-masing agar dashboard tetap bersih.
+
 ## Ringkasan
 
 Implementasi ini merealisasikan MVP frontend berdasarkan `implementation_plan.md` dalam bentuk portal operasional SmartBank Payment Gateway. Fokus utama adalah demo end-to-end untuk role user, merchant, admin, developer, dan analytics viewer dengan route guard, tampilan finansial, fee breakdown, idempotency key, status transaksi, receipt, ledger, webhook, dan rekonsiliasi.

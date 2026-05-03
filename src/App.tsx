@@ -383,6 +383,40 @@ function StatCard({ label, value, tone, icon: Icon }: { label: string; value: st
   );
 }
 
+function DashboardMetric({
+  label,
+  value,
+  hint,
+  tone,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  tone?: string;
+  icon: LucideIcon;
+}) {
+  return (
+    <div className={cx('ios-metric', tone)}>
+      <div className="ios-metric-top">
+        <span>{label}</span>
+        <Icon size={18} />
+      </div>
+      <strong>{value}</strong>
+      <p>{hint}</p>
+    </div>
+  );
+}
+
+function DashboardAction({ icon: Icon, label, onClick }: { icon: LucideIcon; label: string; onClick: () => void }) {
+  return (
+    <button className="ios-action" onClick={onClick}>
+      <Icon size={18} />
+      <span>{label}</span>
+    </button>
+  );
+}
+
 function StatusBadge({ status }: { status: TxStatus | WebhookDelivery['status'] | FeeRule['status'] }) {
   return <span className={cx('badge', `badge-${status.toLowerCase()}`)}>{statusLabel(status)}</span>;
 }
@@ -871,32 +905,27 @@ function UserDashboardPage(ctx: AppContext) {
   const account = currentAccount(ctx)!;
   const transactions = userTransactions(ctx);
   const pending = transactions.filter((tx) => tx.status === 'PENDING' || tx.status === 'PROCESSING').length;
+  const latest = transactions[0];
   return (
-    <div className="page-stack">
-      <section className="stats-grid">
-        <StatCard label="Saldo aktif" value={formatMoney(account.balance)} icon={WalletCards} tone="teal" />
-        <StatCard label="Transaksi bulan ini" value={`${transactions.length} trx`} icon={History} tone="blue" />
-        <StatCard label="Status berjalan" value={`${pending} pending`} icon={Activity} tone="amber" />
-        <StatCard label="Daily limit tersisa" value={formatMoney(350000)} icon={ShieldCheck} tone="green" />
+    <div className="ios-dashboard">
+      <section className="ios-balance-card">
+        <div>
+          <p className="eyebrow">Saldo aktif</p>
+          <h2>{formatMoney(account.balance)}</h2>
+          <span>{account.code}</span>
+        </div>
+        <WalletCards size={44} />
       </section>
-      <section className="split-grid">
-        <div className="panel">
-          <div className="panel-head">
-            <h2>Transaksi terakhir</h2>
-            <button className="button ghost" onClick={() => ctx.navigate('/wallet/transactions')}>Lihat semua</button>
-          </div>
-          <TransactionTable rows={transactions.slice(0, 4)} navigate={ctx.navigate} />
-        </div>
-        <div className="panel">
-          <h2>Aksi cepat</h2>
-          <div className="quick-actions">
-            <button className="quick-action" onClick={() => ctx.navigate('/wallet/transfer')}><Send /> Transfer</button>
-            <button className="quick-action" onClick={() => ctx.navigate('/payments/new')}><CreditCard /> Payment</button>
-            <button className="quick-action" onClick={() => ctx.navigate('/smartqr/pay')}><QrCode /> SmartQR</button>
-            <button className="quick-action" onClick={() => ctx.navigate('/loans/apply')}><Landmark /> Pinjaman</button>
-          </div>
-          <div className="callout warning"><AlertTriangle size={18} /> Balance di UI hanya informasi. Backend tetap menghitung saldo, fee, limit, dan ledger final.</div>
-        </div>
+      <section className="ios-metric-grid">
+        <DashboardMetric label="Pending" value={`${pending}`} hint="transaksi diproses" icon={Activity} tone="amber" />
+        <DashboardMetric label="Limit" value={formatMoney(350000)} hint="tersisa hari ini" icon={ShieldCheck} tone="green" />
+        <DashboardMetric label="Terakhir" value={latest ? formatMoney(latest.amount) : '-'} hint={latest ? statusLabel(latest.status) : 'belum ada transaksi'} icon={History} tone="blue" />
+      </section>
+      <section className="ios-strip">
+        <DashboardAction icon={Send} label="Transfer" onClick={() => ctx.navigate('/wallet/transfer')} />
+        <DashboardAction icon={CreditCard} label="Payment" onClick={() => ctx.navigate('/payments/new')} />
+        <DashboardAction icon={QrCode} label="SmartQR" onClick={() => ctx.navigate('/smartqr/pay')} />
+        <DashboardAction icon={History} label="Riwayat" onClick={() => ctx.navigate('/wallet/transactions')} />
       </section>
     </div>
   );
@@ -1288,15 +1317,27 @@ function SmartQRPayPage(ctx: AppContext) {
 function MerchantDashboardPage(ctx: AppContext) {
   const incoming = ctx.state.transactions.filter((tx) => tx.to === ctx.user?.accountCode);
   const settled = incoming.filter((tx) => tx.status === 'SUCCESS').reduce((sum, tx) => sum + tx.amount, 0);
+  const pending = incoming.filter((tx) => tx.status === 'PENDING' || tx.status === 'PROCESSING').length;
   return (
-    <div className="page-stack">
-      <section className="stats-grid">
-        <StatCard label="Pembayaran masuk" value={formatMoney(settled)} icon={ReceiptText} tone="teal" />
-        <StatCard label="Incoming trx" value={`${incoming.length} trx`} icon={History} tone="blue" />
-        <StatCard label="QR aktif" value="3 QR" icon={QrCode} tone="green" />
-        <StatCard label="Fee bulan ini" value={formatMoney(12875)} icon={SlidersHorizontal} tone="amber" />
+    <div className="ios-dashboard">
+      <section className="ios-balance-card merchant">
+        <div>
+          <p className="eyebrow">Pemasukan merchant</p>
+          <h2>{formatMoney(settled)}</h2>
+          <span>{incoming.length} pembayaran masuk bulan ini</span>
+        </div>
+        <Building2 size={44} />
       </section>
-      <section className="panel"><h2>Incoming payments</h2><TransactionTable rows={incoming} navigate={ctx.navigate} /></section>
+      <section className="ios-metric-grid">
+        <DashboardMetric label="Pending" value={`${pending}`} hint="menunggu settlement" icon={Activity} tone="amber" />
+        <DashboardMetric label="QR aktif" value="3" hint="siap menerima bayar" icon={QrCode} tone="green" />
+        <DashboardMetric label="Fee" value={formatMoney(12875)} hint="potongan bulan ini" icon={SlidersHorizontal} tone="blue" />
+      </section>
+      <section className="ios-strip">
+        <DashboardAction icon={ReceiptText} label="Incoming" onClick={() => ctx.navigate('/merchant/payments')} />
+        <DashboardAction icon={QrCode} label="Buat QR" onClick={() => ctx.navigate('/merchant/smartqr/create')} />
+        <DashboardAction icon={ClipboardCheck} label="Settlement" onClick={() => ctx.navigate('/merchant/settlements')} />
+      </section>
     </div>
   );
 }
@@ -1336,17 +1377,28 @@ function MerchantFeesPage(ctx: AppContext) {
 function AdminDashboardPage(ctx: AppContext) {
   const supply = ctx.state.accounts.reduce((sum, account) => sum + account.balance, 0);
   const successRate = Math.round((ctx.state.transactions.filter((tx) => tx.status === 'SUCCESS').length / ctx.state.transactions.length) * 100);
+  const webhookIssues = ctx.state.webhooks.filter((w) => w.status !== 'DELIVERED').length;
+  const debit = ctx.state.ledger.filter((entry) => entry.direction === 'DEBIT').reduce((sum, entry) => sum + entry.amount, 0);
+  const credit = ctx.state.ledger.filter((entry) => entry.direction === 'CREDIT').reduce((sum, entry) => sum + entry.amount, 0);
   return (
-    <div className="page-stack">
-      <section className="stats-grid">
-        <StatCard label="Money supply" value={formatMoney(supply)} icon={Banknote} tone="teal" />
-        <StatCard label="Bank reserve" value={formatMoney(ctx.state.accounts.find((a) => a.code === 'ACC-RESERVE')!.balance)} icon={Landmark} tone="blue" />
-        <StatCard label="Success rate" value={`${successRate}%`} icon={BadgeCheck} tone="green" />
-        <StatCard label="Webhook retry" value={`${ctx.state.webhooks.filter((w) => w.status !== 'DELIVERED').length} event`} icon={Webhook} tone="amber" />
+    <div className="ios-dashboard">
+      <section className="ios-balance-card admin">
+        <div>
+          <p className="eyebrow">System health</p>
+          <h2>{debit === credit ? 'Balanced' : 'Review'}</h2>
+          <span>Debit {formatMoney(debit)} / Credit {formatMoney(credit)}</span>
+        </div>
+        <ShieldCheck size={44} />
       </section>
-      <section className="split-grid">
-        <div className="panel"><h2>Ledger anomaly</h2><ReconciliationSummary ledger={ctx.state.ledger} /></div>
-        <div className="panel"><h2>Webhook deliveries</h2><WebhookTable rows={ctx.state.webhooks} /></div>
+      <section className="ios-metric-grid">
+        <DashboardMetric label="Supply" value={formatMoney(supply)} hint="total uang tercatat" icon={Banknote} tone="teal" />
+        <DashboardMetric label="Success" value={`${successRate}%`} hint="rasio transaksi sukses" icon={BadgeCheck} tone="green" />
+        <DashboardMetric label="Webhook" value={`${webhookIssues}`} hint="event perlu perhatian" icon={Webhook} tone={webhookIssues ? 'amber' : 'green'} />
+      </section>
+      <section className="ios-strip">
+        <DashboardAction icon={BookOpen} label="Ledger" onClick={() => ctx.navigate('/admin/ledger')} />
+        <DashboardAction icon={Webhook} label="Webhook" onClick={() => ctx.navigate('/admin/webhooks')} />
+        <DashboardAction icon={ClipboardCheck} label="Reconcile" onClick={() => ctx.navigate('/admin/reconciliation')} />
       </section>
     </div>
   );
@@ -1527,14 +1579,25 @@ function ReconciliationSummary({ ledger }: { ledger: LedgerEntry[] }) {
 
 function DeveloperDashboardPage(ctx: AppContext) {
   return (
-    <div className="page-stack">
-      <section className="stats-grid">
-        <StatCard label="API clients" value="5 aktif" icon={KeyRound} tone="teal" />
-        <StatCard label="Webhook endpoints" value="4 callback" icon={Webhook} tone="blue" />
-        <StatCard label="Idempotency records" value={`${ctx.state.payments.length} key`} icon={RefreshCw} tone="green" />
-        <StatCard label="Swagger" value="OpenAPI 3.x" icon={BookOpen} tone="amber" />
+    <div className="ios-dashboard">
+      <section className="ios-balance-card developer">
+        <div>
+          <p className="eyebrow">Developer console</p>
+          <h2>OpenAPI 3.x</h2>
+          <span>{ctx.state.payments.length} idempotency record tersedia</span>
+        </div>
+        <Code2 size={44} />
       </section>
-      <section className="panel"><h2>Recent payment tests</h2><PaymentTable rows={ctx.state.payments} navigate={ctx.navigate} /></section>
+      <section className="ios-metric-grid">
+        <DashboardMetric label="Clients" value="5" hint="aplikasi aktif" icon={KeyRound} tone="teal" />
+        <DashboardMetric label="Webhook" value="4" hint="callback endpoint" icon={Webhook} tone="blue" />
+        <DashboardMetric label="Tests" value={`${ctx.state.payments.length}`} hint="payment request demo" icon={RefreshCw} tone="green" />
+      </section>
+      <section className="ios-strip">
+        <DashboardAction icon={FileCode2} label="Test Pay" onClick={() => ctx.navigate('/developer/test-payment')} />
+        <DashboardAction icon={RefreshCw} label="Idempotency" onClick={() => ctx.navigate('/developer/idempotency')} />
+        <DashboardAction icon={BookOpen} label="Swagger" onClick={() => ctx.navigate('/developer/api-docs')} />
+      </section>
     </div>
   );
 }
@@ -1572,15 +1635,29 @@ function ApiDocsPage() {
 
 function AnalyticsDashboardPage(ctx: AppContext) {
   const success = ctx.state.transactions.filter((tx) => tx.status === 'SUCCESS');
+  const gmv = success.reduce((sum, tx) => sum + tx.amount, 0);
+  const fee = success.reduce((sum, tx) => sum + tx.fee, 0);
+  const tax = success.reduce((sum, tx) => sum + tx.tax, 0);
   return (
-    <div className="page-stack">
-      <section className="stats-grid">
-        <StatCard label="GMV sukses" value={formatMoney(success.reduce((sum, tx) => sum + tx.amount, 0))} icon={BarChart3} tone="teal" />
-        <StatCard label="Fee ekosistem" value={formatMoney(success.reduce((sum, tx) => sum + tx.fee, 0))} icon={SlidersHorizontal} tone="blue" />
-        <StatCard label="Pajak" value={formatMoney(success.reduce((sum, tx) => sum + tx.tax, 0))} icon={Banknote} tone="green" />
-        <StatCard label="Read-only" value="Aktif" icon={Lock} tone="amber" />
+    <div className="ios-dashboard">
+      <section className="ios-balance-card analytics">
+        <div>
+          <p className="eyebrow">UMKM Insight</p>
+          <h2>{formatMoney(gmv)}</h2>
+          <span>GMV transaksi sukses, mode read-only</span>
+        </div>
+        <BarChart3 size={44} />
       </section>
-      <SalesAnalyticsPage {...ctx} />
+      <section className="ios-metric-grid">
+        <DashboardMetric label="Fee" value={formatMoney(fee)} hint="pendapatan ekosistem" icon={SlidersHorizontal} tone="blue" />
+        <DashboardMetric label="Pajak" value={formatMoney(tax)} hint="tax sink tercatat" icon={Banknote} tone="green" />
+        <DashboardMetric label="Akses" value="Read-only" hint="tanpa mutasi saldo" icon={Lock} tone="amber" />
+      </section>
+      <section className="ios-strip">
+        <DashboardAction icon={LineChart} label="Sales" onClick={() => ctx.navigate('/analytics/sales')} />
+        <DashboardAction icon={Activity} label="Cashflow" onClick={() => ctx.navigate('/analytics/cashflow')} />
+        <DashboardAction icon={FileText} label="Reports" onClick={() => ctx.navigate('/analytics/reports')} />
+      </section>
     </div>
   );
 }
