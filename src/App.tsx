@@ -659,54 +659,181 @@ function LandingPage({ navigate }: AppContext) {
 
 function LoginPage({ setUser, navigate }: AppContext) {
   const [role, setRole] = useState<Role>('USER');
+  const [email, setEmail] = useState(demoUsers.find((demo) => demo.role === 'USER')!.email);
+  const [password, setPassword] = useState('demo-smartbank');
+  const [error, setError] = useState('');
   const selected = demoUsers.find((demo) => demo.role === role)!;
+  const chooseRole = (nextRole: Role) => {
+    const nextUser = demoUsers.find((demo) => demo.role === nextRole)!;
+    setRole(nextRole);
+    setEmail(nextUser.email);
+    setPassword('demo-smartbank');
+    setError('');
+  };
   const submit = (event: FormEvent) => {
     event.preventDefault();
+    if (!email.includes('@') || password.length < 8) {
+      setError('Masukkan email valid dan password minimal 8 karakter.');
+      return;
+    }
+    if (email !== selected.email || password !== 'demo-smartbank') {
+      setError('Kredensial demo tidak cocok dengan role yang dipilih.');
+      return;
+    }
     setUser(selected);
     navigate(defaultPathForRole(selected.role));
   };
   return (
-    <div className="auth-grid">
-      <form className="panel form-panel" onSubmit={submit}>
-        <h2>Login Demo</h2>
-        <label>Role
-          <select value={role} onChange={(event) => setRole(event.target.value as Role)}>
-            {demoUsers.map((demo) => <option key={demo.role} value={demo.role}>{roleLabels[demo.role]}</option>)}
-          </select>
-        </label>
-        <label>Email
-          <input value={selected.email} readOnly />
-        </label>
-        <label>Password
-          <input value="demo-smartbank" readOnly type="password" />
-        </label>
-        <button className="button primary" type="submit"><ShieldCheck size={17} /> Masuk sebagai {roleLabels[role]}</button>
-      </form>
-      <div className="panel">
-        <h3>Keamanan session</h3>
-        <p className="muted">Demo menyimpan profil role di localStorage. Pola produksi yang disarankan plan adalah JWT akses di memory dan refresh token melalui HttpOnly Secure Cookie.</p>
-        <div className="callout warning"><Lock size={18} /> Client secret dan HMAC produksi tidak pernah disimpan di browser.</div>
-      </div>
+    <div className="auth-shell">
+      <section className="auth-card">
+        <form className="form-panel auth-form" onSubmit={submit}>
+          <div>
+            <p className="eyebrow">Masuk Portal</p>
+            <h2>Login SmartBank</h2>
+            <p className="muted">Pilih role demo, lalu masuk ke dashboard sesuai permission.</p>
+          </div>
+          <div className="role-picker" aria-label="Pilih role demo">
+            {demoUsers.map((demo) => (
+              <button
+                className={cx('role-option', role === demo.role && 'active')}
+                key={demo.role}
+                onClick={() => chooseRole(demo.role)}
+                type="button"
+              >
+                <strong>{roleLabels[demo.role]}</strong>
+                <span>{demo.email}</span>
+              </button>
+            ))}
+          </div>
+          <label>Role
+            <select value={role} onChange={(event) => chooseRole(event.target.value as Role)}>
+              {demoUsers.map((demo) => <option key={demo.role} value={demo.role}>{roleLabels[demo.role]}</option>)}
+            </select>
+          </label>
+          <label>Email
+            <input autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+          </label>
+          <label>Password
+            <input autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} type="password" />
+          </label>
+          {error && <div className="callout danger"><AlertTriangle size={18} /> {error}</div>}
+          <button className="button primary" type="submit"><ShieldCheck size={17} /> Masuk ke Dashboard</button>
+          <p className="auth-switch">Belum punya akun? <button className="link-button" onClick={() => navigate('/auth/register')} type="button">Daftar sekarang</button></p>
+        </form>
+      </section>
+      <AuthSidePanel selected={selected} />
     </div>
   );
 }
 
-function RegisterPage({ setUser, navigate }: AppContext) {
+function RegisterPage({ setUser, setState, navigate }: AppContext) {
+  const [name, setName] = useState('Mahasiswa Baru');
+  const [email, setEmail] = useState('mahasiswa@smartbank.test');
+  const [password, setPassword] = useState('demo-smartbank');
+  const [confirmPassword, setConfirmPassword] = useState('demo-smartbank');
+  const [role, setRole] = useState<Role>('USER');
+  const [accepted, setAccepted] = useState(true);
+  const [error, setError] = useState('');
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    const nextUser = demoUsers[0];
+    if (name.trim().length < 3) {
+      setError('Nama minimal 3 karakter.');
+      return;
+    }
+    if (!email.includes('@')) {
+      setError('Email belum valid.');
+      return;
+    }
+    if (password.length < 8 || password !== confirmPassword) {
+      setError('Password minimal 8 karakter dan konfirmasi harus sama.');
+      return;
+    }
+    if (!accepted) {
+      setError('Setujui bahwa mutasi saldo final tetap dilakukan backend.');
+      return;
+    }
+    const accountCode = `ACC-${role}-${Date.now().toString().slice(-5)}`;
+    const nextUser: User = {
+      id: `reg-${Date.now()}`,
+      name: name.trim(),
+      email: email.trim(),
+      role,
+      accountCode,
+    };
+    setState((prev) => ({
+      ...prev,
+      accounts: [
+        {
+          code: accountCode,
+          owner: nextUser.name,
+          role,
+          balance: role === 'USER' ? 50000 : 0,
+          token: `tok_${role.toLowerCase()}_${crypto.randomUUID().slice(0, 4)}****`,
+          status: 'ACTIVE',
+        },
+        ...prev.accounts,
+      ],
+    }));
     setUser(nextUser);
-    navigate('/dashboard');
+    navigate(defaultPathForRole(role));
   };
   return (
-    <form className="panel form-panel narrow" onSubmit={submit}>
-      <h2>Register User</h2>
-      <label>Nama lengkap<input defaultValue="Mahasiswa Baru" /></label>
-      <label>Email<input defaultValue="mahasiswa@smartbank.test" /></label>
-      <label>Password<input type="password" defaultValue="demo-smartbank" /></label>
-      <div className="callout"><WalletCards size={18} /> Akun demo menerima saldo awal SC50.000 dari backend seed.</div>
-      <button className="button primary" type="submit"><Users size={17} /> Buat Akun Demo</button>
-    </form>
+    <div className="auth-shell">
+      <section className="auth-card">
+        <form className="form-panel auth-form" onSubmit={submit}>
+          <div>
+            <p className="eyebrow">Registrasi</p>
+            <h2>Buat Akun SmartBank</h2>
+            <p className="muted">Akun demo langsung mendapat account internal untuk menjalankan flow presentasi.</p>
+          </div>
+          <label>Nama lengkap<input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} /></label>
+          <label>Email<input autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+          <label>Role akun
+            <select value={role} onChange={(event) => setRole(event.target.value as Role)}>
+              <option value="USER">User / Mahasiswa</option>
+              <option value="MERCHANT">Merchant / UMKM</option>
+              <option value="SUPPLIER">Supplier</option>
+            </select>
+          </label>
+          <div className="two-col">
+            <label>Password<input autoComplete="new-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
+            <label>Konfirmasi<input autoComplete="new-password" type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} /></label>
+          </div>
+          <label className="check-row">
+            <input checked={accepted} onChange={(event) => setAccepted(event.target.checked)} type="checkbox" />
+            <span>Saya paham frontend hanya membuat request; backend tetap menghitung saldo, fee, dan ledger final.</span>
+          </label>
+          <div className="callout"><WalletCards size={18} /> User demo menerima saldo awal SC50.000. Merchant dan Supplier dibuat dengan saldo awal SC0.</div>
+          {error && <div className="callout danger"><AlertTriangle size={18} /> {error}</div>}
+          <button className="button primary" type="submit"><Users size={17} /> Buat Akun dan Masuk</button>
+          <p className="auth-switch">Sudah punya akun? <button className="link-button" onClick={() => navigate('/auth/login')} type="button">Login</button></p>
+        </form>
+      </section>
+      <section className="auth-info panel">
+        <h3>Setelah register</h3>
+        <div className="detail-list">
+          <span>Account internal <strong>dibuat otomatis</strong></span>
+          <span>Route guard <strong>aktif sesuai role</strong></span>
+          <span>Session demo <strong>tersimpan lokal</strong></span>
+        </div>
+        <div className="callout warning"><Lock size={18} /> Produksi tetap membutuhkan endpoint `POST /auth/register`, validasi backend, dan refresh token HttpOnly.</div>
+      </section>
+    </div>
+  );
+}
+
+function AuthSidePanel({ selected }: { selected: User }) {
+  return (
+    <section className="auth-info panel">
+      <h3>Kredensial demo</h3>
+      <div className="detail-list">
+        <span>Email <strong>{selected.email}</strong></span>
+        <span>Password <strong>demo-smartbank</strong></span>
+        <span>Redirect <strong>{defaultPathForRole(selected.role)}</strong></span>
+      </div>
+      <div className="callout warning"><Lock size={18} /> Client secret dan HMAC produksi tidak pernah disimpan di browser.</div>
+      <p className="muted">Untuk produksi, form ini tinggal diarahkan ke `POST /auth/login`, lalu profil user diambil dari `GET /auth/me`.</p>
+    </section>
   );
 }
 

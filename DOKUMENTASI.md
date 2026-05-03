@@ -23,8 +23,8 @@ Frontend belum menjadi trusted system. Semua perhitungan final saldo, fee, limit
 ### Public dan Auth
 
 - Landing page SmartBank.
-- Login demo dengan pemilihan role.
-- Register demo user.
+- Login demo dengan pemilihan role, field email/password, validasi dasar, kredensial demo, dan redirect sesuai role.
+- Register demo user/merchant/supplier dengan validasi nama, email, password, persetujuan prinsip backend-trusted, pembuatan account mock, dan auto-login.
 - Unauthorized page (`/403`) dan not found (`/404`).
 - Session demo disimpan di `localStorage` sebagai profil role.
 

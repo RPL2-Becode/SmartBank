@@ -263,6 +263,91 @@ main {
   align-items: start;
 }
 
+.auth-shell {
+  min-height: calc(100dvh - 136px);
+  display: grid;
+  grid-template-columns: minmax(320px, 620px) minmax(300px, 0.85fr);
+  gap: 18px;
+  align-items: center;
+}
+
+.auth-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: clamp(18px, 4vw, 34px);
+}
+
+.auth-form {
+  gap: 14px;
+}
+
+.auth-form h2 {
+  margin: 0 0 4px;
+  font-size: clamp(1.55rem, 3vw, 2.2rem);
+  text-wrap: balance;
+}
+
+.role-picker {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.role-option {
+  min-height: 72px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-muted);
+  color: var(--text);
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+  text-align: left;
+  padding: 10px;
+}
+
+.role-option.active {
+  border-color: #5eead4;
+  background: #ecfdf5;
+  color: var(--teal-dark);
+}
+
+.role-option span {
+  max-width: 100%;
+  color: var(--muted);
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-info {
+  display: grid;
+  gap: 14px;
+}
+
+.auth-switch {
+  margin: 0;
+  color: var(--muted);
+}
+
+.check-row {
+  display: flex;
+  grid-template-columns: none;
+  align-items: flex-start;
+  gap: 10px;
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.check-row input {
+  inline-size: 18px;
+  min-height: 18px;
+  margin-top: 3px;
+  flex: 0 0 18px;
+}
+
 .panel,
 .receipt {
   padding: 18px;
@@ -746,6 +831,7 @@ tr:last-child td {
 
   .split-grid,
   .auth-grid,
+  .auth-shell,
   .hero-panel {
     grid-template-columns: 1fr;
   }
@@ -806,6 +892,7 @@ tr:last-child td {
   .stats-grid,
   .two-col,
   .quick-actions,
+  .role-picker,
   .receipt-grid,
   .editable-rules,
   .recon {
