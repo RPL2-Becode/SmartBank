@@ -37,6 +37,8 @@ import {
   Shield,
   ShieldCheck,
   Sparkles,
+  Moon,
+  Sun,
   TerminalSquare,
   UserPlus,
   Users,
@@ -49,11 +51,11 @@ import {
   useEffect,
   useContext,
   useMemo,
-  useRef,
   useState,
   type ButtonHTMLAttributes,
   type ReactNode,
 } from "react";
+import { animate, createTimeline, stagger } from "animejs";
 import {
   Link,
   Navigate,
@@ -63,26 +65,6 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import {
-  AmbientLight,
-  BoxGeometry,
-  BufferGeometry,
-  DirectionalLight,
-  Group,
-  IcosahedronGeometry,
-  Line as ThreeLine,
-  LineBasicMaterial,
-  Mesh,
-  MeshStandardMaterial,
-  PerspectiveCamera,
-  PointLight,
-  Scene,
-  TorusGeometry,
-  Vector3,
-  WebGLRenderer,
-} from "three";
-import smartBankWordmark from "../1.png";
-import smartBankMark from "../2.png";
 import {
   apiLogs,
   apiReference,
@@ -107,6 +89,8 @@ import {
   formatRupiah,
 } from "./utils";
 
+const brandName = "SmartBank";
+
 type Session = {
   token: string;
   user: User;
@@ -119,7 +103,16 @@ type AuthContextValue = {
   switchRole: (role: UserRole) => void;
 };
 
+type ThemeMode = "dark" | "light";
+
+type ThemeContextValue = {
+  theme: ThemeMode;
+  setTheme: (theme: ThemeMode) => void;
+  toggleTheme: () => void;
+};
+
 const AuthContext = createContext<AuthContextValue | null>(null);
+const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 const roleOptions: Array<{ label: string; value: UserRole }> = [
   { label: "User", value: "user" },
@@ -178,11 +171,223 @@ function useAuth() {
   return value;
 }
 
+function useTheme() {
+  const value = useContext(ThemeContext);
+  if (!value) {
+    throw new Error("useTheme must be used inside ThemeContext");
+  }
+  return value;
+}
+
 function getUserByRole(role: UserRole) {
   return users.find((user) => user.role === role) ?? users[0];
 }
 
+type MotionControl = {
+  revert: () => unknown;
+};
+
+type LoopingMotionControl = MotionControl & {
+  pause: () => unknown;
+  play: () => unknown;
+};
+
+function shouldReduceMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function useLandingAnimations() {
+  useEffect(() => {
+    const root = document.querySelector<HTMLElement>(".landing-page");
+    if (!root || shouldReduceMotion()) return;
+
+    root.classList.add("motion-ready");
+
+    const activeMotions: MotionControl[] = [];
+    const loopingMotions: LoopingMotionControl[] = [];
+    const intro = createTimeline({
+      defaults: {
+        duration: 760,
+        ease: "out(3)",
+      },
+    });
+
+    intro
+      .add(root.querySelectorAll(".public-header, .hero-eyebrow"), {
+        opacity: [0, 1],
+        translateY: [-16, 0],
+        delay: stagger(90),
+      })
+      .add(
+        root.querySelectorAll(".hero-copy h1, .hero-copy p, .hero-actions"),
+        {
+          opacity: [0, 1],
+          translateY: [28, 0],
+          delay: stagger(120),
+        },
+        "-=430",
+      )
+      .add(
+        root.querySelectorAll(".hero-panel, .hero-side-panel, .hero-proof .mini-metric"),
+        {
+          opacity: [0, 1],
+          translateY: [34, 0],
+          scale: [0.96, 1],
+          delay: stagger(75),
+        },
+        "-=520",
+      )
+      .add(
+        root.querySelectorAll(".hero-chart span"),
+        {
+          opacity: [0.2, 1],
+          scaleY: [0.35, 1],
+          transformOrigin: "50% 100%",
+          delay: stagger(55),
+          duration: 620,
+        },
+        "-=500",
+      );
+
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+
+          const target = entry.target as HTMLElement;
+          target.classList.add("is-visible");
+          activeMotions.push(
+            animate(target, {
+              opacity: [0, 1],
+              translateY: [26, 0],
+              duration: 680,
+              ease: "out(3)",
+            }),
+          );
+
+          const children = target.querySelectorAll(".stagger-item");
+          if (children.length) {
+            activeMotions.push(
+              animate(children, {
+                opacity: [0, 1],
+                translateY: [20, 0],
+                scale: [0.97, 1],
+                delay: stagger(70),
+                duration: 620,
+                ease: "out(3)",
+              }),
+            );
+          }
+
+          revealObserver.unobserve(target);
+        });
+      },
+      { rootMargin: "0px 0px -12% 0px", threshold: 0.18 },
+    );
+
+    root
+      .querySelectorAll<HTMLElement>(".motion-reveal")
+      .forEach((element) => revealObserver.observe(element));
+
+    const floatingCards = root.querySelectorAll(".hero-side-panel, .hero-balance-card");
+    if (floatingCards.length) {
+      loopingMotions.push(
+        animate(floatingCards, {
+          translateY: [0, -10],
+          duration: 2600,
+          delay: stagger(180),
+          ease: "inOutSine",
+          alternate: true,
+          loop: true,
+          autoplay: false,
+        }) as LoopingMotionControl,
+      );
+    }
+
+    const activeLines = root.querySelectorAll(".hero-ledger-row.is-active");
+    if (activeLines.length) {
+      loopingMotions.push(
+        animate(activeLines, {
+          translateX: [0, 8],
+          duration: 1400,
+          ease: "inOutSine",
+          alternate: true,
+          loop: true,
+          autoplay: false,
+        }) as LoopingMotionControl,
+      );
+    }
+
+    loopingMotions.forEach((motion) => motion.pause());
+
+    const hero = root.querySelector(".landing-hero");
+    const loopObserver = hero
+      ? new IntersectionObserver(
+          ([entry]) => {
+            loopingMotions.forEach((motion) => {
+              if (entry?.isIntersecting) motion.play();
+              else motion.pause();
+            });
+          },
+          { threshold: 0.2 },
+        )
+      : null;
+
+    if (hero && loopObserver) loopObserver.observe(hero);
+
+    return () => {
+      root.classList.remove("motion-ready");
+      intro.revert();
+      activeMotions.forEach((motion) => motion.revert());
+      loopingMotions.forEach((motion) => motion.revert());
+      revealObserver.disconnect();
+      loopObserver?.disconnect();
+    };
+  }, []);
+}
+
+function useAuthAnimations() {
+  useEffect(() => {
+    const root = document.querySelector<HTMLElement>(".auth-page");
+    if (!root || shouldReduceMotion()) return;
+
+    const intro = createTimeline({
+      defaults: {
+        duration: 680,
+        ease: "out(3)",
+      },
+    });
+
+    intro
+      .add(root.querySelectorAll(".public-header, .auth-card"), {
+        opacity: [0, 1],
+        translateY: [-14, 0],
+        delay: stagger(95),
+      })
+      .add(
+        root.querySelectorAll(
+          ".auth-kicker, .auth-card h1, .auth-card > p, .auth-proof-item, .stack-form label, .auth-form-row, .stack-form .btn, .auth-switch",
+        ),
+        {
+          opacity: [0, 1],
+          translateY: [18, 0],
+          delay: stagger(58),
+        },
+        "-=360",
+      );
+
+    return () => {
+      intro.revert();
+    };
+  }, []);
+}
+
 function App() {
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    const saved = localStorage.getItem("smartbank-theme");
+    if (saved === "light" || saved === "dark") return saved;
+    return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  });
   const [session, setSession] = useState<Session | null>(() => {
     const raw = localStorage.getItem("smartbank-session");
     if (!raw) return null;
@@ -223,59 +428,76 @@ function App() {
     [session],
   );
 
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+    localStorage.setItem("smartbank-theme", theme);
+  }, [theme]);
+
+  const themeValue = useMemo(
+    () => ({
+      theme,
+      setTheme,
+      toggleTheme: () => setTheme((current) => (current === "dark" ? "light" : "dark")),
+    }),
+    [theme],
+  );
+
   return (
-    <AuthContext.Provider value={value}>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/auth/login" element={<Navigate to="/login" replace />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/auth/register" element={<Navigate to="/register" replace />} />
-        <Route path="/docs" element={<DocsPage variant="home" />} />
-        <Route path="/docs/api" element={<DocsPage variant="api" />} />
-        <Route path="/docs/payment-flow" element={<DocsPage variant="payment-flow" />} />
-        <Route path="/docs/database" element={<DocsPage variant="database" />} />
-        <Route path="/docs/testing" element={<DocsPage variant="testing" />} />
-        <Route path="/dashboard" element={<PrivatePage page={<DashboardPage />} />} />
-        <Route
-          path="/balance"
-          element={<PrivatePage capability="balance" page={<BalancePage />} />}
-        />
-        <Route
-          path="/transfers"
-          element={<PrivatePage capability="transfer" page={<TransferPage />} />}
-        />
-        <Route
-          path="/payment-requests"
-          element={
-            <PrivatePage capability="paymentRequests" page={<PaymentRequestsPage />} />
-          }
-        />
-        <Route
-          path="/ledger"
-          element={<PrivatePage capability="ledger" page={<LedgerPage />} />}
-        />
-        <Route path="/loans" element={<PrivatePage page={<LoansPage />} />} />
-        <Route
-          path="/fees"
-          element={<PrivatePage capability="fees" page={<FeesPage />} />}
-        />
-        <Route
-          path="/bank-fees"
-          element={<PrivatePage capability="fees" page={<BankFeesPage />} />}
-        />
-        <Route
-          path="/integrations"
-          element={<PrivatePage capability="integrations" page={<IntegrationsPage />} />}
-        />
-        <Route
-          path="/api-logs"
-          element={<PrivatePage capability="integrations" page={<ApiLogsPage />} />}
-        />
-        <Route path="/settings" element={<PrivatePage page={<SettingsPage />} />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </AuthContext.Provider>
+    <ThemeContext.Provider value={themeValue}>
+      <AuthContext.Provider value={value}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/auth/login" element={<Navigate to="/login" replace />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/auth/register" element={<Navigate to="/register" replace />} />
+          <Route path="/docs" element={<DocsPage variant="home" />} />
+          <Route path="/docs/api" element={<DocsPage variant="api" />} />
+          <Route path="/docs/payment-flow" element={<DocsPage variant="payment-flow" />} />
+          <Route path="/docs/database" element={<DocsPage variant="database" />} />
+          <Route path="/docs/testing" element={<DocsPage variant="testing" />} />
+          <Route path="/dashboard" element={<PrivatePage page={<DashboardPage />} />} />
+          <Route
+            path="/balance"
+            element={<PrivatePage capability="balance" page={<BalancePage />} />}
+          />
+          <Route
+            path="/transfers"
+            element={<PrivatePage capability="transfer" page={<TransferPage />} />}
+          />
+          <Route
+            path="/payment-requests"
+            element={
+              <PrivatePage capability="paymentRequests" page={<PaymentRequestsPage />} />
+            }
+          />
+          <Route
+            path="/ledger"
+            element={<PrivatePage capability="ledger" page={<LedgerPage />} />}
+          />
+          <Route path="/loans" element={<PrivatePage page={<LoansPage />} />} />
+          <Route
+            path="/fees"
+            element={<PrivatePage capability="fees" page={<FeesPage />} />}
+          />
+          <Route
+            path="/bank-fees"
+            element={<PrivatePage capability="fees" page={<BankFeesPage />} />}
+          />
+          <Route
+            path="/integrations"
+            element={<PrivatePage capability="integrations" page={<IntegrationsPage />} />}
+          />
+          <Route
+            path="/api-logs"
+            element={<PrivatePage capability="integrations" page={<ApiLogsPage />} />}
+          />
+          <Route path="/settings" element={<PrivatePage page={<SettingsPage />} />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AuthContext.Provider>
+    </ThemeContext.Provider>
   );
 }
 
@@ -314,9 +536,33 @@ function StatusBadge({ status }: { status: string }) {
 
 function BrandLogo({ compact = false }: { compact?: boolean }) {
   return (
-    <Link className="brand-logo" to="/" aria-label="SmartBank home">
-      <img src={compact ? smartBankMark : smartBankWordmark} alt="Logo SmartBank" />
+    <Link
+      className={compact ? "brand-logo brand-logo-compact" : "brand-logo"}
+      to="/"
+      aria-label="SmartBank home"
+    >
+      <span>Smart</span>
+      <strong>Bank</strong>
     </Link>
+  );
+}
+
+function ThemeToggle({ compact = false }: { compact?: boolean }) {
+  const { theme, toggleTheme } = useTheme();
+  const Icon = theme === "dark" ? Sun : Moon;
+  const label = theme === "dark" ? "Aktifkan light theme" : "Aktifkan dark theme";
+
+  return (
+    <button
+      className={compact ? "theme-toggle theme-toggle-compact" : "theme-toggle"}
+      type="button"
+      onClick={toggleTheme}
+      aria-label={label}
+      title={label}
+    >
+      <Icon size={17} aria-hidden="true" />
+      <span>{theme === "dark" ? "Light" : "Dark"}</span>
+    </button>
   );
 }
 
@@ -361,6 +607,7 @@ function ProtectedRoute({
 
 function AppShell({ children }: { children: ReactNode }) {
   const { session, logout, switchRole } = useAuth();
+  const [showMobileMore, setShowMobileMore] = useState(false);
   const visibleNav = navItems.filter((item) =>
     session ? canAccess(session.user.role, item.capability) : false,
   );
@@ -386,7 +633,7 @@ function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="sidebar-foot">
-          <img src={smartBankMark} alt="SmartBank shield mark" />
+          <div className="sidebar-foot-brand">SmartBank</div>
           <p>Ledger immutable, reserve guarded, gateway logged.</p>
         </div>
       </aside>
@@ -394,7 +641,7 @@ function AppShell({ children }: { children: ReactNode }) {
       <div className="app-main">
         <header className="topbar">
           <div>
-            <button className="icon-button mobile-only" aria-label="Buka menu">
+            <button className="icon-button mobile-only" aria-label="Buka menu" onClick={() => setShowMobileMore(!showMobileMore)}>
               <Menu size={20} />
             </button>
             <p>{session?.user.name}</p>
@@ -420,6 +667,7 @@ function AppShell({ children }: { children: ReactNode }) {
             <button className="icon-button" aria-label="Notifikasi">
               <Bell size={18} />
             </button>
+            <ThemeToggle compact />
             <Button variant="ghost" onClick={logout}>
               <LogOut size={17} />
               Keluar
@@ -431,16 +679,35 @@ function AppShell({ children }: { children: ReactNode }) {
       </div>
 
       <nav className="bottom-nav" aria-label="Navigasi mobile">
-        {visibleNav.slice(0, 5).map((item) => {
+        {visibleNav.slice(0, 3).map((item) => {
           const Icon = item.icon;
           return (
-            <NavLink key={item.path} to={item.path} aria-label={item.label}>
+            <NavLink key={item.path} to={item.path} aria-label={item.label} onClick={() => setShowMobileMore(false)}>
               <Icon size={20} />
               <span>{item.label}</span>
             </NavLink>
           );
         })}
+        {visibleNav.length > 3 && (
+          <button type="button" aria-label="Lainnya" onClick={() => setShowMobileMore(!showMobileMore)} className={showMobileMore ? "active" : ""}>
+            <Menu size={20} />
+            <span>Lainnya</span>
+          </button>
+        )}
       </nav>
+      {showMobileMore && (
+        <div className="mobile-more-menu">
+          {visibleNav.slice(3).map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink key={item.path} to={item.path} aria-label={item.label} onClick={() => setShowMobileMore(false)}>
+                <Icon size={18} />
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -454,18 +721,19 @@ function PublicHeader() {
     <header className="public-header">
       <BrandLogo />
       <nav aria-label="Navigasi publik">
-        <a href="#capabilities">Capabilities</a>
-        <a href="#flow">Payment Flow</a>
-        <a href="#rules">Rules</a>
-        <Link to="/docs">Docs</Link>
+        <a href="#overview">Ikhtisar</a>
+        <a href="#features">Fitur</a>
+        <a href="#flow">Alur</a>
+        <a href="#security">Keamanan</a>
+        <Link to="/docs">Bantuan</Link>
       </nav>
       <div className="public-actions">
+        <ThemeToggle />
         <Link className="btn btn-ghost" to="/login">
           Masuk
         </Link>
         <Link className="btn btn-primary" to="/register">
           Daftar
-          <ArrowRight size={17} />
         </Link>
       </div>
     </header>
@@ -473,61 +741,355 @@ function PublicHeader() {
 }
 
 function LandingPage() {
+  useLandingAnimations();
+
+  const maxVolume = Math.max(...moneySupplyTrend.map((item) => item.volume));
+  const successCount = paymentRequests.filter((request) => request.status === "success").length;
+
+  return (
+    <div className="landing-page">
+      <PublicHeader />
+
+      <section id="overview" className="landing-hero">
+        <div className="hero-shell">
+          <div className="hero-copy">
+            <span className="hero-eyebrow">
+              <Sparkles size={18} aria-hidden="true" />
+              Smart finance OS untuk transaksi UMKM
+            </span>
+            <h1>Banking dashboard yang cepat, jelas, dan siap diaudit.</h1>
+            <p>
+              SmartBank menggabungkan saldo, payment request, fee engine, role guard,
+              dan ledger immutable dalam satu pengalaman yang ringan untuk user,
+              admin, developer, dan insight team.
+            </p>
+            <div className="hero-actions">
+              <Link className="btn btn-primary btn-lg" to="/login">
+                Buka Demo
+                <ArrowRight size={20} />
+              </Link>
+              <Link className="btn btn-secondary btn-lg" to="/docs/api">
+                Lihat API
+                <ChevronRight size={20} />
+              </Link>
+            </div>
+            <div className="hero-assurance" aria-label="SmartBank assurance">
+              <span>
+                <ShieldCheck size={16} aria-hidden="true" />
+                Reserve 98%
+              </span>
+              <span>
+                <Activity size={16} aria-hidden="true" />
+                Gateway 84 ms
+              </span>
+              <span>
+                <Database size={16} aria-hidden="true" />
+                Ledger read-only
+              </span>
+            </div>
+          </div>
+
+          <div className="hero-product" aria-label="Preview produk SmartBank">
+            <div className="hero-panel hero-balance-card">
+              <div className="hero-panel-top">
+                <span>{brandName} Balance</span>
+                <StatusBadge status="online" />
+              </div>
+              <div className="hero-balance-value">
+                <span>Available balance</span>
+                <strong>{formatRupiah(balance.availableBalance)}</strong>
+              </div>
+              <div className="hero-action-grid">
+                <span>
+                  <Send size={18} aria-hidden="true" />
+                  Kirim
+                </span>
+                <span>
+                  <Download size={18} aria-hidden="true" />
+                  Terima
+                </span>
+                <span>
+                  <CreditCard size={18} aria-hidden="true" />
+                  Kartu
+                </span>
+              </div>
+              <div className="hero-chart" aria-label="Weekly transaction volume">
+                {moneySupplyTrend.map((item) => (
+                  <span key={item.day} style={{ height: `${(item.volume / maxVolume) * 100}%` }}>
+                    <b>{item.day}</b>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="hero-side-panel hero-ledger-panel">
+              <div className="hero-panel-top">
+                <span>Ledger stream</span>
+                <ScrollText size={18} aria-hidden="true" />
+              </div>
+              {ledgerEntries.slice(0, 3).map((entry, index) => (
+                <div
+                  className={index === 0 ? "hero-ledger-row is-active" : "hero-ledger-row"}
+                  key={entry.id}
+                >
+                  <span>{entry.id}</span>
+                  <strong>{formatRupiah(entry.amount)}</strong>
+                </div>
+              ))}
+            </div>
+
+            <div className="hero-side-panel hero-fee-panel">
+              <div className="hero-panel-top">
+                <span>Fee preview</span>
+                <BadgeCheck size={18} aria-hidden="true" />
+              </div>
+              <dl>
+                <div>
+                  <dt>App fee</dt>
+                  <dd>2%</dd>
+                </div>
+                <div>
+                  <dt>Gateway</dt>
+                  <dd>0.5%</dd>
+                </div>
+                <div>
+                  <dt>Tax</dt>
+                  <dd>2%</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </div>
+
+        <div className="hero-proof">
+          <MiniMetric label="Cadangan Bank" value="98.0%" />
+          <MiniMetric label="Payment sukses" value={`${successCount} request`} />
+          <MiniMetric label="Limit harian" value="10 trx" />
+          <MiniMetric label="Gateway" value="84 ms" />
+        </div>
+      </section>
+
+      <section id="features" className="landing-section motion-reveal">
+        <SectionHeading
+          title="Semua operasi penting terlihat sejak awal."
+          description="Landing page dibuat seperti preview produk sungguhan: status, kontrol, dan aturan finansial tampil jelas tanpa membuat layar terasa padat."
+        />
+        <div className="feature-grid">
+          {[
+            {
+              icon: Shield,
+              title: "Balance guard",
+              text: "Marketplace, POS, SupplierHub, dan LogistiKita hanya mengirim payment request melalui Gateway.",
+            },
+            {
+              icon: ReceiptText,
+              title: "Fee breakdown",
+              text: "App fee, gateway fee, bank fee, pajak, dan total debit selalu terlihat sebelum transaksi dikonfirmasi.",
+            },
+            {
+              icon: ScrollText,
+              title: "Ledger immutable",
+              text: "Setiap debit, kredit, fee, pajak, loan, repayment, dan stimulus menjadi entry audit read-only.",
+            },
+            {
+              icon: Network,
+              title: "Integration health",
+              text: "Status Gateway dan aplikasi ekosistem dipantau dengan latency, error rate, dan API logs.",
+            },
+            {
+              icon: Users,
+              title: "Role-aware routes",
+              text: "User, admin, developer, dan insight read-only mendapat akses sesuai permission matrix demo.",
+            },
+            {
+              icon: Banknote,
+              title: "Loan preview",
+              text: "Limit pinjaman, bunga, repayment, dan status aktif dibuat mudah dipindai sebelum masuk dashboard.",
+            },
+          ].map((item, index) => {
+            const Icon = item.icon;
+            return (
+              <article
+                className={
+                  index === 0
+                    ? "feature-card feature-card-wide stagger-item"
+                    : "feature-card stagger-item"
+                }
+                key={item.title}
+              >
+                <Icon size={24} aria-hidden="true" />
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+
+      <section id="flow" className="landing-section flow-band motion-reveal">
+        <SectionHeading
+          title="Spend, send, settle, audit."
+          description="Alur dibuat linear dan mudah dipahami di desktop maupun mobile, dengan SmartBank sebagai pusat validasi sebelum saldo bergerak."
+        />
+        <div className="flow-layout">
+          <EcosystemFlow />
+          <div className="flow-control-panel">
+            <div>
+              <Sparkles size={18} aria-hidden="true" />
+              <span>Operational posture</span>
+            </div>
+            <strong>Every request is validated before balance movement.</strong>
+            <p>
+              UI mengutamakan status, limit, dan audit trail supaya alur demo
+              tetap jelas untuk user, admin, developer, dan insight read-only.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="security" className="landing-section motion-reveal">
+        <SectionHeading
+          title="Security dan rule engine bukan catatan kecil."
+          description="Bagian ini memadatkan kontrol finansial menjadi kartu informasi yang rapi, sehingga pengguna paham apa yang dijaga SmartBank."
+        />
+        <div className="security-grid">
+          <article className="security-panel security-panel-large stagger-item">
+            <ShieldCheck size={28} aria-hidden="true" />
+            <h3>Every request is checked before money moves.</h3>
+            <p>
+              SmartBank menahan flow di gateway, validasi saldo, hitung fee, lalu
+              menulis ledger supaya demo tetap transparan dari awal sampai akhir.
+            </p>
+            <div className="security-rules">
+              {financialRules.slice(0, 6).map(([label, value]) => (
+                <span key={label}>
+                  <small>{label}</small>
+                  <strong>{value}</strong>
+                </span>
+              ))}
+            </div>
+          </article>
+          <article className="security-panel stagger-item">
+            <KeyRound size={24} aria-hidden="true" />
+            <h3>Mock JWT session</h3>
+            <p>Auth route tetap sederhana untuk demo, tapi status role dan guard terlihat jelas.</p>
+          </article>
+          <article className="security-panel stagger-item">
+            <LineChart size={24} aria-hidden="true" />
+            <h3>Realtime posture</h3>
+            <p>Latency, error rate, dan request state dirancang untuk cepat dipindai.</p>
+          </article>
+          <article className="security-panel stagger-item">
+            <CircleCheckBig size={24} aria-hidden="true" />
+            <h3>Audit ready</h3>
+            <p>Ledger read-only menjaga catatan debit, credit, fee, tax, dan loan.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="landing-cta motion-reveal">
+        <div className="landing-cta-brand">SmartBank</div>
+        <div>
+          <h2>Masuk ke demo dan rasakan flow end-to-end.</h2>
+          <p>
+            Jalankan demo sebagai user, admin, developer, atau Insight read-only
+            untuk melihat permission matrix dan alur transaksi berbeda.
+          </p>
+        </div>
+        <Link className="btn btn-primary" to="/login">
+          Masuk ke Demo
+          <ArrowRight size={18} />
+        </Link>
+      </section>
+
+      <PublicFooter />
+    </div>
+  );
+}
+
+function LegacyLandingPage() {
   return (
     <div className="landing-page">
       <PublicHeader />
 
       <section className="landing-hero">
-        <div className="hero-copy animate-rise">
-          <h1>SmartBank</h1>
-          <p>
-            Pusat kontrol keuangan untuk ekosistem UMKM. Semua saldo, payment
-            request, fee, pajak, pinjaman, dan ledger diproses melalui satu
-            sistem bank yang bisa diaudit.
-          </p>
-          <div className="hero-actions">
-            <Link className="btn btn-primary" to="/login">
-              Buka Dashboard
-              <ArrowRight size={18} />
-            </Link>
-            <Link className="btn btn-secondary" to="/docs/api">
-              Lihat API Contract
-              <BookOpen size={18} />
-            </Link>
+        <div className="hero-shell">
+          <div className="hero-copy animate-rise">
+            <span className="hero-eyebrow">
+              <Sparkles size={18} aria-hidden="true" />
+              Dompet finansial yang ramah dan aman
+            </span>
+            <h1>Teman terpercaya untuk transaksi dan finansial Anda</h1>
+            <p>
+              SmartBank memberi Anda kendali penuh atas aset, pembayaran, dan ledger secara instan. Bergabunglah dengan masa depan finansial yang aman dan transparan.
+            </p>
+            <div className="hero-actions">
+              <Link className="btn btn-primary" to="/login" style={{ padding: "0.8rem 1.5rem", fontSize: "1.1rem" }}>
+                Mulai Sekarang
+                <ArrowRight size={20} />
+              </Link>
+              <Link className="btn btn-secondary" to="/docs/api" style={{ padding: "0.8rem 1.5rem", fontSize: "1.1rem" }}>
+                Jelajahi Fitur
+                <ChevronRight size={20} />
+              </Link>
+            </div>
+            <div className="hero-assurance" aria-label="SmartBank assurance">
+              <span>
+                <ShieldCheck size={16} aria-hidden="true" />
+                Terjamin Aman
+              </span>
+              <span>
+                <Activity size={16} aria-hidden="true" />
+                Real-time
+              </span>
+              <span>
+                <Database size={16} aria-hidden="true" />
+                Desentralisasi
+              </span>
+            </div>
           </div>
-          <div className="hero-proof">
-            <MiniMetric label="Bank reserve" value="98.0%" />
-            <MiniMetric label="Max harian" value="10 trx" />
-            <MiniMetric label="Loan limit" value="100K" />
+
+          <div className="phantom-product-stack animate-scale" aria-label="Preview produk SmartBank">
+            <div className="wallet-card wallet-card-primary">
+              <div className="wallet-card-top">
+                <span style={{ fontWeight: 800, color: "var(--text)" }}>{brandName}</span>
+                <StatusBadge status="online" />
+              </div>
+              <p style={{ marginTop: "1.5rem" }}>Total Saldo</p>
+              <strong style={{ fontSize: "2.5rem", color: "var(--text)" }}>{formatRupiah(balance.availableBalance)}</strong>
+              <div className="wallet-actions" style={{ marginTop: "2rem", gap: "1rem" }}>
+                <span className="phantom-action-btn"><Send size={18}/> Kirim</span>
+                <span className="phantom-action-btn"><Download size={18}/> Terima</span>
+                <span className="phantom-action-btn"><CreditCard size={18}/> Kartu</span>
+              </div>
+            </div>
+            <div className="wallet-card wallet-card-secondary" style={{ backdropFilter: "blur(20px)", background: "rgba(26,26,26,0.6)" }}>
+              <span>Aktivitas Terakhir</span>
+              <strong style={{ color: "var(--text)" }}>LED-90001</strong>
+              <p>Gateway 84ms • Sukses</p>
+            </div>
+            <div className="wallet-card wallet-card-tertiary" style={{ backdropFilter: "blur(20px)", background: "rgba(26,26,26,0.6)" }}>
+              <span>Keamanan</span>
+              <div className="mini-flow">
+                <Shield size={16} style={{ color: "var(--green)" }}/>
+                <b style={{ color: "var(--text)" }}>Enkripsi Aktif</b>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="hero-stage animate-scale">
-          <FinanceCanvas />
-          <div className="hero-logo-orbit">
-            <img src={smartBankMark} alt="Logo simbol SmartBank" />
-          </div>
-          <div className="hero-dashboard-preview" aria-label="Preview dashboard SmartBank">
-            <div>
-              <span>Total debit</span>
-              <strong>{formatRupiah(195267)}</strong>
-            </div>
-            <div>
-              <span>Ledger ID</span>
-              <strong>LED-90001</strong>
-            </div>
-            <div>
-              <span>Gateway</span>
-              <strong>84ms</strong>
-            </div>
-          </div>
+        <div className="hero-proof">
+          <MiniMetric label="Cadangan Bank" value="98.0%" />
+          <MiniMetric label="Batas Harian" value="10 Trx" />
+          <MiniMetric label="Limit Pinjaman" value="Rp 100K" />
+          <MiniMetric label="Gateway" value="84ms" />
         </div>
       </section>
 
       <section id="capabilities" className="landing-section">
         <SectionHeading
-          title="Financial control center"
-          description="SmartBank memberi UI yang transparan untuk input, proses, output, dan audit pada setiap transaksi."
+          title="Alat finansial untuk semua"
+          description="SmartBank dirancang dengan antarmuka yang intuitif dan fitur keamanan kelas enterprise, memberikan pengalaman yang mudah namun kuat bagi siapa saja."
         />
         <div className="feature-grid">
           {[
@@ -548,7 +1110,7 @@ function LandingPage() {
             },
             {
               icon: Network,
-              title: "Integration monitoring",
+              title: "Integration health",
               text: "Status Gateway dan aplikasi ekosistem dipantau dengan latency, error rate, dan API logs.",
             },
           ].map((item, index) => {
@@ -570,16 +1132,29 @@ function LandingPage() {
 
       <section id="flow" className="landing-section flow-band">
         <SectionHeading
-          title="Gateway to ledger flow"
+          title="Spend, send, & settle"
           description="Semua aplikasi eksternal melewati API Gateway, lalu SmartBank melakukan validasi, debit kredit, fee, pajak, dan pencatatan ledger."
         />
-        <EcosystemFlow />
+        <div className="flow-layout">
+          <EcosystemFlow />
+          <div className="flow-control-panel">
+            <div>
+              <Sparkles size={18} aria-hidden="true" />
+              <span>Operational posture</span>
+            </div>
+            <strong>Every request is validated before balance movement.</strong>
+            <p>
+              UI mengutamakan status, limit, dan audit trail supaya alur demo
+              tetap jelas untuk user, admin, developer, dan insight read-only.
+            </p>
+          </div>
+        </div>
       </section>
 
       <section id="rules" className="landing-section">
         <SectionHeading
-          title="Aturan finansial yang terlihat"
-          description="Rule engine dibuat eksplisit supaya demo RPL mudah diuji dan keputusan finansial tidak tersembunyi."
+          title="Controlled by you, secured by SmartBank"
+          description="Rule engine dibuat terlihat supaya demo RPL mudah diuji dan keputusan finansial tidak tersembunyi."
         />
         <div className="rules-grid">
           {financialRules.map(([label, value]) => (
@@ -592,9 +1167,9 @@ function LandingPage() {
       </section>
 
       <section className="landing-cta">
-        <img src={smartBankWordmark} alt="SmartBank wordmark" />
+        <div className="landing-cta-brand">SmartBank</div>
         <div>
-          <h2>Mulai dari payment request, akhiri di ledger yang bisa diaudit.</h2>
+          <h2>Get started. Open SmartBank.</h2>
           <p>
             Jalankan demo sebagai user, admin, developer, atau Insight read-only
             untuk melihat permission matrix dan alur transaksi berbeda.
@@ -608,149 +1183,6 @@ function LandingPage() {
 
       <PublicFooter />
     </div>
-  );
-}
-
-function FinanceCanvas() {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return undefined;
-
-    const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: true });
-    const scene = new Scene();
-    const camera = new PerspectiveCamera(48, 1, 0.1, 100);
-    const group = new Group();
-    const nodes = [
-      new Vector3(-2.7, 1.2, 0),
-      new Vector3(-1.7, -1.3, 0.4),
-      new Vector3(-0.1, 1.45, -0.2),
-      new Vector3(1.35, -1.05, 0.3),
-      new Vector3(2.65, 0.85, -0.1),
-      new Vector3(0.35, 0.05, 0.5),
-    ];
-    let frame = 0;
-
-    camera.position.set(0, 0.2, 7);
-    scene.add(new AmbientLight(0xffffff, 0.72));
-    scene.add(new DirectionalLight(0x4f8cff, 1.4));
-
-    const tealLight = new PointLight(0x12d6c5, 2, 12);
-    tealLight.position.set(4, 5, 5);
-    scene.add(tealLight);
-
-    const blueLight = new PointLight(0x4f8cff, 1.3, 12);
-    blueLight.position.set(-5, -3, 3);
-    scene.add(blueLight);
-
-    const central = new Mesh(
-      new IcosahedronGeometry(0.68, 2),
-      new MeshStandardMaterial({
-        color: 0x0ea5e9,
-        emissive: 0x052a40,
-        metalness: 0.36,
-        roughness: 0.25,
-      }),
-    );
-    central.position.set(0.28, 0.02, 0.3);
-    group.add(central);
-
-    const nodeGeometry = new BoxGeometry(0.34, 0.34, 0.34);
-    nodes.forEach((position, index) => {
-      const node = new Mesh(
-        nodeGeometry,
-        new MeshStandardMaterial({
-          color: index % 2 === 0 ? 0x12d6c5 : 0xf8c14a,
-          emissive: index % 2 === 0 ? 0x062e2a : 0x3a2402,
-          metalness: 0.55,
-          roughness: 0.28,
-        }),
-      );
-      node.position.copy(position);
-      group.add(node);
-    });
-
-    const primaryLine = new ThreeLine(
-      new BufferGeometry().setFromPoints(nodes),
-      new LineBasicMaterial({ color: 0x12d6c5, transparent: true, opacity: 0.62 }),
-    );
-    const secondaryLine = new ThreeLine(
-      new BufferGeometry().setFromPoints([nodes[1], nodes[5], nodes[2], nodes[4]]),
-      new LineBasicMaterial({ color: 0x4f8cff, transparent: true, opacity: 0.5 }),
-    );
-    group.add(primaryLine, secondaryLine);
-
-    const torusOne = new Mesh(
-      new TorusGeometry(1.6, 0.018, 16, 100),
-      new MeshStandardMaterial({ color: 0x12d6c5, emissive: 0x06433d }),
-    );
-    torusOne.position.set(0.28, 0.02, -0.24);
-    torusOne.rotation.set(0, 0, 0.2);
-    group.add(torusOne);
-
-    const torusTwo = new Mesh(
-      new TorusGeometry(2.08, 0.012, 16, 120),
-      new MeshStandardMaterial({ color: 0x4f8cff, emissive: 0x0a2458 }),
-    );
-    torusTwo.position.set(0.28, 0.02, -0.12);
-    torusTwo.rotation.set(1.1, 0.2, -0.4);
-    group.add(torusTwo);
-
-    scene.add(group);
-
-    const resize = () => {
-      const rect = canvas.getBoundingClientRect();
-      const width = Math.max(320, Math.floor(rect.width));
-      const height = Math.max(320, Math.floor(rect.height));
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
-      renderer.setSize(width, height, false);
-      camera.aspect = width / height;
-      camera.updateProjectionMatrix();
-    };
-
-    const animate = () => {
-      frame = requestAnimationFrame(animate);
-      const elapsed = performance.now() / 1000;
-      group.rotation.y = Math.sin(elapsed * 0.22) * 0.28;
-      group.rotation.x = Math.cos(elapsed * 0.18) * 0.1;
-      central.rotation.x += 0.006;
-      central.rotation.y += 0.008;
-      torusOne.rotation.z += 0.003;
-      torusTwo.rotation.y += 0.002;
-      group.children.forEach((child, index) => {
-        if (child instanceof Mesh && index > 0 && index < 7) {
-          child.position.y += Math.sin(elapsed * 1.2 + index) * 0.0018;
-          child.rotation.x += 0.006 + index * 0.0005;
-          child.rotation.y += 0.004 + index * 0.0004;
-        }
-      });
-      renderer.render(scene, camera);
-    };
-
-    resize();
-    animate();
-    window.addEventListener("resize", resize, { passive: true });
-
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("resize", resize);
-      renderer.dispose();
-      nodeGeometry.dispose();
-      central.geometry.dispose();
-      torusOne.geometry.dispose();
-      torusTwo.geometry.dispose();
-      primaryLine.geometry.dispose();
-      secondaryLine.geometry.dispose();
-    };
-  }, []);
-
-  return (
-    <canvas
-      className="three-canvas"
-      ref={canvasRef}
-      aria-label="Animasi 3D jaringan transaksi SmartBank"
-    />
   );
 }
 
@@ -820,26 +1252,124 @@ function AuthLayout({
   description: string;
   children: ReactNode;
 }) {
+  useAuthAnimations();
+
+  return (
+    <div className="auth-page">
+      <PublicHeader />
+      <main className="auth-main">
+        <section className="auth-card auth-card-unified" aria-label="SmartBank authentication">
+          <div className="auth-info-panel">
+            <span className="auth-kicker">
+              <ShieldCheck size={17} aria-hidden="true" />
+              Secure demo access
+            </span>
+            <h1>{title}</h1>
+            <p>{description}</p>
+            <div className="auth-proof-grid" aria-label="Kontrol keamanan SmartBank">
+              <span className="auth-proof-item">
+                <KeyRound size={16} aria-hidden="true" />
+                JWT demo session
+              </span>
+              <span className="auth-proof-item">
+                <Shield size={16} aria-hidden="true" />
+                Role guard matrix
+              </span>
+              <span className="auth-proof-item">
+                <ScrollText size={16} aria-hidden="true" />
+                Ledger read-only
+              </span>
+            </div>
+            <dl className="auth-ledger-preview">
+              <div>
+                <dt>Reserve status</dt>
+                <dd>98.0%</dd>
+              </div>
+              <div>
+                <dt>Gateway latency</dt>
+                <dd>84 ms</dd>
+              </div>
+              <div>
+                <dt>Session mode</dt>
+                <dd>Mock JWT</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div className="auth-form-panel">
+            <div className="auth-form-header">
+              <span>SmartBank access</span>
+              <strong>Role demo</strong>
+            </div>
+            {children}
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+function LegacyAuthLayout({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
   return (
     <div className="auth-page">
       <PublicHeader />
       <main className="auth-main">
         <section className="auth-card">
-          <img src={smartBankWordmark} alt="SmartBank" />
+          <div className="auth-wordmark">SmartBank</div>
           <h1>{title}</h1>
           <p>{description}</p>
           {children}
         </section>
         <section className="auth-visual" aria-label="Trust panel SmartBank">
-          <FinanceCanvas />
-          <div>
-            <ShieldCheck size={34} />
-            <h2>JWT, role guard, Gateway logging, dan ledger read-only.</h2>
+          <div className="auth-visual-top">
+            <strong>SmartBank</strong>
+            <span>Secure banking access</span>
+          </div>
+          <div className="auth-visual-copy">
+            <ShieldCheck size={30} />
+            <h2>Akses masuk yang fokus, aman, dan siap untuk demo role.</h2>
             <p>
-              Gunakan role demo untuk membuka workflow user, admin, developer,
-              dan Insight read-only tanpa backend.
+              Form dibuat ringkas seperti auth screen SaaS/fintech modern:
+              satu alur utama, status keamanan terlihat, dan konteks produk
+              tetap hadir tanpa dekorasi berlebihan.
             </p>
           </div>
+          <div className="auth-trust-list" aria-label="Kontrol keamanan login">
+            <span>
+              <KeyRound size={16} aria-hidden="true" />
+              JWT demo session
+            </span>
+            <span>
+              <Shield size={16} aria-hidden="true" />
+              Role guard matrix
+            </span>
+            <span>
+              <ScrollText size={16} aria-hidden="true" />
+              Ledger read-only
+            </span>
+          </div>
+          <dl className="auth-ledger-preview">
+            <div>
+              <dt>Reserve status</dt>
+              <dd>98.0%</dd>
+            </div>
+            <div>
+              <dt>Gateway latency</dt>
+              <dd>84ms</dd>
+            </div>
+            <div>
+              <dt>Session mode</dt>
+              <dd>Mock JWT</dd>
+            </div>
+          </dl>
         </section>
       </main>
     </div>
@@ -873,12 +1403,16 @@ function LoginPage() {
   return (
     <AuthLayout
       title="Masuk ke SmartBank"
-      description="Login mock menyimpan JWT demo dan membuka route sesuai role."
+      description="Masuk dengan akun demo untuk membuka dashboard sesuai role dan permission."
     >
       <form className="stack-form" onSubmit={submit}>
         <label>
           Email
-          <input value={email} onChange={(event) => setEmail(event.target.value)} />
+          <input
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+          />
         </label>
         <label>
           Password
@@ -886,6 +1420,7 @@ function LoginPage() {
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            autoComplete="current-password"
           />
         </label>
         <label>
@@ -898,6 +1433,15 @@ function LoginPage() {
             ))}
           </select>
         </label>
+        <div className="auth-form-row">
+          <label className="checkbox-row">
+            <input type="checkbox" defaultChecked />
+            Ingat role demo
+          </label>
+          <Link className="text-link" to="/docs">
+            Bantuan akses
+          </Link>
+        </div>
         {error && <p className="field-error">{error}</p>}
         <Button type="submit" className="full-width">
           <KeyRound size={18} />
@@ -947,16 +1491,24 @@ function RegisterPage() {
   return (
     <AuthLayout
       title="Register SmartBank"
-      description="Akun baru langsung mendapat saldo awal dan permission role user."
+      description="Buat akun user demo dengan saldo awal dan permission dasar SmartBank."
     >
       <form className="stack-form" onSubmit={submit}>
         <label>
           Nama
-          <input value={name} onChange={(event) => setName(event.target.value)} />
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            autoComplete="name"
+          />
         </label>
         <label>
           Email
-          <input value={email} onChange={(event) => setEmail(event.target.value)} />
+          <input
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+          />
         </label>
         <label>
           Password
@@ -964,6 +1516,7 @@ function RegisterPage() {
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            autoComplete="new-password"
           />
         </label>
         <label>
@@ -972,7 +1525,12 @@ function RegisterPage() {
             type="password"
             value={confirm}
             onChange={(event) => setConfirm(event.target.value)}
+            autoComplete="new-password"
           />
+        </label>
+        <label className="checkbox-row">
+          <input type="checkbox" defaultChecked />
+          Saya memahami akun ini menggunakan data demo frontend.
         </label>
         {error && <p className="field-error">{error}</p>}
         <Button type="submit" className="full-width">
@@ -2094,12 +2652,13 @@ function ApiLogsPage() {
 
 function SettingsPage() {
   const { session } = useAuth();
+  const { theme, setTheme } = useTheme();
 
   return (
     <>
       <PageHeader
         title="Account Settings"
-        description="Konfigurasi demo untuk session, notification, dan privacy."
+        description="Konfigurasi demo untuk session, notification, privacy, dan theme."
       />
       <div className="form-grid">
         <Panel>
@@ -2131,10 +2690,38 @@ function SettingsPage() {
         <Panel>
           <div className="panel-title">
             <div>
-              <h2>Security controls</h2>
-              <p>Mock setting untuk kebutuhan UI state.</p>
+              <h2>Theme</h2>
+              <p>Pilih tampilan dashboard dan halaman publik.</p>
             </div>
           </div>
+          <div className="theme-choice-grid" role="group" aria-label="Pilih theme SmartBank">
+            <button
+              className={theme === "light" ? "theme-choice is-active" : "theme-choice"}
+              type="button"
+              onClick={() => setTheme("light")}
+            >
+              <Sun size={18} aria-hidden="true" />
+              <span>Light</span>
+            </button>
+            <button
+              className={theme === "dark" ? "theme-choice is-active" : "theme-choice"}
+              type="button"
+              onClick={() => setTheme("dark")}
+            >
+              <Moon size={18} aria-hidden="true" />
+              <span>Dark</span>
+            </button>
+          </div>
+        </Panel>
+      </div>
+
+      <Panel>
+        <div className="panel-title">
+          <div>
+            <h2>Security controls</h2>
+            <p>Mock setting untuk kebutuhan UI state.</p>
+          </div>
+        </div>
           <div className="settings-list">
             <label className="checkbox-row">
               <input type="checkbox" defaultChecked />
@@ -2149,8 +2736,7 @@ function SettingsPage() {
               Focus ring aksesibilitas aktif
             </label>
           </div>
-        </Panel>
-      </div>
+      </Panel>
     </>
   );
 }
@@ -2169,7 +2755,7 @@ function DocsPage({ variant }: { variant: "home" | "api" | "payment-flow" | "dat
       <PublicHeader />
       <main className="docs-layout">
         <aside className="docs-sidebar">
-          <img src={smartBankMark} alt="Logo simbol SmartBank" />
+          <div className="docs-sidebar-brand">SmartBank</div>
           <NavLink to="/docs">Overview</NavLink>
           <NavLink to="/docs/api">API Reference</NavLink>
           <NavLink to="/docs/payment-flow">Payment Flow</NavLink>
