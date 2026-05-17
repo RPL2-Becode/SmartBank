@@ -314,48 +314,52 @@
         }
 
         .hero-title {
-            font-size: 3.5rem;
+            font-size: 3rem;
             font-weight: 800;
             line-height: 1.1;
             color: var(--text-primary);
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             letter-spacing: -0.03em;
         }
 
         .hero-subtitle {
-            font-size: 1.25rem;
+            font-size: 1.125rem;
             color: var(--text-secondary);
-            line-height: 1.7;
-            margin-bottom: 40px;
+            line-height: 1.6;
+            margin-bottom: 32px;
             max-width: 520px;
         }
 
         .hero-buttons {
             display: flex;
-            gap: 16px;
-            margin-bottom: 48px;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 32px;
         }
 
         .hero-stats {
             display: flex;
-            gap: 48px;
+            flex-wrap: wrap;
+            gap: 32px;
             padding-top: 32px;
             border-top: 1px solid var(--border-color);
         }
 
         .hero-stat {
             text-align: left;
+            flex: 1;
+            min-width: 120px;
         }
 
         .hero-stat-value {
-            font-size: 2rem;
+            font-size: 1.75rem;
             font-weight: 700;
             color: var(--text-primary);
             font-feature-settings: 'tnum';
         }
 
         .hero-stat-label {
-            font-size: 0.875rem;
+            font-size: 0.8125rem;
             color: var(--text-muted);
             margin-top: 4px;
         }
@@ -1477,12 +1481,12 @@
         @media (max-width: 1024px) {
             .hero-container {
                 grid-template-columns: 1fr;
-                gap: 60px;
+                gap: 48px;
+                padding: 100px 24px;
             }
 
             .hero-visual {
-                max-width: 480px;
-                margin: 0 auto;
+                padding: 20px 0;
             }
 
             .hero-card-3d {
@@ -1537,15 +1541,20 @@
             }
 
             .hero {
-                padding: 120px 0 80px;
+                padding: 80px 0 60px;
+                align-items: flex-start;
+            }
+
+            .hero-container {
+                padding: 60px 24px;
             }
 
             .hero-title {
-                font-size: 2.5rem;
+                font-size: 2.25rem;
             }
 
             .hero-subtitle {
-                font-size: 1.125rem;
+                font-size: 1rem;
             }
 
             .hero-stats {
@@ -1557,9 +1566,9 @@
             }
 
             .hero-card-3d {
-                width: 320px;
-                height: 200px;
-                transform: perspective(1000px) rotateY(-10deg) rotateX(3deg);
+                width: 300px;
+                height: 190px;
+                transform: perspective(1000px) rotateY(-8deg) rotateX(2deg);
             }
 
             .features-grid {
@@ -1623,7 +1632,11 @@
 
         @media (max-width: 480px) {
             .hero-title {
-                font-size: 2rem;
+                font-size: 1.875rem;
+            }
+
+            .hero-subtitle {
+                font-size: 0.9375rem;
             }
 
             .hero-buttons {
@@ -1635,8 +1648,26 @@
             }
 
             .hero-stats {
-                flex-direction: column;
-                gap: 24px;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+
+            .hero-stat {
+                min-width: 45%;
+            }
+
+            .hero-stat-value {
+                font-size: 1.375rem;
+            }
+
+            .hero-stat-label {
+                font-size: 0.6875rem;
+            }
+
+            .hero-card-3d {
+                width: 260px;
+                height: 165px;
             }
 
             .cta-buttons {
@@ -1689,6 +1720,7 @@
             </a>
             <div class="nav-links" id="navLinks">
                 <a href="#fitur">Fitur</a>
+                <a href="#mitra">Mitra</a>
                 <a href="#cara-kerja">Cara Kerja</a>
                 <a href="#keamanan">Keamanan</a>
                 <a href="#api">API</a>
