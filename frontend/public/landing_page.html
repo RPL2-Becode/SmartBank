@@ -251,7 +251,11 @@
            Hero Section
         ======================================== */
         .hero {
-            padding: 160px 0 100px;
+            min-height: 100vh;
+            height: 100vh;
+            padding: 0;
+            display: flex;
+            align-items: center;
             background: var(--secondary-bg);
             position: relative;
             overflow: hidden;
@@ -270,6 +274,7 @@
 
         .hero-container {
             max-width: 1200px;
+            width: 100%;
             margin: 0 auto;
             padding: 0 24px;
             display: grid;
@@ -1021,6 +1026,212 @@
         }
 
         /* ========================================
+           API Section
+        ======================================== */
+        .api {
+            padding: 100px 0;
+            background: var(--primary-bg);
+        }
+
+        .api-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 60px;
+            align-items: start;
+        }
+
+        .api-content {
+            position: sticky;
+            top: 100px;
+        }
+
+        .api-content .section-title,
+        .api-content .section-subtitle {
+            text-align: left;
+            margin-bottom: 16px;
+        }
+
+        .api-intro {
+            font-size: 0.9375rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .api-endpoints {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .api-endpoint-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+
+        .api-endpoint-card:hover {
+            border-color: var(--primary-blue-light);
+            box-shadow: var(--card-shadow);
+        }
+
+        .api-endpoint-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            cursor: pointer;
+        }
+
+        .api-method {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            flex-shrink: 0;
+        }
+
+        .api-method.post {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+
+        .api-method.get {
+            background: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+        }
+
+        .api-endpoint-path {
+            font-family: 'Inter', monospace;
+            font-size: 0.875rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .api-endpoint-auth {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .api-endpoint-auth svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        .api-endpoint-body {
+            padding: 0 20px 20px;
+            display: none;
+        }
+
+        .api-endpoint-card.active .api-endpoint-body {
+            display: block;
+        }
+
+        .api-endpoint-desc {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .api-code-block {
+            background: var(--text-primary);
+            border-radius: var(--radius);
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        .api-code-block code {
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.8125rem;
+            color: #e2e8f0;
+            white-space: pre;
+        }
+
+        .api-code-block .comment {
+            color: #64748b;
+        }
+
+        .api-code-block .string {
+            color: #f4d03f;
+        }
+
+        .api-code-block .key {
+            color: #60a5fa;
+        }
+
+        .api-code-block .number {
+            color: #10b981;
+        }
+
+        .api-toggle-icon {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-muted);
+            transition: transform 0.2s ease;
+        }
+
+        .api-endpoint-card.active .api-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Config Cards */
+        .api-config-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .api-config-card {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .api-config-card h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .api-config-card h4 svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--primary-blue);
+        }
+
+        .api-config-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 0.8125rem;
+        }
+
+        .api-config-item span:first-child {
+            color: var(--text-muted);
+        }
+
+        .api-config-item span:last-child {
+            color: var(--text-primary);
+            font-weight: 500;
+            font-family: 'Inter', monospace;
+        }
+
+        /* ========================================
            Stats Section
         ======================================== */
         .stats {
@@ -1238,6 +1449,15 @@
                 grid-row: span 1;
             }
 
+            .api-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .api-content {
+                position: static;
+            }
+
             .footer-grid {
                 grid-template-columns: 1fr 1fr;
                 gap: 40px;
@@ -1405,6 +1625,7 @@
                 <a href="#fitur">Fitur</a>
                 <a href="#cara-kerja">Cara Kerja</a>
                 <a href="#keamanan">Keamanan</a>
+                <a href="#api">API</a>
             </div>
             <div class="nav-buttons" id="navButtons">
                 <a href="#" class="btn btn-secondary">Login</a>
@@ -1467,21 +1688,13 @@
                             <div class="card-chip">
                                 <div class="card-chip-lines"></div>
                             </div>
-                            <div class="card-number">4532  ••••  ••••  7891</div>
+                            <div class="card-number">4532  ****  ****  7891</div>
                             <div class="card-details">
                                 <div class="card-holder-info">
                                     <span class="card-label">Card Holder</span>
                                     <span class="card-holder-name">Ahmad Wijaya</span>
                                 </div>
-                                <div class="card-balance-info">
-                                    <span class="card-balance-label">Balance</span>
-                                    <span class="card-balance-value">Rp 12.500.000</span>
-                                </div>
                             </div>
-                        </div>
-                        <div class="card-tier-badge">
-                            <svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
-                            GOLD MEMBER
                         </div>
                     </div>
                     <div class="card-reflection"></div>
@@ -1640,6 +1853,225 @@
                             <div class="bento-feature">
                                 <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                 bcrypt 10 rounds encryption
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Section -->
+    <section class="api" id="api">
+        <div class="container">
+            <div class="api-grid">
+                <div class="api-content animate-on-scroll">
+                    <h2 class="section-title">API Documentation</h2>
+                    <p class="section-subtitle">Integrasi mudah dengan RESTful API untuk aplikasi pihak ketiga</p>
+                    <p class="api-intro">SmartBank menyediakan API endpoints yang well-documented untuk integrasi dengan sistem eksternal seperti mobile apps, dashboard admin, atau aplikasi pihak ketiga lainnya.</p>
+                    <div class="api-config-grid">
+                        <div class="api-config-card">
+                            <h4>
+                                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                                Base URL
+                            </h4>
+                            <div class="api-config-item">
+                                <span>Production</span>
+                                <span>http://localhost:5000/smartbank</span>
+                            </div>
+                            <div class="api-config-item">
+                                <span>Version</span>
+                                <span>v1.0</span>
+                            </div>
+                        </div>
+                        <div class="api-config-card">
+                            <h4>
+                                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                                Authentication
+                            </h4>
+                            <div class="api-config-item">
+                                <span>Type</span>
+                                <span>JWT Bearer Token</span>
+                            </div>
+                            <div class="api-config-item">
+                                <span>Header</span>
+                                <span>Authorization</span>
+                            </div>
+                        </div>
+                        <div class="api-config-card">
+                            <h4>
+                                <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                                Rate Limits
+                            </h4>
+                            <div class="api-config-item">
+                                <span>Auth Endpoint</span>
+                                <span>5 req/menit</span>
+                            </div>
+                            <div class="api-config-item">
+                                <span>General API</span>
+                                <span>50 req/menit</span>
+                            </div>
+                        </div>
+                        <div class="api-config-card">
+                            <h4>
+                                <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                                Response Format
+                            </h4>
+                            <div class="api-config-item">
+                                <span>Content-Type</span>
+                                <span>application/json</span>
+                            </div>
+                            <div class="api-config-item">
+                                <span>Encoding</span>
+                                <span>UTF-8</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="api-endpoints animate-on-scroll">
+                    <div class="api-endpoint-card">
+                        <div class="api-endpoint-header" onclick="toggleEndpoint(this)">
+                            <span class="api-method post">POST</span>
+                            <span class="api-endpoint-path">/smartbank/auth/register</span>
+                            <span class="api-endpoint-auth">
+                                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+                                No Auth
+                            </span>
+                            <svg class="api-toggle-icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                        </div>
+                        <div class="api-endpoint-body">
+                            <p class="api-endpoint-desc">Daftar akun user baru dengan role NASABAH.</p>
+                            <div class="api-code-block">
+<code>{
+  <span class="key">"userId"</span>: <span class="string">"userman"</span>,
+  <span class="key">"name"</span>: <span class="string">"User Manual"</span>,
+  <span class="key">"password"</span>: <span class="string">"Password123!"</span>,
+  <span class="key">"role"</span>: <span class="string">"NASABAH"</span>
+}
+
+<span class="comment">// Response: 201 Created</span></code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="api-endpoint-card">
+                        <div class="api-endpoint-header" onclick="toggleEndpoint(this)">
+                            <span class="api-method post">POST</span>
+                            <span class="api-endpoint-path">/smartbank/auth/login</span>
+                            <span class="api-endpoint-auth">
+                                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+                                No Auth
+                            </span>
+                            <svg class="api-toggle-icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                        </div>
+                        <div class="api-endpoint-body">
+                            <p class="api-endpoint-desc">Login user dan mendapatkan JWT token untuk autentikasi.</p>
+                            <div class="api-code-block">
+<code>{
+  <span class="key">"userId"</span>: <span class="string">"userman"</span>,
+  <span class="key">"password"</span>: <span class="string">"Password123!"</span>
+}
+
+<span class="comment">// Response: 200 OK
+// Returns: { token, user }</span></code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="api-endpoint-card">
+                        <div class="api-endpoint-header" onclick="toggleEndpoint(this)">
+                            <span class="api-method get">GET</span>
+                            <span class="api-endpoint-path">/smartbank/balance</span>
+                            <span class="api-endpoint-auth">
+                                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                                JWT Required
+                            </span>
+                            <svg class="api-toggle-icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                        </div>
+                        <div class="api-endpoint-body">
+                            <p class="api-endpoint-desc">Cek saldo dan history transaksi user yang login.</p>
+                            <div class="api-code-block">
+<code><span class="comment">// Header: Authorization: Bearer [token]</span>
+
+<span class="comment">// Response: 200 OK</span>
+{
+  <span class="key">"status"</span>: <span class="string">"success"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"balance"</span>: <span class="number">50000.00</span>,
+    <span class="key">"loan"</span>: <span class="number">0.00</span>,
+    <span class="key">"history"</span>: [...]
+  }
+}</code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="api-endpoint-card">
+                        <div class="api-endpoint-header" onclick="toggleEndpoint(this)">
+                            <span class="api-method post">POST</span>
+                            <span class="api-endpoint-path">/smartbank/transfer</span>
+                            <span class="api-endpoint-auth">
+                                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                                JWT Required
+                            </span>
+                            <svg class="api-toggle-icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                        </div>
+                        <div class="api-endpoint-body">
+                            <p class="api-endpoint-desc">Transfer saldo ke user lain dengan biaya admin dan pajak.</p>
+                            <div class="api-code-block">
+<code>{
+  <span class="key">"toUserId"</span>: <span class="string">"tujuan"</span>,
+  <span class="key">"amount"</span>: <span class="number">50000</span>
+}
+
+<span class="comment">// Biaya: FEE_BANK (1%) + TAX_RATE (2%)
+// Max 10 transaksi/hari, cooldown 10 detik</span></code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="api-endpoint-card">
+                        <div class="api-endpoint-header" onclick="toggleEndpoint(this)">
+                            <span class="api-method post">POST</span>
+                            <span class="api-endpoint-path">/smartbank/loan</span>
+                            <span class="api-endpoint-auth">
+                                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                                JWT Required
+                            </span>
+                            <svg class="api-toggle-icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                        </div>
+                        <div class="api-endpoint-body">
+                            <p class="api-endpoint-desc">Ajukan pinjaman dengan bunga 10% per periode (30 hari).</p>
+                            <div class="api-code-block">
+<code>{
+  <span class="key">"amount"</span>: <span class="number">1000000</span>
+}
+
+<span class="comment">// Response:
+{
+  <span class="key">"loanId"</span>: <span class="number">1</span>,
+  <span class="key">"amount"</span>: <span class="number">1000000</span>,
+  <span class="key">"interestRate"</span>: <span class="number">0.10</span>,
+  <span class="key">"totalDue"</span>: <span class="number">1100000</span>,
+  <span class="key">"status"</span>: <span class="string">"APPROVED"</span>
+}</code>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="api-endpoint-card">
+                        <div class="api-endpoint-header" onclick="toggleEndpoint(this)">
+                            <span class="api-method get">GET</span>
+                            <span class="api-endpoint-path">/smartbank/ledger</span>
+                            <span class="api-endpoint-auth">
+                                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+                                JWT Required
+                            </span>
+                            <svg class="api-toggle-icon" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/></svg>
+                        </div>
+                        <div class="api-endpoint-body">
+                            <p class="api-endpoint-desc">Ambil ledger 100 transaksi terakhir untuk audit trail.</p>
+                            <div class="api-code-block">
+<code><span class="comment">// Header: Authorization: Bearer [token]</span>
+
+<span class="comment">// Response: Array of transactions
+// Fields: refId, type, fromUserId, toUserId,
+amount, tax, fee, description, created_at</span></code>
                             </div>
                         </div>
                     </div>
@@ -1828,6 +2260,14 @@
                 }
             });
         });
+
+        // ========================================
+        // API Endpoint Toggle
+        // ========================================
+        function toggleEndpoint(header) {
+            const card = header.closest('.api-endpoint-card');
+            card.classList.toggle('active');
+        }
     </script>
 </body>
 </html>
