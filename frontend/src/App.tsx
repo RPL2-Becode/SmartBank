@@ -46,6 +46,8 @@ import {
   Workflow,
   X,
 } from "lucide-react";
+import { LoginPage } from "./LoginPage";
+import { RegisterPage } from "./RegisterPage";
 import {
   createContext,
   useEffect,
@@ -388,17 +390,24 @@ function App() {
     if (saved === "light" || saved === "dark") return saved;
     return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
   });
-  const [session, setSession] = useState<Session | null>(() => {
-    const raw = localStorage.getItem("smartbank-session");
-    if (!raw) return null;
+const [session, setSession] = useState<Session | null>(() => {
+  const raw = localStorage.getItem("smartbank-session");
+  if (!raw) return null;
 
-    try {
-      return JSON.parse(raw) as Session;
-    } catch {
-      localStorage.removeItem("smartbank-session");
-      return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (parsed.token && parsed.user) {
+      return {
+        token: parsed.token,
+        user: parsed.user,
+      };
     }
-  });
+    return null;
+  } catch {
+    localStorage.removeItem("smartbank-session");
+    return null;
+  }
+});
 
   const login = (role: UserRole, email?: string) => {
     const user = {
@@ -589,17 +598,14 @@ function ProtectedRoute({
 }) {
   const { session } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (!session) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
   if (capability && !canAccess(session.user.role, capability)) {
-    return (
-      <AppShell>
-        <AccessDenied capability={capability} />
-      </AppShell>
-    );
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

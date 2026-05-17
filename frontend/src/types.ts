@@ -100,3 +100,13 @@ export type FeeBreakdown = {
   totalFee: number;
   totalDebit: number;
 };
+
+export type LoginResponse = {
+  token: string;
+  user: User;
+};
+
+export type RegisterResponse = {
+  token: string;
+  user: User;
+};

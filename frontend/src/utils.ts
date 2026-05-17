@@ -93,3 +93,16 @@ export function canAccess(role: UserRole, capability: string) {
 
   return permissions[capability]?.includes(role) ?? false;
 }
+
+// Token storage utilities
+export function getStoredToken(): string | null {
+  return localStorage.getItem("smartbank-session");
+}
+
+export function storeSession(token: string, user: User): void {
+  localStorage.setItem("smartbank-session", JSON.stringify({ token, user }));
+}
+
+export function clearSession(): void {
+  localStorage.removeItem("smartbank-session");
+}
