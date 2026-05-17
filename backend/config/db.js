@@ -10,14 +10,16 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// Test connection
-pool.getConnection()
+// Test connection (hanya jika bukan testing)
+if (process.env.NODE_ENV !== 'test') {
+  pool.getConnection()
     .then(connection => {
-        console.log('✅ Terhubung ke database MySQL (SmartBank)');
-        connection.release();
+      console.log('✅ Terhubung ke database MySQL (SmartBank)');
+      connection.release();
     })
     .catch(err => {
-        console.error('❌ Gagal terhubung ke MySQL:', err.message);
+      console.error('❌ Gagal terhubung ke MySQL:', err.message);
     });
+}
 
 module.exports = pool;
