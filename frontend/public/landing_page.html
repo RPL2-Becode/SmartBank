@@ -9,24 +9,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         /* ========================================
-           CSS Custom Properties & Reset
+           CSS Custom Properties - Professional Blue Theme
         ======================================== */
         :root {
-            --primary-bg: #0a1628;
-            --secondary-bg: #0f2140;
-            --accent-cyan: #00d4ff;
-            --gradient-start: #0066ff;
-            --gradient-end: #00d4ff;
-            --text-primary: #ffffff;
-            --text-secondary: #94a3b8;
-            --glass-bg: rgba(15, 33, 64, 0.7);
-            --glass-border: rgba(0, 212, 255, 0.15);
-            --card-bg: rgba(15, 33, 64, 0.6);
-            --success: #10b981;
-            --warning: #f59e0b;
-            --radius: 20px;
-            --radius-sm: 12px;
-            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --primary-bg: #ffffff;
+            --secondary-bg: #f8fafc;
+            --tertiary-bg: #f1f5f9;
+            --primary-blue: #1e40af;
+            --primary-blue-dark: #1e3a8a;
+            --primary-blue-light: #3b82f6;
+            --accent-blue: #2563eb;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --card-shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.2s ease;
         }
 
         * {
@@ -57,7 +58,7 @@
         }
 
         /* ========================================
-           Utility Classes
+           Typography
         ======================================== */
         .container {
             max-width: 1200px;
@@ -65,100 +66,78 @@
             padding: 0 24px;
         }
 
-        .gradient-text {
-            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .text-primary {
+            color: var(--primary-blue);
+        }
+
+        .text-secondary {
+            color: var(--text-secondary);
+        }
+
+        .text-muted {
+            color: var(--text-muted);
         }
 
         .section-title {
-            font-size: 2.5rem;
-            font-weight: 800;
+            font-size: 2.25rem;
+            font-weight: 700;
             text-align: center;
+            color: var(--text-primary);
             margin-bottom: 1rem;
+            letter-spacing: -0.025em;
         }
 
         .section-subtitle {
             text-align: center;
             color: var(--text-secondary);
-            font-size: 1.1rem;
+            font-size: 1.125rem;
             max-width: 600px;
             margin: 0 auto 3rem;
+            font-weight: 400;
         }
 
         /* ========================================
-           Animations
+           Buttons
         ======================================== */
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(5deg); }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.9375rem;
+            transition: var(--transition);
+            cursor: pointer;
+            border: none;
+            gap: 8px;
         }
 
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.6); }
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(40px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .btn-primary:hover {
+            background: var(--primary-blue-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
         }
 
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-60px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        .btn-secondary {
+            background: var(--secondary-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
         }
 
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(60px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
+        .btn-secondary:hover {
+            background: var(--tertiary-bg);
+            border-color: var(--primary-blue-light);
         }
 
-        @keyframes scaleIn {
-            from {
-                opacity: 0;
-                transform: scale(0.8);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .animate-on-scroll {
-            opacity: 0;
-            transform: translateY(40px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
-
-        .animate-on-scroll.visible {
-            opacity: 1;
-            transform: translateY(0);
+        .btn-large {
+            padding: 16px 32px;
+            font-size: 1rem;
         }
 
         /* ========================================
@@ -170,53 +149,61 @@
             left: 0;
             right: 0;
             z-index: 1000;
-            padding: 1rem 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-color);
             transition: var(--transition);
         }
 
-        .navbar.scrolled {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--glass-border);
-            padding: 0.75rem 0;
-        }
-
-        .navbar .container {
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: 72px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
         }
 
         .logo {
-            font-size: 1.75rem;
-            font-weight: 800;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--text-primary);
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            width: 36px;
+            height: 36px;
+            background: var(--primary-blue);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
+        }
+
+        .logo-icon svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
         }
 
         .nav-links {
             display: flex;
-            align-items: center;
-            gap: 2rem;
+            gap: 32px;
         }
 
         .nav-links a {
             font-weight: 500;
+            color: var(--text-secondary);
             transition: var(--transition);
             position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-blue);
         }
 
         .nav-links a::after {
@@ -226,7 +213,7 @@
             left: 0;
             width: 0;
             height: 2px;
-            background: var(--accent-cyan);
+            background: var(--primary-blue);
             transition: var(--transition);
         }
 
@@ -234,327 +221,267 @@
             width: 100%;
         }
 
-        .nav-links a:hover {
-            color: var(--accent-cyan);
-        }
-
         .nav-buttons {
             display: flex;
-            gap: 1rem;
+            gap: 12px;
         }
 
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border-radius: var(--radius-sm);
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: var(--transition);
-            border: none;
-            font-family: inherit;
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--accent-cyan);
-            color: var(--accent-cyan);
-        }
-
-        .btn-outline:hover {
-            background: var(--accent-cyan);
-            color: var(--primary-bg);
-            transform: translateY(-2px);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-            color: white;
-            box-shadow: 0 4px 20px rgba(0, 102, 255, 0.4);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 102, 255, 0.6);
-        }
-
-        .btn-lg {
-            padding: 1rem 2rem;
-            font-size: 1.1rem;
-        }
-
-        /* Mobile Menu */
-        .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            padding: 5px;
-        }
-
-        .hamburger span {
-            width: 28px;
-            height: 3px;
-            background: var(--text-primary);
-            border-radius: 3px;
-            transition: var(--transition);
-        }
-
-        .hamburger.active span:nth-child(1) {
-            transform: rotate(45deg) translate(6px, 6px);
-        }
-
-        .hamburger.active span:nth-child(2) {
-            opacity: 0;
-        }
-
-        .hamburger.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(6px, -6px);
+        .nav-buttons .btn {
+            padding: 10px 20px;
         }
 
         .mobile-menu {
             display: none;
-            position: fixed;
-            top: 70px;
-            left: 0;
-            right: 0;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            padding: 2rem;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .mobile-menu.active {
-            display: block;
-            animation: fadeInUp 0.3s ease;
-        }
-
-        .mobile-menu a {
-            display: block;
-            padding: 1rem 0;
-            font-weight: 500;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .mobile-menu .nav-buttons {
-            margin-top: 1rem;
             flex-direction: column;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        .mobile-menu span {
+            width: 24px;
+            height: 2px;
+            background: var(--text-primary);
+            transition: var(--transition);
         }
 
         /* ========================================
            Hero Section
         ======================================== */
         .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            padding-top: 80px;
+            padding: 160px 0 100px;
+            background: var(--secondary-bg);
             position: relative;
             overflow: hidden;
         }
 
-        .hero-bg {
+        .hero::before {
+            content: '';
             position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse at 30% 20%, rgba(0, 102, 255, 0.15) 0%, transparent 50%),
-                        radial-gradient(ellipse at 70% 80%, rgba(0, 212, 255, 0.1) 0%, transparent 50%);
-        }
-
-        .floating-icons {
-            position: absolute;
-            inset: 0;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 0%, rgba(30, 64, 175, 0.03) 100%);
             pointer-events: none;
         }
 
-        .floating-icon {
-            position: absolute;
-            width: 60px;
-            height: 60px;
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            animation: float 6s ease-in-out infinite;
-        }
-
-        .floating-icon:nth-child(1) { top: 20%; left: 10%; animation-delay: 0s; }
-        .floating-icon:nth-child(2) { top: 30%; right: 15%; animation-delay: 1s; }
-        .floating-icon:nth-child(3) { top: 60%; left: 5%; animation-delay: 2s; }
-        .floating-icon:nth-child(4) { bottom: 20%; right: 10%; animation-delay: 3s; }
-        .floating-icon:nth-child(5) { top: 50%; right: 25%; animation-delay: 0.5s; }
-        .floating-icon:nth-child(6) { bottom: 30%; left: 20%; animation-delay: 1.5s; }
-
-        .hero .container {
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 4rem;
+            gap: 80px;
             align-items: center;
-            position: relative;
-            z-index: 1;
         }
 
         .hero-content {
-            animation: slideInLeft 1s ease;
+            position: relative;
+            z-index: 1;
         }
 
         .hero-badge {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
+            gap: 8px;
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 100px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
         }
 
-        .hero-badge .dot {
+        .hero-badge-dot {
             width: 8px;
             height: 8px;
             background: var(--success);
             border-radius: 50%;
-            animation: pulse-glow 2s infinite;
         }
 
-        .hero h1 {
+        .hero-title {
             font-size: 3.5rem;
-            font-weight: 900;
+            font-weight: 800;
             line-height: 1.1;
-            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+            letter-spacing: -0.03em;
         }
 
-        .hero p {
+        .hero-subtitle {
             font-size: 1.25rem;
             color: var(--text-secondary);
-            margin-bottom: 2rem;
-            max-width: 500px;
+            line-height: 1.7;
+            margin-bottom: 40px;
+            max-width: 520px;
         }
 
         .hero-buttons {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 3rem;
+            gap: 16px;
+            margin-bottom: 48px;
         }
 
         .hero-stats {
             display: flex;
-            gap: 3rem;
+            gap: 48px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
         }
 
-        .stat-item {
-            text-align: center;
+        .hero-stat {
+            text-align: left;
         }
 
-        .stat-number {
+        .hero-stat-value {
             font-size: 2rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-feature-settings: 'tnum';
         }
 
-        .stat-label {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
+        .hero-stat-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 4px;
         }
 
         .hero-visual {
             position: relative;
-            animation: slideInRight 1s ease;
         }
 
         .hero-card {
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 2rem;
-            backdrop-filter: blur(10px);
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1;
         }
 
         .hero-card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 32px;
         }
 
-        .hero-card-title {
-            font-weight: 600;
+        .hero-card-logo {
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hero-card-logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-blue);
+            border-radius: 8px;
+        }
+
+        .hero-card-menu {
+            display: flex;
+            gap: 4px;
+        }
+
+        .hero-card-menu span {
+            width: 4px;
+            height: 4px;
+            background: var(--text-muted);
+            border-radius: 50%;
+        }
+
+        .hero-card-balance-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
         }
 
         .hero-card-balance {
             font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 0.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            font-feature-settings: 'tnum';
+            margin-bottom: 8px;
         }
 
         .hero-card-tier {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            font-size: 0.85rem;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-blue);
+            border-radius: 100px;
+            font-size: 0.75rem;
             font-weight: 600;
-            color: #f59e0b;
         }
 
-        .hero-card-actions {
+        .hero-card-info {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-top: 1.5rem;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
         }
 
-        .action-btn {
-            background: rgba(0, 102, 255, 0.1);
-            border: 1px solid rgba(0, 102, 255, 0.2);
-            border-radius: var(--radius-sm);
-            padding: 1rem;
-            text-align: center;
-            cursor: pointer;
-            transition: var(--transition);
+        .hero-card-info-item {
+            padding: 16px;
+            background: var(--secondary-bg);
+            border-radius: var(--radius);
         }
 
-        .action-btn:hover {
-            background: rgba(0, 102, 255, 0.2);
-            transform: translateY(-3px);
+        .hero-card-info-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
         }
 
-        .action-btn-icon {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
+        .hero-card-info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
-        .action-btn-label {
-            font-size: 0.85rem;
-            font-weight: 500;
+        .hero-card-decoration {
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 120px;
+            height: 120px;
+            background: var(--primary-blue);
+            opacity: 0.1;
+            border-radius: 50%;
         }
 
         /* ========================================
            Features Section
         ======================================== */
         .features {
-            padding: 6rem 0;
-            background: linear-gradient(180deg, transparent, rgba(15, 33, 64, 0.5), transparent);
+            padding: 100px 0;
+            background: white;
         }
 
         .features-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
+            gap: 24px;
         }
 
         .feature-card {
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 2rem;
+            padding: 32px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
             transition: var(--transition);
             position: relative;
             overflow: hidden;
@@ -567,295 +494,389 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
-            opacity: 0;
+            background: var(--primary-blue);
+            transform: scaleX(0);
+            transform-origin: left;
             transition: var(--transition);
         }
 
         .feature-card:hover {
-            transform: translateY(-8px);
-            border-color: var(--accent-cyan);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 30px rgba(0, 212, 255, 0.1);
+            background: white;
+            box-shadow: var(--card-shadow-hover);
+            border-color: transparent;
+            transform: translateY(-4px);
         }
 
         .feature-card:hover::before {
-            opacity: 1;
+            transform: scaleX(1);
         }
 
         .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-            border-radius: var(--radius-sm);
+            width: 48px;
+            height: 48px;
+            background: var(--primary-blue);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.75rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
         }
 
-        .feature-card h3 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
+        .feature-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
         }
 
-        .feature-card p {
+        .feature-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .feature-description {
+            font-size: 0.9375rem;
             color: var(--text-secondary);
-            font-size: 0.95rem;
+            line-height: 1.6;
         }
 
         /* ========================================
            How It Works Section
         ======================================== */
         .how-it-works {
-            padding: 6rem 0;
+            padding: 100px 0;
+            background: var(--secondary-bg);
         }
 
         .steps-container {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 32px;
             position: relative;
-            margin-top: 4rem;
         }
 
-        .steps-line {
+        .steps-container::before {
+            content: '';
             position: absolute;
-            top: 40px;
+            top: 36px;
             left: 15%;
             right: 15%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
-            border-radius: 2px;
-            z-index: 0;
+            height: 2px;
+            background: var(--border-color);
         }
 
-        .step {
-            flex: 1;
+        .step-card {
             text-align: center;
+            max-width: 280px;
             position: relative;
             z-index: 1;
-            padding: 0 1rem;
         }
 
         .step-number {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            width: 72px;
+            height: 72px;
+            background: white;
+            border: 3px solid var(--primary-blue);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
-            font-weight: 800;
-            margin: 0 auto 1.5rem;
-            box-shadow: 0 10px 30px rgba(0, 102, 255, 0.4);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin: 0 auto 24px;
             transition: var(--transition);
         }
 
-        .step:hover .step-number {
-            transform: scale(1.1);
-            box-shadow: 0 15px 40px rgba(0, 102, 255, 0.6);
+        .step-card:hover .step-number {
+            background: var(--primary-blue);
+            color: white;
         }
 
-        .step h3 {
-            font-size: 1.25rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
+        .step-icon {
+            display: none;
         }
 
-        .step p {
+        .step-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .step-description {
+            font-size: 0.9375rem;
             color: var(--text-secondary);
-            font-size: 0.95rem;
+            line-height: 1.6;
         }
 
         /* ========================================
            Security Section
         ======================================== */
         .security {
-            padding: 6rem 0;
-            background: linear-gradient(180deg, transparent, rgba(15, 33, 64, 0.5), transparent);
+            padding: 100px 0;
+            background: white;
         }
 
         .security-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 80px;
+            align-items: center;
         }
 
-        .security-card {
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 1.5rem;
+        .security-header {
+            margin-bottom: 40px;
+        }
+
+        .security-header .section-title,
+        .security-header .section-subtitle {
+            text-align: left;
+            margin-bottom: 16px;
+        }
+
+        .security-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .security-item {
             display: flex;
             align-items: flex-start;
-            gap: 1rem;
+            gap: 16px;
+            padding: 20px;
+            background: var(--secondary-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
             transition: var(--transition);
         }
 
-        .security-card:hover {
-            border-color: var(--accent-cyan);
-            transform: translateY(-4px);
+        .security-item:hover {
+            background: white;
+            box-shadow: var(--card-shadow);
+            border-color: transparent;
         }
 
         .security-icon {
-            width: 50px;
-            height: 50px;
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            border-radius: var(--radius-sm);
+            width: 44px;
+            height: 44px;
+            background: var(--primary-blue);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
             flex-shrink: 0;
         }
 
+        .security-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: white;
+        }
+
         .security-content h4 {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 600;
-            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            margin-bottom: 4px;
         }
 
         .security-content p {
+            font-size: 0.875rem;
             color: var(--text-secondary);
-            font-size: 0.9rem;
+        }
+
+        .security-visual {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .security-shield {
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(30, 64, 175, 0.3);
+        }
+
+        .security-shield-inner {
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .security-shield svg {
+            width: 80px;
+            height: 80px;
+            fill: white;
+            opacity: 0.9;
+        }
+
+        .security-shield::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(135deg, var(--primary-blue-light), transparent);
+            border-radius: 42px;
+            z-index: -1;
         }
 
         /* ========================================
            Stats Section
         ======================================== */
         .stats {
-            padding: 6rem 0;
+            padding: 80px 0;
+            background: var(--primary-blue);
+            color: white;
         }
 
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 2rem;
+            gap: 40px;
         }
 
         .stat-card {
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius);
-            padding: 2rem;
             text-align: center;
-            transition: var(--transition);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent-cyan);
-        }
-
-        .stat-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+            padding: 24px;
         }
 
         .stat-value {
             font-size: 3rem;
-            font-weight: 900;
-            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
+            font-weight: 800;
+            font-feature-settings: 'tnum';
+            margin-bottom: 8px;
         }
 
-        .stat-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-
-        .stat-desc {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
+        .stat-label {
+            font-size: 0.9375rem;
+            opacity: 0.8;
         }
 
         /* ========================================
            CTA Section
         ======================================== */
         .cta {
-            padding: 6rem 0;
-        }
-
-        .cta-box {
-            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-            border-radius: var(--radius);
-            padding: 4rem;
+            padding: 100px 0;
+            background: var(--secondary-bg);
             text-align: center;
-            position: relative;
-            overflow: hidden;
         }
 
-        .cta-box::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            opacity: 0.5;
+        .cta-content {
+            max-width: 600px;
+            margin: 0 auto;
         }
 
-        .cta-box h2 {
+        .cta-title {
             font-size: 2.5rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            position: relative;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
         }
 
-        .cta-box p {
-            font-size: 1.1rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-            position: relative;
+        .cta-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
         }
 
-        .cta-box .btn {
-            background: white;
-            color: var(--gradient-start);
-            position: relative;
-        }
-
-        .cta-box .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        .cta-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
         }
 
         /* ========================================
            Footer
         ======================================== */
         .footer {
-            padding: 4rem 0 2rem;
-            border-top: 1px solid var(--glass-border);
+            padding: 60px 0 40px;
+            background: var(--text-primary);
+            color: white;
         }
 
         .footer-grid {
             display: grid;
             grid-template-columns: 2fr 1fr 1fr 1fr;
-            gap: 3rem;
-            margin-bottom: 3rem;
+            gap: 60px;
+            margin-bottom: 48px;
+        }
+
+        .footer-brand .logo {
+            color: white;
+            margin-bottom: 16px;
+        }
+
+        .footer-brand .logo-icon {
+            background: white;
+        }
+
+        .footer-brand .logo-icon svg {
+            fill: var(--primary-blue);
         }
 
         .footer-brand p {
-            color: var(--text-secondary);
-            margin: 1rem 0;
-            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9375rem;
+            line-height: 1.7;
+        }
+
+        .footer-links h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .footer-links a {
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9375rem;
+            padding: 8px 0;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: white;
+        }
+
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer-bottom p {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.875rem;
         }
 
         .footer-social {
             display: flex;
-            gap: 1rem;
+            gap: 16px;
         }
 
         .footer-social a {
             width: 40px;
             height: 40px;
-            background: var(--card-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -863,112 +884,91 @@
         }
 
         .footer-social a:hover {
-            background: var(--accent-cyan);
-            color: var(--primary-bg);
+            background: var(--primary-blue);
         }
 
-        .footer-column h4 {
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
+        .footer-social svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
         }
 
-        .footer-column ul li {
-            margin-bottom: 0.75rem;
+        /* ========================================
+           Animations
+        ======================================== */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease-out;
         }
 
-        .footer-column a {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-            transition: var(--transition);
-        }
-
-        .footer-column a:hover {
-            color: var(--accent-cyan);
-        }
-
-        .footer-bottom {
-            padding-top: 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 2rem;
-        }
-
-        .footer-links a {
-            transition: var(--transition);
-        }
-
-        .footer-links a:hover {
-            color: var(--accent-cyan);
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         /* ========================================
            Responsive Design
         ======================================== */
         @media (max-width: 1024px) {
-            .hero .container {
+            .hero-container {
                 grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .hero-content {
-                order: 2;
+                gap: 60px;
             }
 
             .hero-visual {
-                order: 1;
-                max-width: 500px;
+                max-width: 480px;
                 margin: 0 auto;
             }
 
-            .hero p {
-                margin: 0 auto 2rem;
+            .security-grid {
+                grid-template-columns: 1fr;
+                gap: 60px;
             }
 
-            .hero-buttons {
-                justify-content: center;
+            .security-visual {
+                order: -1;
             }
 
-            .hero-stats {
-                justify-content: center;
-            }
-
-            .features-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
+            .security-shield {
+                width: 240px;
+                height: 240px;
             }
 
             .footer-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: 1fr 1fr;
+                gap: 40px;
             }
         }
 
         @media (max-width: 768px) {
-            .nav-links, .nav-buttons {
+            .nav-links,
+            .nav-buttons {
                 display: none;
             }
 
-            .hamburger {
+            .mobile-menu {
                 display: flex;
             }
 
-            .hero h1 {
+            .hero {
+                padding: 120px 0 80px;
+            }
+
+            .hero-title {
                 font-size: 2.5rem;
             }
 
-            .section-title {
-                font-size: 2rem;
+            .hero-subtitle {
+                font-size: 1.125rem;
+            }
+
+            .hero-stats {
+                gap: 32px;
+            }
+
+            .hero-stat-value {
+                font-size: 1.5rem;
             }
 
             .features-grid {
@@ -977,169 +977,181 @@
 
             .steps-container {
                 flex-direction: column;
-                gap: 2rem;
+                align-items: center;
             }
 
-            .steps-line {
+            .steps-container::before {
                 display: none;
             }
 
+            .step-card {
+                max-width: 100%;
+            }
+
             .stats-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
             }
 
-            .cta-box {
-                padding: 2.5rem 1.5rem;
+            .stat-value {
+                font-size: 2.25rem;
             }
 
-            .cta-box h2 {
-                font-size: 1.75rem;
+            .cta-title {
+                font-size: 2rem;
             }
 
             .footer-grid {
                 grid-template-columns: 1fr;
-                text-align: center;
-            }
-
-            .footer-social {
-                justify-content: center;
+                gap: 32px;
             }
 
             .footer-bottom {
                 flex-direction: column;
-                gap: 1rem;
-            }
-
-            .floating-icon {
-                display: none;
+                gap: 20px;
+                text-align: center;
             }
         }
 
         @media (max-width: 480px) {
-            .hero h1 {
+            .hero-title {
                 font-size: 2rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .hero-buttons .btn {
+                width: 100%;
             }
 
             .hero-stats {
                 flex-direction: column;
-                gap: 1.5rem;
+                gap: 24px;
             }
 
-            .hero-card-actions {
-                grid-template-columns: repeat(3, 1fr);
-                gap: 0.5rem;
+            .cta-buttons {
+                flex-direction: column;
             }
 
-            .action-btn {
-                padding: 0.75rem 0.5rem;
+            .cta-buttons .btn {
+                width: 100%;
             }
+        }
 
-            .btn-lg {
-                padding: 0.875rem 1.5rem;
-                font-size: 1rem;
-            }
+        /* ========================================
+           Mobile Menu Active State
+        ======================================== */
+        .nav-links.active {
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            top: 72px;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 24px;
+            gap: 16px;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-buttons.active {
+            display: flex;
+            flex-direction: column;
+            padding: 0 24px 24px;
+            gap: 12px;
+        }
+
+        .nav-buttons.active .btn {
+            width: 100%;
         }
     </style>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar" id="navbar">
-        <div class="container">
+    <nav class="navbar">
+        <div class="nav-container">
             <a href="#" class="logo">
-                <div class="logo-icon">S</div>
-                <span class="gradient-text">SmartBank</span>
+                <div class="logo-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z"/></svg>
+                </div>
+                SmartBank
             </a>
-            <div class="nav-links">
-                <a href="#features">Fitur</a>
-                <a href="#how-it-works">Cara Kerja</a>
-                <a href="#security">Keamanan</a>
-                <a href="#stats">Statistik</a>
+            <div class="nav-links" id="navLinks">
+                <a href="#fitur">Fitur</a>
+                <a href="#cara-kerja">Cara Kerja</a>
+                <a href="#keamanan">Keamanan</a>
             </div>
-            <div class="nav-buttons">
-                <button class="btn btn-outline">Masuk</button>
-                <button class="btn btn-primary">Daftar</button>
+            <div class="nav-buttons" id="navButtons">
+                <a href="#" class="btn btn-secondary">Login</a>
+                <a href="#" class="btn btn-primary">Register</a>
             </div>
-            <div class="hamburger" id="hamburger">
+            <button class="mobile-menu" id="mobileMenu">
                 <span></span>
                 <span></span>
                 <span></span>
-            </div>
+            </button>
         </div>
     </nav>
 
-    <!-- Mobile Menu -->
-    <div class="mobile-menu" id="mobileMenu">
-        <a href="#features">Fitur</a>
-        <a href="#how-it-works">Cara Kerja</a>
-        <a href="#security">Keamanan</a>
-        <a href="#stats">Statistik</a>
-        <div class="nav-buttons">
-            <button class="btn btn-outline" style="width: 100%;">Masuk</button>
-            <button class="btn btn-primary" style="width: 100%;">Daftar</button>
-        </div>
-    </div>
-
     <!-- Hero Section -->
     <section class="hero">
-        <div class="hero-bg"></div>
-        <div class="floating-icons">
-            <div class="floating-icon">💳</div>
-            <div class="floating-icon">💰</div>
-            <div class="floating-icon">📱</div>
-            <div class="floating-icon">🔒</div>
-            <div class="floating-icon">📊</div>
-            <div class="floating-icon">🏪</div>
-        </div>
-        <div class="container">
-            <div class="hero-content">
+        <div class="hero-container">
+            <div class="hero-content animate-on-scroll">
                 <div class="hero-badge">
-                    <span class="dot"></span>
-                    <span>Platform Active</span>
+                    <span class="hero-badge-dot"></span>
+                    Sistem Perbankan Digital
                 </div>
-                <h1>Banking Digital untuk <span class="gradient-text">UMKM Indonesia</span></h1>
-                <p>SmartBank memungkinkan transaksi antar pengguna, manajemen saldo, dan layanan pinjaman dalam satu sistem terpadu yang aman dan mudah digunakan.</p>
+                <h1 class="hero-title">Banking Cerdas untuk UMKM Indonesia</h1>
+                <p class="hero-subtitle">SmartBank adalah platform perbankan digital yang dirancang untuk mendukung pertumbuhan bisnis Anda dengan transaksi cepat, aman, dan terpercaya.</p>
                 <div class="hero-buttons">
-                    <button class="btn btn-primary btn-lg">Mulai Sekarang</button>
-                    <button class="btn btn-outline btn-lg">Pelajari Lebih</button>
+                    <a href="#" class="btn btn-primary btn-large">Mulai Sekarang</a>
+                    <a href="#fitur" class="btn btn-secondary btn-large">Pelajari Fitur</a>
                 </div>
                 <div class="hero-stats">
-                    <div class="stat-item">
-                        <div class="stat-number" data-target="10000">0</div>
-                        <div class="stat-label">Pengguna Aktif</div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value" data-target="10000" data-suffix="+">0+</div>
+                        <div class="hero-stat-label">Pengguna Aktif</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number" data-target="50000">0</div>
-                        <div class="stat-label">Transaksi</div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value" data-target="50000" data-suffix="+">0+</div>
+                        <div class="hero-stat-label">Transaksi Berhasil</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-number" data-target="99" data-suffix="%">0</div>
-                        <div class="stat-label">Uptime</div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value" data-target="98" data-suffix="%">0%</div>
+                        <div class="hero-stat-label">Tingkat Persetujuan Pinjaman</div>
                     </div>
                 </div>
             </div>
-            <div class="hero-visual">
+            <div class="hero-visual animate-on-scroll">
                 <div class="hero-card">
+                    <div class="hero-card-decoration"></div>
                     <div class="hero-card-header">
-                        <div class="hero-card-title">Saldo Tersedia</div>
-                        <div class="hero-card-tier">
-                            <span>⭐</span>
-                            <span>Tier GOLD</span>
+                        <div class="hero-card-logo">
+                            <div class="hero-card-logo-icon"></div>
+                            SmartBank
+                        </div>
+                        <div class="hero-card-menu">
+                            <span></span>
+                            <span></span>
+                            <span></span>
                         </div>
                     </div>
-                    <div class="hero-card-balance gradient-text">Rp 25.750.000</div>
-                    <div style="color: var(--text-secondary); font-size: 0.9rem;">User ID: userman</div>
-                    <div class="hero-card-actions">
-                        <div class="action-btn">
-                            <div class="action-btn-icon">💸</div>
-                            <div class="action-btn-label">Transfer</div>
+                    <div class="hero-card-balance-label">Saldo Tersedia</div>
+                    <div class="hero-card-balance">Rp 12.500.000</div>
+                    <span class="hero-card-tier">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>
+                        Tiers GOLD
+                    </span>
+                    <div class="hero-card-info">
+                        <div class="hero-card-info-item">
+                            <div class="hero-card-info-label">Role</div>
+                            <div class="hero-card-info-value">NASABAH</div>
                         </div>
-                        <div class="action-btn">
-                            <div class="action-btn-icon">📥</div>
-                            <div class="action-btn-label">Terima</div>
-                        </div>
-                        <div class="action-btn">
-                            <div class="action-btn-icon">📋</div>
-                            <div class="action-btn-label">History</div>
+                        <div class="hero-card-info-item">
+                            <div class="hero-card-info-label">User ID</div>
+                            <div class="hero-card-info-value">SB-2026-001</div>
                         </div>
                     </div>
                 </div>
@@ -1148,110 +1160,144 @@
     </section>
 
     <!-- Features Section -->
-    <section class="features" id="features">
+    <section class="features" id="fitur">
         <div class="container">
-            <h2 class="section-title animate-on-scroll">Fitur <span class="gradient-text">SmartBank</span></h2>
-            <p class="section-subtitle animate-on-scroll">Semua kebutuhan banking UMKM Anda dalam satu platform yang lengkap dan aman.</p>
+            <h2 class="section-title animate-on-scroll">Fitur Unggulan</h2>
+            <p class="section-subtitle animate-on-scroll">Semua yang Anda butuhkan untuk mengelola keuangan bisnis dalam satu platform</p>
             <div class="features-grid">
                 <div class="feature-card animate-on-scroll">
-                    <div class="feature-icon">👤</div>
-                    <h3>Registrasi & Login</h3>
-                    <p>Daftar dengan mudah menggunakan User ID. Login aman dengan JWT token dan bcrypt password hashing.</p>
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                    </div>
+                    <h3 class="feature-title">Registrasi & Login</h3>
+                    <p class="feature-description">Akun aman dengan verifikasi JWT untuk keamanan maksimal dalam setiap transaksi.</p>
                 </div>
                 <div class="feature-card animate-on-scroll">
-                    <div class="feature-icon">💰</div>
-                    <h3>Cek Saldo</h3>
-                    <p>Pantau saldo terbaru secara real-time dengan tampilan yang clean dan informatif.</p>
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                    </div>
+                    <h3 class="feature-title">Cek Saldo</h3>
+                    <p class="feature-description">Pantau saldo real-time kapan saja dengan update instan dan akurat.</p>
                 </div>
                 <div class="feature-card animate-on-scroll">
-                    <div class="feature-icon">💸</div>
-                    <h3>Transfer</h3>
-                    <p>Transfer saldo ke pengguna lain dengan cepat dan aman. Tersedia berbagai metode transfer.</p>
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                    </div>
+                    <h3 class="feature-title">Transfer Dana</h3>
+                    <p class="feature-description">Kirim uang ke user lain secara instan tanpa biaya tersembunyi.</p>
                 </div>
                 <div class="feature-card animate-on-scroll">
-                    <div class="feature-icon">📊</div>
-                    <h3>Pinjaman (Loan)</h3>
-                    <p>Minta pinjaman hingga Rp 100 juta dengan bunga 10% per tahun. Tersedia 3 tier: Reguler, Gold, Prioritas.</p>
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+                    </div>
+                    <h3 class="feature-title">Pinjaman Digital</h3>
+                    <p class="feature-description">Ajukan pinjaman dengan bunga kompetitif dan proses persetujuan cepat.</p>
                 </div>
                 <div class="feature-card animate-on-scroll">
-                    <div class="feature-icon">📜</div>
-                    <h3>History Transaksi</h3>
-                    <p>Lihat semua riwayat transaksi dan ledger 100 transaksi terakhir dengan detail lengkap.</p>
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+                    </div>
+                    <h3 class="feature-title">History Transaksi</h3>
+                    <p class="feature-description">Lacak semua aktivitas keuangan dengan ledger lengkap dan detail transaksi.</p>
                 </div>
                 <div class="feature-card animate-on-scroll">
-                    <div class="feature-icon">🔐</div>
-                    <h3>Keamanan Tinggi</h3>
-                    <p>SQL Injection prevention, XSS protection, Rate limiting, dan Helmet.js security headers.</p>
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                    </div>
+                    <h3 class="feature-title">Keamanan Canggih</h3>
+                    <p class="feature-description">Lindungi aset dengan enkripsi bank-grade dan multi-layer security.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- How It Works Section -->
-    <section class="how-it-works" id="how-it-works">
+    <section class="how-it-works" id="cara-kerja">
         <div class="container">
-            <h2 class="section-title animate-on-scroll">Cara <span class="gradient-text">Kerja</span></h2>
-            <p class="section-subtitle animate-on-scroll">Mulai gunakan SmartBank dalam tiga langkah mudah.</p>
+            <h2 class="section-title animate-on-scroll">Cara Kerja</h2>
+            <p class="section-subtitle animate-on-scroll">Mulai dalam 3 langkah mudah</p>
             <div class="steps-container">
-                <div class="steps-line"></div>
-                <div class="step animate-on-scroll">
+                <div class="step-card animate-on-scroll">
                     <div class="step-number">1</div>
-                    <h3>Registrasi</h3>
-                    <p>Daftar dengan User ID unik dan mulai perjalanan banking digital Anda.</p>
+                    <h3 class="step-title">Registrasi</h3>
+                    <p class="step-description">Daftar akun baru dengan verifikasi email. Proses cepat dan gratis untuk semua kalangan.</p>
                 </div>
-                <div class="step animate-on-scroll">
+                <div class="step-card animate-on-scroll">
                     <div class="step-number">2</div>
-                    <h3>Transaksi</h3>
-                    <p>Transfer, cek saldo, dan kelola keuangan UMKM Anda dengan aman.</p>
+                    <h3 class="step-title">Transaksi</h3>
+                    <p class="step-description">Transfer, cek saldo, dan kelola keuangan bisnis Anda dengan mudah dan aman.</p>
                 </div>
-                <div class="step animate-on-scroll">
+                <div class="step-card animate-on-scroll">
                     <div class="step-number">3</div>
-                    <h3>Tumbuh Bisnis</h3>
-                    <p>Gunakan pinjaman untuk berkembang dan naik tier untuk limit lebih besar.</p>
+                    <h3 class="step-title">Tumbuh Bisnis</h3>
+                    <p class="step-description">Gunakan pinjaman digital untuk mengembangkan usaha dan meningkatkan omzet.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Security Section -->
-    <section class="security" id="security">
+    <section class="security" id="keamanan">
         <div class="container">
-            <h2 class="section-title animate-on-scroll">Keamanan <span class="gradient-text">Terbaik</span></h2>
-            <p class="section-subtitle animate-on-scroll">SmartBank dilengkapi dengan fitur keamanan tingkat enterprise untuk melindungi data Anda.</p>
             <div class="security-grid">
-                <div class="security-card animate-on-scroll">
-                    <div class="security-icon">🔑</div>
-                    <div class="security-content">
-                        <h4>JWT Authentication</h4>
-                        <p>Autentikasi dengan JWT (HS256) dengan expire 1 hari dan tamper detection untuk keamanan maksimal.</p>
+                <div class="security-content animate-on-scroll">
+                    <div class="security-header">
+                        <h2 class="section-title">Keamanan Tingkat Bank</h2>
+                        <p class="section-subtitle">Standar keamanan tertinggi untuk melindungi data dan aset Anda</p>
+                    </div>
+                    <div class="security-list">
+                        <div class="security-item">
+                            <div class="security-icon">
+                                <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                            </div>
+                            <div class="security-content">
+                                <h4>JWT Authentication</h4>
+                                <p>Token-based authentication dengan enkripsi HS256 untuk keamanan akses.</p>
+                            </div>
+                        </div>
+                        <div class="security-item">
+                            <div class="security-icon">
+                                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                            </div>
+                            <div class="security-content">
+                                <h4>SQL Injection Prevention</h4>
+                                <p>Parameterized queries untuk mencegah serangan database.</p>
+                            </div>
+                        </div>
+                        <div class="security-item">
+                            <div class="security-icon">
+                                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                            </div>
+                            <div class="security-content">
+                                <h4>XSS Protection</h4>
+                                <p>Helmet.js headers dan input validation untuk keamanan aplikasi.</p>
+                            </div>
+                        </div>
+                        <div class="security-item">
+                            <div class="security-icon">
+                                <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                            </div>
+                            <div class="security-content">
+                                <h4>Rate Limiting</h4>
+                                <p>Anti-spam dengan 50 request per menit untuk melindungi sistem.</p>
+                            </div>
+                        </div>
+                        <div class="security-item">
+                            <div class="security-icon">
+                                <svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+                            </div>
+                            <div class="security-content">
+                                <h4>Password Hashing</h4>
+                                <p>bcryptjs dengan 10 rounds encryption untuk keamanan data sensitif.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="security-card animate-on-scroll">
-                    <div class="security-icon">🛡️</div>
-                    <div class="security-content">
-                        <h4>SQL Injection Prevention</h4>
-                        <p>Parameterized queries menggunakan mysql2 untuk mencegah SQL injection attacks.</p>
-                    </div>
-                </div>
-                <div class="security-card animate-on-scroll">
-                    <div class="security-icon">⚔️</div>
-                    <div class="security-content">
-                        <h4>XSS Protection</h4>
-                        <p>Helmet.js headers dan Zod validation untuk melindungi dari cross-site scripting.</p>
-                    </div>
-                </div>
-                <div class="security-card animate-on-scroll">
-                    <div class="security-icon">🚦</div>
-                    <div class="security-content">
-                        <h4>Rate Limiting</h4>
-                        <p>Batasi request: 5 req/menit untuk auth, 50 req/menit untuk endpoint umum.</p>
-                    </div>
-                </div>
-                <div class="security-card animate-on-scroll">
-                    <div class="security-icon">🔒</div>
-                    <div class="security-content">
-                        <h4>bcrypt Password Hashing</h4>
-                        <p>Password di-hash dengan bcryptjs (10 rounds) sebelum disimpan ke database.</p>
+                <div class="security-visual animate-on-scroll">
+                    <div class="security-shield">
+                        <div class="security-shield-inner">
+                            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1259,34 +1305,24 @@
     </section>
 
     <!-- Stats Section -->
-    <section class="stats" id="stats">
+    <section class="stats">
         <div class="container">
-            <h2 class="section-title animate-on-scroll">Statistik <span class="gradient-text">Platform</span></h2>
-            <p class="section-subtitle animate-on-scroll">Angka yang menunjukkan kepercayaan пользователей terhadap SmartBank.</p>
             <div class="stats-grid">
                 <div class="stat-card animate-on-scroll">
-                    <div class="stat-icon">👥</div>
-                    <div class="stat-value" data-target="10000" data-suffix="+">0</div>
-                    <div class="stat-title">Pengguna Terdaftar</div>
-                    <div class="stat-desc">UMKM di seluruh Indonesia</div>
+                    <div class="stat-value" data-target="10000" data-suffix="+">0+</div>
+                    <div class="stat-label">Pengguna Aktif</div>
                 </div>
                 <div class="stat-card animate-on-scroll">
-                    <div class="stat-icon">💳</div>
-                    <div class="stat-value" data-target="50000" data-suffix="+">0</div>
-                    <div class="stat-title">Transaksi Berhasil</div>
-                    <div class="stat-desc">Transfer & pembayaran</div>
+                    <div class="stat-value" data-target="50000" data-suffix="+">0+</div>
+                    <div class="stat-label">Transaksi per Hari</div>
                 </div>
                 <div class="stat-card animate-on-scroll">
-                    <div class="stat-icon">✅</div>
-                    <div class="stat-value" data-target="98" data-suffix="%">0</div>
-                    <div class="stat-title">Approval Pinjaman</div>
-                    <div class="stat-desc">Persetujuan cepat</div>
+                    <div class="stat-value" data-target="98" data-suffix="%">0%</div>
+                    <div class="stat-label">Persetujuan Pinjaman</div>
                 </div>
                 <div class="stat-card animate-on-scroll">
-                    <div class="stat-icon">⚡</div>
-                    <div class="stat-value" data-target="99" data-suffix="%">0</div>
-                    <div class="stat-title">Uptime Server</div>
-                    <div class="stat-desc">Ketersediaan tinggi</div>
+                    <div class="stat-value" data-target="99" data-suffix="%">0%</div>
+                    <div class="stat-label">Uptime Sistem</div>
                 </div>
             </div>
         </div>
@@ -1295,10 +1331,13 @@
     <!-- CTA Section -->
     <section class="cta">
         <div class="container">
-            <div class="cta-box animate-on-scroll">
-                <h2>Siap Memulai Perjalanan Banking Digital Anda?</h2>
-                <p>Bergabung dengan ribuan UMKM yang sudah menggunakan SmartBank untuk mengelola keuangan bisnis mereka.</p>
-                <button class="btn btn-lg">Daftar Gratis Sekarang</button>
+            <div class="cta-content animate-on-scroll">
+                <h2 class="cta-title">Siap Memulai Banking Cerdas?</h2>
+                <p class="cta-subtitle">Bergabung dengan ribuan pelaku UMKM yang sudah menggunakan SmartBank untuk mengelola keuangan bisnis mereka.</p>
+                <div class="cta-buttons">
+                    <a href="#" class="btn btn-primary btn-large">Daftar Gratis</a>
+                    <a href="#" class="btn btn-secondary btn-large">Hubungi Kami</a>
+                </div>
             </div>
         </div>
     </section>
@@ -1308,52 +1347,48 @@
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-brand">
-                    <a href="#" class="logo">
-                        <div class="logo-icon">S</div>
-                        <span class="gradient-text">SmartBank</span>
-                    </a>
-                    <p>Platform perbankan digital yang dirancang khusus untuk mendukung ekosistem UMKM Indonesia.</p>
-                    <div class="footer-social">
-                        <a href="#">📘</a>
-                        <a href="#">🐦</a>
-                        <a href="#">📸</a>
-                        <a href="#">💼</a>
+                    <div class="logo">
+                        <div class="logo-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z"/></svg>
+                        </div>
+                        SmartBank
                     </div>
+                    <p>Platform perbankan digital untuk ekosistem UMKM Indonesia. Dirancang untuk mendukung pertumbuhan bisnis dengan teknologi terdepan.</p>
                 </div>
-                <div class="footer-column">
+                <div class="footer-links">
                     <h4>Produk</h4>
-                    <ul>
-                        <li><a href="#">Registrasi</a></li>
-                        <li><a href="#">Transfer</a></li>
-                        <li><a href="#">Pinjaman</a></li>
-                        <li><a href="#">History</a></li>
-                    </ul>
+                    <a href="#">Fitur</a>
+                    <a href="#">Harga</a>
+                    <a href="#">API</a>
+                    <a href="#">Dokumentasi</a>
                 </div>
-                <div class="footer-column">
+                <div class="footer-links">
                     <h4>Perusahaan</h4>
-                    <ul>
-                        <li><a href="#">Tentang Kami</a></li>
-                        <li><a href="#">Karir</a></li>
-                        <li><a href="#">Blog</a></li>
-                        <li><a href="#">Press</a></li>
-                    </ul>
+                    <a href="#">Tentang</a>
+                    <a href="#">Karir</a>
+                    <a href="#">Kontak</a>
+                    <a href="#">Blog</a>
                 </div>
-                <div class="footer-column">
+                <div class="footer-links">
                     <h4>Bantuan</h4>
-                    <ul>
-                        <li><a href="#">FAQ</a></li>
-                        <li><a href="#">Kontak</a></li>
-                        <li><a href="#">Kebijakan Privasi</a></li>
-                        <li><a href="#">Syarat & Ketentuan</a></li>
-                    </ul>
+                    <a href="#">Tutorial</a>
+                    <a href="#">Support</a>
+                    <a href="#">FAQ</a>
+                    <a href="#">Status</a>
                 </div>
             </div>
             <div class="footer-bottom">
-                <div>© 2026 SmartBank. Hak cipta dilindungi.</div>
-                <div class="footer-links">
-                    <a href="#">Kebijakan Privasi</a>
-                    <a href="#">Syarat Layanan</a>
-                    <a href="#">Cookie Policy</a>
+                <p>2026 SmartBank. MIT License.</p>
+                <div class="footer-social">
+                    <a href="#" aria-label="Website">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    </a>
+                    <a href="#" aria-label="Twitter">
+                        <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    </a>
+                    <a href="#" aria-label="GitHub">
+                        <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    </a>
                 </div>
             </div>
         </div>
@@ -1361,39 +1396,20 @@
 
     <script>
         // ========================================
-        // Navbar Scroll Effect
-        // ========================================
-        const navbar = document.getElementById('navbar');
-        
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
-
-        // ========================================
         // Mobile Menu Toggle
         // ========================================
-        const hamburger = document.getElementById('hamburger');
         const mobileMenu = document.getElementById('mobileMenu');
+        const navLinks = document.getElementById('navLinks');
+        const navButtons = document.getElementById('navButtons');
 
-        hamburger.addEventListener('click', () => {
-            hamburger.classList.toggle('active');
+        mobileMenu.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            navButtons.classList.toggle('active');
             mobileMenu.classList.toggle('active');
         });
 
-        // Close mobile menu when clicking a link
-        mobileMenu.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                hamburger.classList.remove('active');
-                mobileMenu.classList.remove('active');
-            });
-        });
-
         // ========================================
-        // Intersection Observer for Animations
+        // Scroll Animations
         // ========================================
         const observerOptions = {
             root: null,
@@ -1456,37 +1472,16 @@
                 e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
+                    // Close mobile menu if open
+                    navLinks.classList.remove('active');
+                    navButtons.classList.remove('active');
+                    mobileMenu.classList.remove('active');
+                    
                     target.scrollIntoView({
                         behavior: 'smooth',
                         block: 'start'
                     });
                 }
-            });
-        });
-
-        // ========================================
-        // Button Interactions
-        // ========================================
-        document.querySelectorAll('.btn').forEach(btn => {
-            btn.addEventListener('mouseenter', function() {
-                this.style.transform = 'translateY(-3px)';
-            });
-            btn.addEventListener('mouseleave', function() {
-                this.style.transform = 'translateY(0)';
-            });
-        });
-
-        // ========================================
-        // Feature Cards Hover Effect
-        // ========================================
-        document.querySelectorAll('.feature-card').forEach(card => {
-            card.addEventListener('mousemove', function(e) {
-                const rect = this.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                
-                this.style.setProperty('--mouse-x', `${x}px`);
-                this.style.setProperty('--mouse-y', `${y}px`);
             });
         });
     </script>
