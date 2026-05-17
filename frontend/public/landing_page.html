@@ -221,6 +221,10 @@
             width: 100%;
         }
 
+        .nav-links a.active {
+            color: var(--primary-blue);
+        }
+
         .nav-buttons {
             display: flex;
             gap: 12px;
@@ -252,10 +256,10 @@
         ======================================== */
         .hero {
             min-height: 100vh;
-            height: 100vh;
             padding: 0;
             display: flex;
             align-items: center;
+            justify-content: center;
             background: var(--secondary-bg);
             position: relative;
             overflow: hidden;
@@ -276,10 +280,10 @@
             max-width: 1200px;
             width: 100%;
             margin: 0 auto;
-            padding: 0 24px;
+            padding: 80px 24px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 80px;
+            gap: 60px;
             align-items: center;
         }
 
@@ -361,7 +365,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 500px;
+            padding: 40px 0;
         }
 
         .hero-card-3d {
@@ -809,7 +813,72 @@
         }
 
         /* ========================================
-           Security Section
+           Partners Section
+        ======================================== */
+        .partners {
+            padding: 80px 0;
+            background: var(--primary-bg);
+        }
+
+        .partners-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 48px;
+            margin-top: 48px;
+        }
+
+        .partner-logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 24px 32px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            transition: var(--transition);
+            min-width: 160px;
+        }
+
+        .partner-logo:hover {
+            background: white;
+            box-shadow: var(--card-shadow-hover);
+            transform: translateY(-4px);
+        }
+
+        .partner-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary-blue);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .partner-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .partner-name {
+            font-weight: 600;
+            font-size: 0.9375rem;
+            color: var(--text-primary);
+        }
+
+        .partner-type {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ========================================
+           Security Section (Bento Box)
         ======================================== */
         .security {
             padding: 100px 0;
@@ -844,11 +913,11 @@
             line-height: 1.7;
         }
 
-        /* Bento Box Grid */
+        /* Bento Box Grid - Clean Design */
         .bento-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: auto auto;
+            grid-template-rows: repeat(3, auto);
             gap: 20px;
         }
 
@@ -883,12 +952,9 @@
             grid-column: span 2;
         }
 
-        /* Tall card - spans 2 rows */
-        .bento-card.tall {
-            grid-row: span 2;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+        /* Full width card */
+        .bento-card.full {
+            grid-column: span 3;
         }
 
         .bento-icon {
@@ -1441,12 +1507,8 @@
                 grid-column: span 2;
             }
 
-            .bento-card.tall {
-                grid-row: span 1;
-            }
-
-            .bento-shield-card {
-                grid-row: span 1;
+            .bento-card.full {
+                grid-column: span 2;
             }
 
             .api-grid {
@@ -1517,18 +1579,22 @@
                 max-width: 100%;
             }
 
+            .partners-logos {
+                gap: 24px;
+            }
+
+            .partner-logo {
+                min-width: 140px;
+                padding: 20px 24px;
+            }
+
             .bento-grid {
                 grid-template-columns: 1fr;
             }
 
             .bento-card.large,
-            .bento-card.tall {
+            .bento-card.full {
                 grid-column: span 1;
-                grid-row: span 1;
-            }
-
-            .bento-shield-card {
-                grid-row: span 1;
             }
 
             .stats-grid {
@@ -1780,6 +1846,51 @@
         </div>
     </section>
 
+    <!-- Partners Section -->
+    <section class="partners" id="mitra">
+        <div class="container">
+            <h2 class="section-title animate-on-scroll">Ekosistem Terintegrasi</h2>
+            <p class="section-subtitle animate-on-scroll">Berkomunikasi dengan platform UMKM dan marketplace populer di Indonesia</p>
+            <div class="partners-logos animate-on-scroll">
+                <div class="partner-logo">
+                    <div class="partner-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    </div>
+                    <span class="partner-name">PasarKita</span>
+                    <span class="partner-type">Marketplace</span>
+                </div>
+                <div class="partner-logo">
+                    <div class="partner-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+                    </div>
+                    <span class="partner-name">UMKM Insight</span>
+                    <span class="partner-type">Analytics</span>
+                </div>
+                <div class="partner-logo">
+                    <div class="partner-icon">
+                        <svg viewBox="0 0 24 24"><path d="M18.36 9l.6 3H5.04l.6-3h12.72M20 4H4v2h16V4zm0 3H4l-1 5v2h1v6h10v-6h4v6h2v-6h1v-2l-1-5zM6 18v-4h6v4H6z"/></svg>
+                    </div>
+                    <span class="partner-name">SupplierHub</span>
+                    <span class="partner-type">Supplier</span>
+                </div>
+                <div class="partner-logo">
+                    <div class="partner-icon">
+                        <svg viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 19 9 21 15 21c2.92 0 5.18-1.82 6.58-4.6l1.98.48c-.41-.74-1.06-1.51-1.56-1.88z"/></svg>
+                    </div>
+                    <span class="partner-name">LogistiKita</span>
+                    <span class="partner-type">Logistics</span>
+                </div>
+                <div class="partner-logo">
+                    <div class="partner-icon">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    </div>
+                    <span class="partner-name">Koperasi Digital</span>
+                    <span class="partner-type">Cooperative</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Security Section -->
     <section class="security" id="keamanan">
         <div class="container">
@@ -1801,25 +1912,6 @@
                         <p class="bento-description">Token-based authentication dengan enkripsi HS256 untuk keamanan akses yang tidak dapat di-tamper.</p>
                     </div>
                     
-                    <!-- Shield Visual - Tall card -->
-                    <div class="bento-shield-card">
-                        <div class="bento-shield-icon">
-                            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
-                        </div>
-                        <h3>Bank-Grade Security</h3>
-                        <p>Enkripsi end-to-end dengan standar industri</p>
-                        <div class="bento-stats">
-                            <div class="bento-stat">
-                                <div class="bento-stat-value">256-bit</div>
-                                <div class="bento-stat-label">Encryption</div>
-                            </div>
-                            <div class="bento-stat">
-                                <div class="bento-stat-value">24/7</div>
-                                <div class="bento-stat-label">Monitoring</div>
-                            </div>
-                        </div>
-                    </div>
-                    
                     <!-- SQL Injection Prevention -->
                     <div class="bento-card">
                         <div class="bento-icon">
@@ -1838,7 +1930,7 @@
                         <p class="bento-description">Helmet.js headers dan input validation untuk keamanan aplikasi.</p>
                     </div>
                     
-                    <!-- Rate Limiting & Password -->
+                    <!-- Rate Limiting & Password - Full width -->
                     <div class="bento-card large">
                         <div class="bento-icon large-icon">
                             <svg viewBox="0 0 24 24"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
@@ -1853,6 +1945,25 @@
                             <div class="bento-feature">
                                 <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                                 bcrypt 10 rounds encryption
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 256-bit Encryption - Full width -->
+                    <div class="bento-card large">
+                        <div class="bento-icon large-icon">
+                            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                        </div>
+                        <h3 class="bento-title">Bank-Grade Encryption</h3>
+                        <p class="bento-description">Enkripsi 256-bit end-to-end untuk semua transaksi dan data sensitif Anda.</p>
+                        <div class="bento-features">
+                            <div class="bento-feature">
+                                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                256-bit AES encryption
+                            </div>
+                            <div class="bento-feature">
+                                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                24/7 security monitoring
                             </div>
                         </div>
                     </div>
@@ -2268,6 +2379,34 @@ amount, tax, fee, description, created_at</span></code>
             const card = header.closest('.api-endpoint-card');
             card.classList.toggle('active');
         }
+
+        // ========================================
+        // Active Navigation Link Highlighting
+        // ========================================
+        const sections = document.querySelectorAll('section[id]');
+        const navLinksItems = document.querySelectorAll('.nav-links a');
+
+        function highlightNavLink() {
+            const scrollY = window.scrollY;
+            
+            sections.forEach(section => {
+                const sectionHeight = section.offsetHeight;
+                const sectionTop = section.offsetTop - 100;
+                const sectionId = section.getAttribute('id');
+                
+                if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+                    navLinksItems.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href') === '#' + sectionId) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }
+
+        window.addEventListener('scroll', highlightNavLink);
+        highlightNavLink(); // Initial call
     </script>
 </body>
 </html>
