@@ -1,0 +1,864 @@
+openapi: 3.0.3
+info:
+  title: SmartBank API
+  description: |
+    SmartBank adalah platform perbankan digital yang dirancang khusus untuk mendukung ekosistem UMKM Indonesia.
+    API ini menyediakan layanan transaksi antar pengguna, manajemen saldo, dan layanan pinjaman.
+  version: 1.0.0
+  contact:
+    name: Tim RPL 2 Becode
+    url: https://github.com/RPL2-Becode/SmartBank
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:5000/smartbank
+    description: Development server
+  - url: https://api.smartbank.example.com/smartbank
+    description: Production server
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Registrasi user baru
+      description: |
+        Mendaftarkan user baru dengan saldo awal Rp 50.000.
+        User ID akan digenerate otomatis dengan format `USER_<timestamp>_<random4digit>`.
+        Role default adalah NASABAH, tier default adalah REGULER.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registrasi berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Data tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: User sudah terdaftar
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login user
+      description: Autentikasi user dan generate JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Password salah
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Kesalahan server
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /balance:
+    get:
+      tags:
+        - Balance
+      summary: Cek saldo
+      description: Mengembalikan saldo user dan 10 transaksi terakhir
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Saldo user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BalanceResponse'
+        '401':
+          description: Token tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Token tidak disediakan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /transfer:
+    post:
+      tags:
+        - Transactions
+      summary: Transfer saldo
+      description: |
+        Transfer saldo ke user lain.
+        Max 10 transaksi per hari.
+        Cooldown 10 detik antar transaksi.
+        Biaya: 1% bank fee + 2% pajak.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          description: Transfer berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+        '400':
+          description: Saldo tidak mencukupi atau validasi gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Token tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User penerima tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /payment:
+    post:
+      tags:
+        - Transactions
+      summary: Pembayaran
+      description: |
+        Pembayaran untuk layanan (Marketplace, POS, Supplier, Logistik, dll).
+        Hanya privileged users (ADMIN, TELLER, MANAGER) yang bisa menentukan fromUserId.
+        User biasa hanya bisa bayar dari akun sendiri.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '200':
+          description: Pembayaran berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          description: Saldo tidak mencukupi atau validasi gagal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Token tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /loan:
+    post:
+      tags:
+        - Loans
+      summary: Minta pinjaman
+      description: |
+        Minta pinjaman dengan limit berdasarkan tier:
+        - REGULER: Rp 5.000.000
+        - GOLD: Rp 20.000.000
+        - PRIORITAS: Rp 100.000.000
+        Bunga: 10% (dapat diubah via system_rates)
+        Status: Otomatis APPROVED
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanRequest'
+      responses:
+        '200':
+          description: Pinjaman disetujui
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanResponse'
+        '400':
+          description: Jumlah melebihi limit tier
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Token tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /loans:
+    get:
+      tags:
+        - Loans
+      summary: List pinjaman
+      description: |
+        Admin/Privileged: Melihat semua pinjaman
+        User biasa: Melihat pinjaman sendiri
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Daftar pinjaman
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoansResponse'
+        '403':
+          description: Token tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /loan/pay:
+    post:
+      tags:
+        - Loans
+      summary: Bayar angsuran
+      description: |
+        Bayar angsuran pinjaman.
+        Jika terlambat, dikenakan denda Rp 2.000 (dapat diubah via system_rates).
+        Hanya bisa bayar angsuran sendiri.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanPayRequest'
+      responses:
+        '200':
+          description: Pembayaran berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanPayResponse'
+        '400':
+          description: Saldo tidak cukup
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Token tidak valid atau tidak diizinkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Angsuran tidak ditemukan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /history:
+    get:
+      tags:
+        - Transactions
+      summary: History transaksi user
+      description: |
+        Menampilkan transaksi user (sebagai pengirim atau penerima).
+        Hanya user sendiri yang bisa melihat history-nya.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: History transaksi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryResponse'
+        '403':
+          description: Token tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ledger:
+    get:
+      tags:
+        - Transactions
+      summary: Ledger transaksi
+      description: |
+        Admin/Privileged: Melihat semua transaksi di sistem
+        User biasa: Melihat transaksi sendiri (sebagai pengirim atau penerima)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        '200':
+          description: Ledger transaksi
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerResponse'
+        '403':
+          description: Token tidak valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token dari login
+
+  parameters:
+    page:
+      name: page
+      in: query
+      description: Halaman
+      required: false
+      schema:
+        type: integer
+        default: 1
+        minimum: 1
+    limit:
+      name: limit
+      in: query
+      description: Jumlah item per halaman
+      required: false
+      schema:
+        type: integer
+        default: 100
+        minimum: 1
+        maximum: 1000
+
+  schemas:
+    # Request schemas
+    RegisterRequest:
+      type: object
+      required:
+        - name
+        - password
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: ^[a-zA-Z0-9\s\-.,'()]+$
+          description: Nama user (hanya huruf, angka, spasi, dan karakter sederhana)
+        password:
+          type: string
+          minLength: 6
+          description: Password minimal 6 karakter
+
+    LoginRequest:
+      type: object
+      required:
+        - userId
+        - password
+      properties:
+        userId:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: ^[a-zA-Z0-9_]+$
+          description: User ID (hanya huruf, angka, dan underscore)
+        password:
+          type: string
+          minLength: 1
+          description: Password
+
+    TransferRequest:
+      type: object
+      required:
+        - toUserId
+        - amount
+      properties:
+        toUserId:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: ^[a-zA-Z0-9_]+$
+          description: User ID penerima
+        amount:
+          type: number
+          minimum: 0.01
+          description: Jumlah transfer (positif)
+
+    PaymentRequest:
+      type: object
+      required:
+        - toUserId
+        - amount
+      properties:
+        fromUserId:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: ^[a-zA-Z0-9_]+$
+          description: User ID pengirim (hanya untuk privileged users)
+        toUserId:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: ^[a-zA-Z0-9_]+$
+          description: User ID penerima
+        amount:
+          type: number
+          minimum: 0.01
+          description: Jumlah pembayaran (positif)
+        type:
+          type: string
+          enum:
+            - PAYMENT_MARKETPLACE
+            - PAYMENT_POS
+            - PAYMENT_SUPPLIER
+            - PAYMENT_LOGISTIC
+            - PAYMENT_INSIGHT
+            - PAYMENT
+          default: PAYMENT
+          description: Tipe pembayaran
+        description:
+          type: string
+          maxLength: 255
+          pattern: ^[a-zA-Z0-9\s\-.,'()]+$
+          description: Deskripsi pembayaran
+
+    LoanRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: number
+          minimum: 0.01
+          description: Jumlah pinjaman (harus sesuai limit tier)
+
+    LoanPayRequest:
+      type: object
+      required:
+        - installmentId
+      properties:
+        installmentId:
+          type: integer
+          minimum: 1
+          description: ID angsuran yang akan dibayar
+
+    # Response schemas
+    RegisterResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Registrasi berhasil!
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+              description: JWT token
+            user:
+              $ref: '#/components/schemas/User'
+
+    LoginResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Login berhasil!
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+              description: JWT token
+            user:
+              $ref: '#/components/schemas/User'
+
+    BalanceResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        data:
+          type: object
+          properties:
+            balance:
+              type: number
+              example: 50000.00
+              description: Saldo user
+            loan:
+              type: number
+              example: 0.00
+              description: Total pinjaman user
+            history:
+              type: array
+              items:
+                $ref: '#/components/schemas/Transaction'
+              description: 10 transaksi terakhir
+
+    TransferResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Transfer berhasil
+        data:
+          type: object
+          properties:
+            refId:
+              type: string
+              example: TX-xxxxx
+              description: Referensi transaksi
+            amount:
+              type: number
+              example: 50000
+              description: Jumlah transfer
+
+    PaymentResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Pembayaran berhasil
+        data:
+          type: object
+          properties:
+            refId:
+              type: string
+              example: TX-xxxxx
+              description: Referensi transaksi
+            amount:
+              type: number
+              example: 50000
+              description: Jumlah pembayaran
+
+    LoanResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Pinjaman disetujui
+        data:
+          type: object
+          properties:
+            loanId:
+              type: integer
+              example: 1
+              description: ID pinjaman
+            amount:
+              type: number
+              example: 1000000
+              description: Jumlah pinjaman
+            totalDue:
+              type: number
+              example: 1100000
+              description: Total yang harus dibayar (termasuk bunga)
+            dueDate:
+              type: string
+              format: date-time
+              description: Tanggal jatuh tempo
+
+    LoansResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        data:
+          type: object
+          properties:
+            loans:
+              type: array
+              items:
+                $ref: '#/components/schemas/Loan'
+
+    LoanPayResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: Pinjaman berhasil dilunasi
+        data:
+          type: object
+          properties:
+            amountPaid:
+              type: number
+              example: 1100000
+              description: Jumlah yang dibayar
+            penalty:
+              type: number
+              example: 2000
+              description: Denda keterlambatan (jika ada)
+
+    HistoryResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        data:
+          type: object
+          properties:
+            transactions:
+              type: array
+              items:
+                $ref: '#/components/schemas/Transaction'
+            pagination:
+              $ref: '#/components/schemas/Pagination'
+
+    LedgerResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+          example: Saldo tidak mencukupi
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: amount
+              message:
+                type: string
+                example: Amount harus positif
+
+    # Entity schemas
+    User:
+      type: object
+      properties:
+        userId:
+          type: string
+          example: USER_XXXX_XXXX
+          description: ID user yang digenerate otomatis
+        name:
+          type: string
+          example: John Doe
+        role:
+          $ref: '#/components/schemas/Role'
+        tier:
+          $ref: '#/components/schemas/Tier'
+        balance:
+          type: number
+          example: 50000.00
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        refId:
+          type: string
+          example: TX-xxxxx
+        type:
+          type: string
+          example: TRANSFER
+          description: TRANSFER, PAYMENT_MARKETPLACE, PAYMENT_POS, PAYMENT_SUPPLIER, PAYMENT_LOGISTIC, PAYMENT_INSIGHT, LOAN_DISBURSEMENT, LOAN_REPAYMENT
+        fromUserId:
+          type: string
+          example: USER_A
+        toUserId:
+          type: string
+          example: USER_B
+        baseAmount:
+          type: number
+          example: 50000.00
+        tax:
+          type: number
+          example: 1000.00
+        fee:
+          type: number
+          example: 500.00
+        description:
+          type: string
+          example: Transfer antar user
+        created_at:
+          type: string
+          format: date-time
+
+    Loan:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: string
+          example: USER_A
+        amount:
+          type: number
+          example: 1000000.00
+        interestRate:
+          type: number
+          example: 0.10
+        totalDue:
+          type: number
+          example: 1100000.00
+        status:
+          type: string
+          enum: [PENDING, APPROVED, PAID, REJECTED]
+          example: APPROVED
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        installmentId:
+          type: integer
+          example: 1
+        amountDue:
+          type: number
+          example: 1100000.00
+        penaltyAmount:
+          type: number
+          example: 2000.00
+        installmentStatus:
+          type: string
+          enum: [PENDING, PAID, LATE, OVERDUE]
+        dueDate:
+          type: string
+          format: date
+        paidAt:
+          type: string
+          format: date-time
+          nullable: true
+        installmentCreatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 50
+        offset:
+          type: integer
+          example: 0
+        total:
+          type: integer
+          example: 10
+
+    # Enum schemas
+    Role:
+      type: string
+      enum: [NASABAH, ADMIN, TELLER, MANAGER]
+      description: |
+        - NASABAH: User biasa, bisa transfer, minta loan
+        - ADMIN: Full access
+        - TELLER: Transaksi kas
+        - MANAGER: Approval pinjaman
+
+    Tier:
+      type: string
+      enum: [REGULER, GOLD, PRIORITAS]
+      description: |
+        - REGULER: Default, max loan Rp 5.000.000
+        - GOLD: Balance ≥ Rp 10.000.000, max loan Rp 20.000.000
+        - PRIORITAS: Balance ≥ Rp 50.000.000, max loan Rp 100.000.000

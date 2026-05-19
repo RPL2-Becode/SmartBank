@@ -1,2 +1,61 @@
-Context
-PLANNING.md
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+*.err.log
+*.out.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+
+# Test coverage
+coverage/
+
+# Backup
+backup/
+*.sql
+
+# Temporary files
+*.tmp
+
+# Local files
+.gemini/
+HERMES.md
+GEMINI.md
+memory.md
+rules.md
+Laporan_Testing_SmartBank.docx
+SmartBank Landing.html
+gemini_cli_smartbank_fix_prompt.md
+generate_report.py
+login.png
+CHANGES_SUMMARY.md
+database_testing_report.md
+
+# Documentation
+docs/
+
+# Scripts
+*.cjs
+
+# Images
+*.png
+*.jpg
+*.jpeg
