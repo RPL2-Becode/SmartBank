@@ -1,4 +1,4 @@
-import type { FeeBreakdown, SourceApp, UserRole } from "./types";
+import type { FeeBreakdown, SourceApp, User, UserRole } from "./types";
 
 export const feeRules = {
   marketplace: 0.02,
@@ -96,7 +96,14 @@ export function canAccess(role: UserRole, capability: string) {
 
 // Token storage utilities
 export function getStoredToken(): string | null {
-  return localStorage.getItem("smartbank-session");
+  const raw = localStorage.getItem("smartbank-session");
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed.token || null;
+  } catch {
+    return null;
+  }
 }
 
 export function storeSession(token: string, user: User): void {

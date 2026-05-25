@@ -51,8 +51,8 @@ async function run() {
   });
   console.log(`  Response: ${JSON.stringify(r.data)}`);
   assert(r.data.status === 'success', 'Register user 1');
-  assert(r.data.data.userId === USER1, 'User ID match');
-  assert(r.data.data.balance === 50000, 'Initial balance 50000');
+  assert(r.data.user.userId === USER1, 'User ID match');
+  assert(r.data.user.balance === 50000, 'Initial balance 50000');
 
   // ----------------------------------------------------
   // TEST 2: Register User 2
@@ -64,7 +64,7 @@ async function run() {
   });
   console.log(`  Response: ${JSON.stringify(r.data)}`);
   assert(r.data.status === 'success', 'Register user 2');
-  assert(r.data.data.balance === 50000, 'Initial balance 50000');
+  assert(r.data.user.balance === 50000, 'Initial balance 50000');
 
   // ----------------------------------------------------
   // TEST 3: Login User 1

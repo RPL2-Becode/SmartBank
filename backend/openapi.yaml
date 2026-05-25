@@ -14,9 +14,9 @@ info:
 
 servers:
   - url: http://localhost:5000/smartbank
-    description: Development server
-  - url: https://api.smartbank.example.com/smartbank
-    description: Production server
+    description: Development server (localhost)
+  - url: http://127.0.0.1:5000/smartbank
+    description: Development server (127.0.0.1)
 
 paths:
   /auth/register:
@@ -405,6 +405,11 @@ components:
         - name
         - password
       properties:
+        userId:
+          type: string
+          minLength: 3
+          maxLength: 255
+          description: User ID unik (opsional, akan digenerate jika kosong). Bisa berupa email.
         name:
           type: string
           minLength: 1
@@ -415,6 +420,10 @@ components:
           type: string
           minLength: 6
           description: Password minimal 6 karakter
+        role:
+          $ref: '#/components/schemas/Role'
+        tier:
+          $ref: '#/components/schemas/Tier'
 
     LoginRequest:
       type: object
@@ -425,9 +434,8 @@ components:
         userId:
           type: string
           minLength: 3
-          maxLength: 50
-          pattern: ^[a-zA-Z0-9_]+$
-          description: User ID (hanya huruf, angka, dan underscore)
+          maxLength: 255
+          description: User ID atau Email yang terdaftar
         password:
           type: string
           minLength: 1
@@ -442,8 +450,7 @@ components:
         toUserId:
           type: string
           minLength: 1
-          maxLength: 50
-          pattern: ^[a-zA-Z0-9_]+$
+          maxLength: 255
           description: User ID penerima
         amount:
           type: number
@@ -459,14 +466,12 @@ components:
         fromUserId:
           type: string
           minLength: 1
-          maxLength: 50
-          pattern: ^[a-zA-Z0-9_]+$
+          maxLength: 255
           description: User ID pengirim (hanya untuk privileged users)
         toUserId:
           type: string
           minLength: 1
-          maxLength: 50
-          pattern: ^[a-zA-Z0-9_]+$
+          maxLength: 255
           description: User ID penerima
         amount:
           type: number
@@ -497,7 +502,8 @@ components:
         amount:
           type: number
           minimum: 0.01
-          description: Jumlah pinjaman (harus sesuai limit tier)
+          maximum: 100000
+          description: Jumlah pinjaman (maksimal Rp 100.000)
 
     LoanPayRequest:
       type: object
@@ -519,14 +525,11 @@ components:
         message:
           type: string
           example: Registrasi berhasil!
-        data:
-          type: object
-          properties:
-            token:
-              type: string
-              description: JWT token
-            user:
-              $ref: '#/components/schemas/User'
+        token:
+          type: string
+          description: JWT token
+        user:
+          $ref: '#/components/schemas/User'
 
     LoginResponse:
       type: object
@@ -537,14 +540,11 @@ components:
         message:
           type: string
           example: Login berhasil!
-        data:
-          type: object
-          properties:
-            token:
-              type: string
-              description: JWT token
-            user:
-              $ref: '#/components/schemas/User'
+        token:
+          type: string
+          description: JWT token
+        user:
+          $ref: '#/components/schemas/User'
 
     BalanceResponse:
       type: object
@@ -848,12 +848,14 @@ components:
     # Enum schemas
     Role:
       type: string
-      enum: [NASABAH, ADMIN, TELLER, MANAGER]
+      enum: [NASABAH, ADMIN, TELLER, MANAGER, user, admin, developer, insight_readonly]
       description: |
-        - NASABAH: User biasa, bisa transfer, minta loan
-        - ADMIN: Full access
+        - NASABAH / user: User biasa, bisa transfer, minta loan
+        - ADMIN / admin: Full access
         - TELLER: Transaksi kas
         - MANAGER: Approval pinjaman
+        - developer: Full access (mapped to ADMIN)
+        - insight_readonly: Read-only access (mapped to NASABAH)
 
     Tier:
       type: string

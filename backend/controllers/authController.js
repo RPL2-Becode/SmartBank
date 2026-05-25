@@ -5,7 +5,12 @@ const jwt = require('jsonwebtoken');
 // 1. REGISTRASI USER
 exports.register = async (req, res) => {
     try {
-        const { userId, name, password, role, tier } = req.body;
+        let { userId, name, password, role, tier } = req.body;
+
+        // Auto-generate userId if not provided
+        if (!userId) {
+            userId = `USER_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
+        }
 
         // Cek apakah user ID sudah dipakai
         const [existingUser] = await db.query('SELECT * FROM users WHERE userId = ?', [userId]);
@@ -28,22 +33,44 @@ exports.register = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const finalRole = role || 'NASABAH';
+        const roleMapping = {
+            'user': 'NASABAH',
+            'admin': 'ADMIN',
+            'developer': 'ADMIN',
+            'insight_readonly': 'NASABAH'
+        };
+
+        const finalRole = roleMapping[role] || role || 'NASABAH';
         const finalTier = finalRole === 'NASABAH' ? (tier || 'REGULER') : 'REGULER';
 
         // Simpan ke Database MySQL
-        await db.query(
+        const [result] = await db.query(
             'INSERT INTO users (userId, name, password, role, tier, balance) VALUES (?, ?, ?, ?, ?, ?)',
             [userId, name, hashedPassword, finalRole, finalTier, initialBalance]
+        );
+
+        const id = result.insertId;
+
+        // Generate Token JWT
+        const token = jwt.sign(
+            { id: id, userId, role: finalRole, tier: finalTier },
+            process.env.JWT_SECRET,
+            { expiresIn: '1d' }
         );
 
         res.status(201).json({
             status: 'success',
             message: 'Registrasi berhasil!',
-            data: {
-                userId,
+            token: token,
+            user: {
+                id: id.toString(),
                 name,
-                role: finalRole,
+                email: userId,
+                role: (role === 'admin' || role === 'developer' || role === 'insight_readonly') ? role : 'user',
+                status: "active",
+                createdAt: new Date().toISOString(),
+                // Extra fields used by backend
+                userId,
                 tier: finalTier,
                 balance: initialBalance
             }
@@ -85,10 +112,15 @@ exports.login = async (req, res) => {
             status: 'success',
             message: 'Login berhasil!',
             token: token,
-            data: {
-                userId: user.userId,
+            user: {
+                id: user.id.toString(),
                 name: user.name,
-                role: user.role,
+                email: user.userId,
+                role: (user.role === 'ADMIN' || user.role === 'MANAGER') ? 'admin' : 'user',
+                status: "active",
+                createdAt: user.created_at || new Date().toISOString(),
+                // Extra fields
+                userId: user.userId,
                 tier: user.tier,
                 balance: user.balance
             }

@@ -2,16 +2,16 @@ const { z } = require('zod');
 
 // Schema untuk registrasi
 const registerSchema = z.object({
-  userId: z.string().min(3).max(50),
+  userId: z.string().min(3).max(255).optional(),
   name: z.string().min(1).max(100),
-  password: z.string().min(8, { message: 'Password minimal 8 karakter' }),
-  role: z.enum(['NASABAH', 'ADMIN', 'TELLER', 'MANAGER']).optional(),
+  password: z.string().min(6, { message: 'Password minimal 6 karakter' }),
+  role: z.enum(['NASABAH', 'ADMIN', 'TELLER', 'MANAGER', 'user', 'admin', 'developer', 'insight_readonly']).optional(),
   tier: z.enum(['REGULER', 'GOLD', 'PRIORITAS']).optional()
 });
 
 // Schema untuk login
 const loginSchema = z.object({
-  userId: z.string().min(3).max(50),
+  userId: z.string().min(3).max(255),
   password: z.string().min(1, { message: 'Password harus diisi' })
 });
 

@@ -110,3 +110,71 @@ export type RegisterResponse = {
   token: string;
   user: User;
 };
+
+export type BackendLoan = {
+  id: number | string;
+  userId: string;
+  amount: number | string;
+  interestRate: number | string;
+  totalDue: number | string;
+  status: "PENDING" | "APPROVED" | "PAID" | "REJECTED";
+  createdAt: string;
+  dueDate?: string | null;
+  installmentId?: number | null;
+  installmentStatus?: string | null;
+  amountDue?: number | string | null;
+  penaltyAmount?: number | string | null;
+  paidAt?: string | null;
+};
+
+export type BackendTransaction = {
+  id: number;
+  refId: string;
+  type: string;
+  fromUserId: string;
+  toUserId: string;
+  baseAmount: number | string;
+  tax: number | string;
+  fee: number | string;
+  description?: string | null;
+  created_at: string;
+};
+
+export type BankBalanceView = {
+  userId: string;
+  currentBalance: number;
+  availableBalance: number;
+  heldBalance: number;
+  initialBalance: number;
+  dailyTransactionCount: number;
+  dailyTransactionLimit: number;
+  cooldownUntil: string | null;
+  lastUpdatedAt: string;
+  outstandingLoan: number;
+};
+
+export type BankLedgerRow = {
+  id: string;
+  transactionId: string;
+  type: "transfer" | "payment" | "loan" | "repayment";
+  fromUserId: string;
+  toUserId: string;
+  amount: number;
+  fee: number;
+  tax: number;
+  total: number;
+  description: string;
+  createdAt: string;
+  direction: "incoming" | "outgoing" | "system";
+  sourceApp: SourceApp;
+};
+
+export type BalanceResponse = {
+  status: string;
+  data: {
+    balance: number | string;
+    loan: number | string;
+    history?: BackendTransaction[];
+  };
+};
+

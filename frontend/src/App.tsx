@@ -70,17 +70,18 @@ import {
 import {
   apiLogs,
   apiReference,
-  balance,
+  balance as mockBalance,
   financialRules,
   integrations,
-  ledgerEntries,
-  loans,
+  ledgerEntries as mockLedgerEntries,
+  loans as mockLoans,
   moneySupplyTrend,
-  paymentRequests,
+  paymentRequests as mockPaymentRequests,
   sourceDistribution,
   users,
 } from "./data";
 import type { LedgerEntry, PaymentRequest, SourceApp, User, UserRole } from "./types";
+import { getBalanceData, getLedger, api } from "./api/client";
 import {
   calculateFee,
   calculateLoan,
@@ -103,6 +104,11 @@ type AuthContextValue = {
   login: (role: UserRole, email?: string) => void;
   logout: () => void;
   switchRole: (role: UserRole) => void;
+  balance: any;
+  ledgerEntries: any[];
+  loans: any[];
+  paymentRequests: any[];
+  refreshData: () => void;
 };
 
 type ThemeMode = "dark" | "light";
@@ -116,7 +122,7 @@ type ThemeContextValue = {
 const AuthContext = createContext<AuthContextValue | null>(null);
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-const roleOptions: Array<{ label: string; value: UserRole }> = [
+export const roleOptions: Array<{ label: string; value: UserRole }> = [
   { label: "User", value: "user" },
   { label: "Admin", value: "admin" },
   { label: "Developer", value: "developer" },
@@ -147,7 +153,7 @@ const navItems = [
   { label: "Settings", path: "/settings", icon: ShieldCheck, capability: "docs" },
 ];
 
-const statusTone: Record<string, string> = {
+export const statusTone: Record<string, string> = {
   success: "success",
   online: "success",
   active: "success",
@@ -165,7 +171,7 @@ const statusTone: Record<string, string> = {
   blocked: "danger",
 };
 
-function useAuth() {
+export function useAuth() {
   const value = useContext(AuthContext);
   if (!value) {
     throw new Error("useAuth must be used inside AuthContext");
@@ -390,24 +396,179 @@ function App() {
     if (saved === "light" || saved === "dark") return saved;
     return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
   });
-const [session, setSession] = useState<Session | null>(() => {
-  const raw = localStorage.getItem("smartbank-session");
-  if (!raw) return null;
+  const [session, setSession] = useState<Session | null>(() => {
+    const raw = localStorage.getItem("smartbank-session");
+    if (!raw) return null;
 
-  try {
-    const parsed = JSON.parse(raw);
-    if (parsed.token && parsed.user) {
-      return {
-        token: parsed.token,
-        user: parsed.user,
-      };
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.token && parsed.user) {
+        return {
+          token: parsed.token,
+          user: parsed.user,
+        };
+      }
+      return null;
+    } catch {
+      localStorage.removeItem("smartbank-session");
+      return null;
     }
-    return null;
-  } catch {
-    localStorage.removeItem("smartbank-session");
-    return null;
-  }
-});
+  });
+
+  const [balance, setBalance] = useState<any>(mockBalance);
+  const [ledgerEntries, setLedgerEntries] = useState<any[]>(mockLedgerEntries);
+  const [loans, setLoans] = useState<any[]>(mockLoans);
+  const [paymentRequests, setPaymentRequests] = useState<any[]>(mockPaymentRequests);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const refreshData = () => {
+    setRefreshTrigger((prev) => prev + 1);
+  };
+
+  useEffect(() => {
+    if (!session) {
+      setBalance(mockBalance);
+      setLedgerEntries(mockLedgerEntries);
+      setLoans(mockLoans);
+      setPaymentRequests(mockPaymentRequests);
+      return;
+    }
+
+    let active = true;
+
+    const fetchData = async () => {
+      try {
+        const balanceRes = await getBalanceData();
+        if (!active) return;
+
+        let ledgerRes: any[] = [];
+        if (session.user.role === "admin" || session.user.role === "developer" || session.user.role === "insight_readonly") {
+          ledgerRes = await getLedger();
+        } else {
+          ledgerRes = balanceRes.history || [];
+        }
+        if (!active) return;
+
+        const mappedBalance = {
+          userId: session.user.id,
+          currentBalance: Number(balanceRes.balance),
+          availableBalance: Number(balanceRes.balance),
+          heldBalance: 0,
+          initialBalance: 50000,
+          dailyTransactionCount: balanceRes.history ? balanceRes.history.filter((tx: any) => tx.fromUserId === session.user.email && new Date(tx.created_at).toDateString() === new Date().toDateString()).length : 0,
+          dailyTransactionLimit: 10,
+          cooldownUntil: null,
+          lastUpdatedAt: new Date().toISOString(),
+        };
+
+        const mappedLoans = Number(balanceRes.loan) > 0 ? [
+          {
+            id: "LOAN-001",
+            userId: session.user.id,
+            principal: Number(balanceRes.loan),
+            interestRate: 0.1,
+            interestAmount: Number(balanceRes.loan) * 0.1,
+            totalRepayment: Number(balanceRes.loan),
+            status: "active" as const,
+            createdAt: new Date().toISOString(),
+            dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          }
+        ] : [];
+
+        const mappedLedger: any[] = [];
+        const txList = ledgerRes || [];
+        txList.forEach((tx: any) => {
+          const baseAmount = Number(tx.baseAmount);
+          const tax = Number(tx.tax);
+          const fee = Number(tx.fee);
+          const refId = tx.refId || `TX-${tx.id}`;
+
+          if (tx.type === "TRANSFER" || tx.type.startsWith("PAYMENT_")) {
+            mappedLedger.push({
+              id: `LED-${tx.id}-DR`,
+              transactionId: refId,
+              type: "debit" as const,
+              accountId: tx.fromUserId,
+              accountName: tx.fromUserId,
+              amount: baseAmount + tax + fee,
+              balanceBefore: 0,
+              balanceAfter: 0,
+              sourceApp: (tx.type.replace("PAYMENT_", "").toLowerCase() as any) || "manual_transfer",
+              createdAt: tx.created_at || new Date().toISOString(),
+            });
+
+            mappedLedger.push({
+              id: `LED-${tx.id}-CR`,
+              transactionId: refId,
+              type: "credit" as const,
+              accountId: tx.toUserId,
+              accountName: tx.toUserId,
+              amount: baseAmount,
+              balanceBefore: 0,
+              balanceAfter: 0,
+              sourceApp: (tx.type.replace("PAYMENT_", "").toLowerCase() as any) || "manual_transfer",
+              createdAt: tx.created_at || new Date().toISOString(),
+            });
+          } else if (tx.type === "LOAN_DISBURSEMENT") {
+            mappedLedger.push({
+              id: `LED-${tx.id}-LN`,
+              transactionId: refId,
+              type: "loan" as const,
+              accountId: tx.toUserId,
+              accountName: tx.toUserId,
+              amount: baseAmount,
+              balanceBefore: 0,
+              balanceAfter: 0,
+              sourceApp: "loan" as const,
+              createdAt: tx.created_at || new Date().toISOString(),
+            });
+          } else if (tx.type === "LOAN_REPAYMENT") {
+            mappedLedger.push({
+              id: `LED-${tx.id}-RP`,
+              transactionId: refId,
+              type: "repayment" as const,
+              accountId: tx.fromUserId,
+              accountName: tx.fromUserId,
+              amount: baseAmount,
+              balanceBefore: 0,
+              balanceAfter: 0,
+              sourceApp: "loan" as const,
+              createdAt: tx.created_at || new Date().toISOString(),
+            });
+          }
+        });
+
+        const mappedPaymentRequests = txList
+          .filter((tx: any) => tx.type.startsWith("PAYMENT_"))
+          .map((tx: any) => ({
+            id: tx.refId,
+            sourceApp: tx.type.replace("PAYMENT_", "").toLowerCase() as SourceApp,
+            fromUserId: tx.fromUserId,
+            toUserId: tx.toUserId,
+            amount: Number(tx.baseAmount),
+            feeTotal: Number(tx.fee),
+            taxTotal: Number(tx.tax),
+            totalDebit: Number(tx.baseAmount) + Number(tx.fee) + Number(tx.tax),
+            status: "success" as const,
+            metadata: { description: tx.description },
+            createdAt: tx.created_at || new Date().toISOString(),
+          }));
+
+        setBalance(mappedBalance);
+        setLedgerEntries(mappedLedger.length > 0 ? mappedLedger : mockLedgerEntries);
+        setLoans(mappedLoans);
+        setPaymentRequests(mappedPaymentRequests.length > 0 ? mappedPaymentRequests : mockPaymentRequests);
+      } catch (err) {
+        console.error("Error fetching stateful backend data:", err);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      active = false;
+    };
+  }, [session, refreshTrigger]);
 
   const login = (role: UserRole, email?: string) => {
     const user = {
@@ -433,8 +594,18 @@ const [session, setSession] = useState<Session | null>(() => {
   };
 
   const value = useMemo(
-    () => ({ session, login, logout, switchRole }),
-    [session],
+    () => ({
+      session,
+      login,
+      logout,
+      switchRole,
+      balance,
+      ledgerEntries,
+      loans,
+      paymentRequests,
+      refreshData,
+    }),
+    [session, balance, ledgerEntries, loans, paymentRequests],
   );
 
   useEffect(() => {
@@ -604,7 +775,7 @@ function ProtectedRoute({
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  if (capability && !canAccess(session.user.role, capability)) {
+  if (capability && !canAccess(session?.user?.role || "user", capability)) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -722,7 +893,7 @@ function roleLabel(role: UserRole) {
   return roleOptions.find((item) => item.value === role)?.label ?? "User";
 }
 
-function PublicHeader() {
+export function PublicHeader() {
   return (
     <header className="public-header">
       <BrandLogo />
@@ -750,7 +921,7 @@ function LandingPage() {
   useLandingAnimations();
 
   const maxVolume = Math.max(...moneySupplyTrend.map((item) => item.volume));
-  const successCount = paymentRequests.filter((request) => request.status === "success").length;
+  const successCount = mockPaymentRequests.filter((request: any) => request.status === "success").length;
 
   return (
     <div className="landing-page">
@@ -803,7 +974,7 @@ function LandingPage() {
               </div>
               <div className="hero-balance-value">
                 <span>Available balance</span>
-                <strong>{formatRupiah(balance.availableBalance)}</strong>
+                <strong>{formatRupiah(mockBalance.availableBalance)}</strong>
               </div>
               <div className="hero-action-grid">
                 <span>
@@ -833,7 +1004,7 @@ function LandingPage() {
                 <span>Ledger stream</span>
                 <ScrollText size={18} aria-hidden="true" />
               </div>
-              {ledgerEntries.slice(0, 3).map((entry, index) => (
+              {mockLedgerEntries.slice(0, 3).map((entry: any, index: number) => (
                 <div
                   className={index === 0 ? "hero-ledger-row is-active" : "hero-ledger-row"}
                   key={entry.id}
@@ -1062,7 +1233,7 @@ function LegacyLandingPage() {
                 <StatusBadge status="online" />
               </div>
               <p style={{ marginTop: "1.5rem" }}>Total Saldo</p>
-              <strong style={{ fontSize: "2.5rem", color: "var(--text)" }}>{formatRupiah(balance.availableBalance)}</strong>
+              <strong style={{ fontSize: "2.5rem", color: "var(--text)" }}>{formatRupiah(mockBalance.availableBalance)}</strong>
               <div className="wallet-actions" style={{ marginTop: "2rem", gap: "1rem" }}>
                 <span className="phantom-action-btn"><Send size={18}/> Kirim</span>
                 <span className="phantom-action-btn"><Download size={18}/> Terima</span>
@@ -1382,174 +1553,6 @@ function LegacyAuthLayout({
   );
 }
 
-function LoginPage() {
-  const { login } = useAuth();
-  const navigate = useNavigate();
-  const [role, setRole] = useState<UserRole>("user");
-  const [email, setEmail] = useState("ayu@smartbank.local");
-  const [password, setPassword] = useState("smartbank-demo");
-  const [error, setError] = useState("");
-
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!email.includes("@")) {
-      setError("Email tidak valid.");
-      return;
-    }
-    if (!password.trim()) {
-      setError("Password wajib diisi.");
-      return;
-    }
-
-    setError("");
-    login(role, email);
-    navigate("/dashboard");
-  };
-
-  return (
-    <AuthLayout
-      title="Masuk ke SmartBank"
-      description="Masuk dengan akun demo untuk membuka dashboard sesuai role dan permission."
-    >
-      <form className="stack-form" onSubmit={submit}>
-        <label>
-          Email
-          <input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            autoComplete="email"
-          />
-        </label>
-        <label>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="current-password"
-          />
-        </label>
-        <label>
-          Role Demo
-          <select value={role} onChange={(event) => setRole(event.target.value as UserRole)}>
-            {roleOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <div className="auth-form-row">
-          <label className="checkbox-row">
-            <input type="checkbox" defaultChecked />
-            Ingat role demo
-          </label>
-          <Link className="text-link" to="/docs">
-            Bantuan akses
-          </Link>
-        </div>
-        {error && <p className="field-error">{error}</p>}
-        <Button type="submit" className="full-width">
-          <KeyRound size={18} />
-          Masuk Aman
-        </Button>
-      </form>
-      <p className="auth-switch">
-        Belum punya akun? <Link to="/register">Daftar user baru</Link>
-      </p>
-    </AuthLayout>
-  );
-}
-
-function RegisterPage() {
-  const { login } = useAuth();
-  const navigate = useNavigate();
-  const [name, setName] = useState("Pemilik UMKM");
-  const [email, setEmail] = useState("umkm@smartbank.local");
-  const [password, setPassword] = useState("smartbank-demo");
-  const [confirm, setConfirm] = useState("smartbank-demo");
-  const [error, setError] = useState("");
-
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!name.trim()) {
-      setError("Nama wajib diisi.");
-      return;
-    }
-    if (!email.includes("@")) {
-      setError("Email tidak valid.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Password minimal 6 karakter untuk demo.");
-      return;
-    }
-    if (password !== confirm) {
-      setError("Konfirmasi password tidak sama.");
-      return;
-    }
-
-    setError("");
-    login("user", email);
-    navigate("/dashboard");
-  };
-
-  return (
-    <AuthLayout
-      title="Register SmartBank"
-      description="Buat akun user demo dengan saldo awal dan permission dasar SmartBank."
-    >
-      <form className="stack-form" onSubmit={submit}>
-        <label>
-          Nama
-          <input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            autoComplete="name"
-          />
-        </label>
-        <label>
-          Email
-          <input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            autoComplete="email"
-          />
-        </label>
-        <label>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            autoComplete="new-password"
-          />
-        </label>
-        <label>
-          Confirm Password
-          <input
-            type="password"
-            value={confirm}
-            onChange={(event) => setConfirm(event.target.value)}
-            autoComplete="new-password"
-          />
-        </label>
-        <label className="checkbox-row">
-          <input type="checkbox" defaultChecked />
-          Saya memahami akun ini menggunakan data demo frontend.
-        </label>
-        {error && <p className="field-error">{error}</p>}
-        <Button type="submit" className="full-width">
-          <UserPlus size={18} />
-          Buat Akun Demo
-        </Button>
-      </form>
-      <p className="auth-switch">
-        Sudah punya akses? <Link to="/login">Masuk</Link>
-      </p>
-    </AuthLayout>
-  );
-}
 
 function PageHeader({
   title,
@@ -1595,11 +1598,11 @@ function MetricCard({
 }
 
 function DashboardPage() {
-  const { session } = useAuth();
+  const { session, balance, loans, paymentRequests } = useAuth();
   const isAdminLike = session?.user.role === "admin" || session?.user.role === "developer";
-  const successfulRequests = paymentRequests.filter((request) => request.status === "success");
+  const successfulRequests = paymentRequests.filter((request: any) => request.status === "success");
   const feeRevenue = successfulRequests.reduce(
-    (sum, request) => sum + request.feeTotal + request.taxTotal,
+    (sum: number, request: any) => sum + request.feeTotal + request.taxTotal,
     0,
   );
 
@@ -1794,6 +1797,8 @@ function BarVisual({ items }: { items: Array<{ label: string; value: number }> }
 }
 
 function RecentPayments() {
+  const { paymentRequests } = useAuth();
+
   return (
     <Panel className="wide">
       <div className="panel-title">
@@ -1817,7 +1822,7 @@ function RecentPayments() {
             </tr>
           </thead>
           <tbody>
-            {paymentRequests.slice(0, 5).map((request) => (
+            {paymentRequests.slice(0, 5).map((request: any) => (
               <tr key={request.id}>
                 <td>{request.id}</td>
                 <td>{sourceLabel(request.sourceApp)}</td>
@@ -1858,7 +1863,9 @@ function IntegrationSnapshot() {
 }
 
 function BalancePage() {
-  const movement = ledgerEntries.filter((entry) => entry.accountId === "user_001");
+  const { session, balance, ledgerEntries } = useAuth();
+  const currentUserId = session?.user.email || "user_001";
+  const movement = ledgerEntries.filter((entry: any) => entry.accountId === currentUserId);
 
   return (
     <>
@@ -1913,7 +1920,7 @@ function BalancePage() {
             <StatusBadge status="readonly" />
           </div>
           <div className="timeline">
-            {movement.map((entry) => (
+            {movement.map((entry: any) => (
               <div className="timeline-item" key={entry.id}>
                 <span className={`timeline-dot dot-${statusTone[entry.type] ?? "neutral"}`} />
                 <div>
@@ -1961,11 +1968,14 @@ function BalancePage() {
 }
 
 function TransferPage() {
+  const { balance, refreshData } = useAuth();
   const [recipient, setRecipient] = useState("seller_001");
   const [amount, setAmount] = useState("125000");
   const [note, setNote] = useState("Pembayaran bahan baku");
   const [confirmed, setConfirmed] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [transferError, setTransferError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [receipt, setReceipt] = useState<null | {
     id: string;
     ledgerId: string;
@@ -1985,19 +1995,31 @@ function TransferPage() {
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (amountError || !recipient || !confirmed) return;
+    if (amountError || !recipient || !confirmed || isSubmitting) return;
     setModalOpen(true);
   };
 
-  const confirmTransfer = () => {
-    setReceipt({
-      id: `TRX-${Math.floor(34000 + Math.random() * 900)}`,
-      ledgerId: `LED-${Math.floor(91000 + Math.random() * 900)}`,
-      amount: amountNumber,
-      totalDebit: fee.totalDebit,
-      time: new Date().toISOString(),
-    });
-    setModalOpen(false);
+  const confirmTransfer = async () => {
+    setIsSubmitting(true);
+    setTransferError("");
+    try {
+      const response = await api.transfer(recipient, amountNumber);
+      setReceipt({
+        id: response.data?.refId || `TRX-${Math.floor(34000 + Math.random() * 900)}`,
+        ledgerId: `LED-${Math.floor(91000 + Math.random() * 900)}`,
+        amount: amountNumber,
+        totalDebit: fee.totalDebit,
+        time: new Date().toISOString(),
+      });
+      refreshData();
+      setModalOpen(false);
+    } catch (err: any) {
+      console.error(err);
+      setTransferError(err.message || "Gagal melakukan transfer");
+      setModalOpen(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -2006,6 +2028,13 @@ function TransferPage() {
         title="Transfer Antar User"
         description="Flow input, process, output dengan preview biaya dan receipt."
       />
+
+      {transferError && (
+        <div className="alert alert-danger" role="alert" style={{ marginBottom: "1.5rem" }}>
+          <CircleAlert size={20} />
+          {transferError}
+        </div>
+      )}
 
       <div className="form-grid">
         <Panel>
@@ -2157,9 +2186,10 @@ function FeeBreakdownPanel({
 }
 
 function PaymentRequestsPage() {
+  const { paymentRequests } = useAuth();
   const [status, setStatus] = useState("all");
   const [selected, setSelected] = useState<PaymentRequest | null>(null);
-  const filtered = paymentRequests.filter((request) => status === "all" || request.status === status);
+  const filtered = paymentRequests.filter((request: any) => status === "all" || request.status === status);
 
   return (
     <>
@@ -2194,7 +2224,7 @@ function PaymentRequestsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((request) => (
+              {filtered.map((request: any) => (
                 <tr key={request.id}>
                   <td>{request.id}</td>
                   <td>{sourceLabel(request.sourceApp)}</td>
@@ -2275,10 +2305,11 @@ function PaymentRequestDetail({ request }: { request: PaymentRequest }) {
 }
 
 function LedgerPage() {
+  const { ledgerEntries } = useAuth();
   const [query, setQuery] = useState("");
   const [type, setType] = useState("all");
   const [selected, setSelected] = useState<LedgerEntry | null>(null);
-  const filtered = ledgerEntries.filter((entry) => {
+  const filtered = ledgerEntries.filter((entry: any) => {
     const matchesType = type === "all" || entry.type === type;
     const matchesQuery = `${entry.id} ${entry.transactionId} ${entry.accountName ?? ""}`
       .toLowerCase()
@@ -2330,7 +2361,7 @@ function LedgerPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((entry) => (
+              {filtered.map((entry: any) => (
                 <tr key={entry.id}>
                   <td>{entry.id}</td>
                   <td>{entry.transactionId}</td>
@@ -2385,11 +2416,36 @@ function LedgerPage() {
 }
 
 function LoansPage() {
+  const { loans, refreshData } = useAuth();
   const [amount, setAmount] = useState("80000");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loanError, setLoanError] = useState("");
+  const [loanSuccess, setLoanSuccess] = useState("");
+
   const amountNumber = Number(amount) || 0;
   const loan = calculateLoan(amountNumber);
   const overLimit = amountNumber > feeRules.loanLimit;
-  const remainingLimit = feeRules.loanLimit - loans[0].principal;
+  
+  const activeLoan = loans && loans.length > 0 ? loans[0] : null;
+  const activeLoanPrincipal = activeLoan ? activeLoan.principal : 0;
+  const remainingLimit = feeRules.loanLimit - activeLoanPrincipal;
+
+  const handleRequestLoan = async () => {
+    if (overLimit || amountNumber <= 0 || isSubmitting) return;
+    setIsSubmitting(true);
+    setLoanError("");
+    setLoanSuccess("");
+    try {
+      await api.requestLoan(amountNumber);
+      setLoanSuccess("Pengajuan pinjaman berhasil disetujui!");
+      refreshData();
+    } catch (err: any) {
+      console.error(err);
+      setLoanError(err.message || "Gagal mengajukan pinjaman");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <>
@@ -2397,6 +2453,20 @@ function LoansPage() {
         title="Pinjaman dan Loan Simulator"
         description="Limit 100,000/user dengan bunga 10% dan repayment transparan."
       />
+
+      {loanSuccess && (
+        <div className="alert alert-success" role="alert" style={{ marginBottom: "1.5rem", background: "rgba(34, 197, 94, 0.15)", border: "1px solid rgba(34, 197, 94, 0.3)", color: "#a7f3d0" }}>
+          <CheckCircle2 size={20} style={{ color: "#22c55e" }} />
+          {loanSuccess}
+        </div>
+      )}
+
+      {loanError && (
+        <div className="alert alert-danger" role="alert" style={{ marginBottom: "1.5rem" }}>
+          <CircleAlert size={20} />
+          {loanError}
+        </div>
+      )}
 
       <div className="form-grid">
         <Panel>
@@ -2406,19 +2476,19 @@ function LoansPage() {
               <p>Preview principal, bunga, dan total repayment.</p>
             </div>
           </div>
-          <form className="stack-form">
+          <form className="stack-form" onSubmit={(e) => e.preventDefault()}>
             <label>
               Nominal pinjaman
-              <input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="numeric" />
+              <input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="numeric" disabled={isSubmitting} />
             </label>
             {overLimit && <p className="field-error">Nominal melebihi limit pinjaman user.</p>}
             <label className="checkbox-row">
-              <input type="checkbox" defaultChecked />
+              <input type="checkbox" defaultChecked disabled={isSubmitting} />
               Saya memahami bunga pinjaman 10%.
             </label>
-            <Button type="button" disabled={overLimit || amountNumber <= 0}>
+            <Button type="button" disabled={overLimit || amountNumber <= 0 || isSubmitting} onClick={handleRequestLoan}>
               <HandCoins size={18} />
-              Ajukan Loan Mock
+              {isSubmitting ? "Mengajukan..." : "Ajukan Pinjaman"}
             </Button>
           </form>
         </Panel>
@@ -2452,10 +2522,10 @@ function LoansPage() {
       </div>
 
       <div className="metric-grid">
-        <MetricCard icon={HandCoins} label="Active loan" value={formatRupiah(loans[0].principal)} helper={loans[0].id} />
+        <MetricCard icon={HandCoins} label="Active loan" value={activeLoan ? formatRupiah(activeLoan.principal) : "Rp 0"} helper={activeLoan ? activeLoan.id : "Tidak ada pinjaman"} />
         <MetricCard icon={Gauge} label="Remaining limit" value={formatRupiah(Math.max(remainingLimit, 0))} helper="Limit 100,000/user." tone="green" />
-        <MetricCard icon={Clock3} label="Due date" value={formatDateTime(loans[0].dueDate ?? loans[0].createdAt)} helper="Tanggal jatuh tempo loan." tone="amber" />
-        <MetricCard icon={BadgeCheck} label="Status" value={loans[0].status} helper="Loan aktif dari ledger." tone="blue" />
+        <MetricCard icon={Clock3} label="Due date" value={activeLoan ? formatDateTime(activeLoan.dueDate ?? activeLoan.createdAt) : "-"} helper="Tanggal jatuh tempo loan." tone="amber" />
+        <MetricCard icon={BadgeCheck} label="Status" value={activeLoan ? activeLoan.status : "No active loan"} helper="Loan aktif dari ledger." tone="blue" />
       </div>
     </>
   );
@@ -2535,9 +2605,10 @@ function FeesPage() {
 }
 
 function BankFeesPage() {
+  const { paymentRequests } = useAuth();
   const feeRevenue = paymentRequests
-    .filter((request) => request.status === "success")
-    .reduce((sum, request) => sum + request.feeTotal, 0);
+    .filter((request: any) => request.status === "success")
+    .reduce((sum: number, request: any) => sum + request.feeTotal, 0);
 
   return (
     <>
@@ -3024,7 +3095,7 @@ function NotFound() {
   );
 }
 
-function sourceLabel(source: SourceApp) {
+export function sourceLabel(source: SourceApp) {
   const labels: Record<SourceApp, string> = {
     marketplace: "Marketplace",
     pos: "WarungPOS",
@@ -3037,7 +3108,7 @@ function sourceLabel(source: SourceApp) {
   return labels[source];
 }
 
-function serviceLabel(service: string) {
+export function serviceLabel(service: string) {
   const labels: Record<string, string> = {
     gateway: "API Gateway",
     marketplace: "Marketplace",

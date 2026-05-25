@@ -1,4 +1,4 @@
-import { getStoredToken, storeSession, clearSession } from "../utils";
+import { getStoredToken as utilsGetStoredToken, storeSession as utilsStoreSession, clearSession as utilsClearSession } from "../utils";
 import type { 
   LoginResponse, 
   RegisterResponse, 
@@ -7,11 +7,11 @@ import type {
   PaymentRequest 
 } from "../types";
 
-const API_BASE_URL = "http://localhost:5000/smartbank";
+const API_BASE_URL = "http://127.0.0.1:5000/smartbank";
 
 // Helper function to get the authorization header
 function getAuthHeaders(): HeadersInit {
-  const token = getStoredToken();
+  const token = utilsGetStoredToken();
   if (token) {
     return { 
       'Authorization': `Bearer ${token}`, 
@@ -44,11 +44,11 @@ export const apiClient = {
     });
     
     const data = await handleResponse<LoginResponse>(response);
-    storeSession(data.token);
+    utilsStoreSession(data.token, data.user);
     return data;
   },
   
-  async register(userId: string, name: string, password: string, role: 'user' | 'admin' | 'developer' | 'insight_readonly'): Promise<RegisterResponse> {
+  async register(userId: string | undefined, name: string, password: string, role: 'user' | 'admin' | 'developer' | 'insight_readonly'): Promise<RegisterResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: getAuthHeaders(),
@@ -56,55 +56,76 @@ export const apiClient = {
     });
     
     const data = await handleResponse<RegisterResponse>(response);
-    storeSession(data.token);
+    utilsStoreSession(data.token, data.user);
     return data;
   },
   
   // User data
-  async getBalance(): Promise<number> {
-    const response = await fetch(`${API_BASE_URL}/user/balance`, {
+  async getBalanceData(): Promise<{ balance: number; loan: number; history: any[] }> {
+    const response = await fetch(`${API_BASE_URL}/balance`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
-    
-    const data = await handleResponse<{ balance: number }>(response);
-    return data.balance;
+    const res = await handleResponse<{ status: string; data: { balance: number; loan: number; history: any[] } }>(response);
+    return res.data;
   },
   
-  async getLedger(): Promise<LedgerEntry[]> {
-    const response = await fetch(`${API_BASE_URL}/user/ledger`, {
+  async getLedger(): Promise<any[]> {
+    const response = await fetch(`${API_BASE_URL}/ledger`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
-    
-    return await handleResponse<LedgerEntry[]>(response);
+    const res = await handleResponse<{ status: string; data: any[] }>(response);
+    return res.data;
   },
   
   async getPaymentRequests(): Promise<PaymentRequest[]> {
-    const response = await fetch(`${API_BASE_URL}/user/payment-requests`, {
-      method: 'GET',
+    // Derived in frontend, return empty by default from API
+    return [];
+  },
+
+  async transfer(toUserId: string, amount: number): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/transfer`, {
+      method: 'POST',
       headers: getAuthHeaders(),
+      body: JSON.stringify({ toUserId, amount }),
     });
-    
-    return await handleResponse<PaymentRequest[]>(response);
+    return await handleResponse<any>(response);
+  },
+
+  async requestLoan(amount: number): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/loan`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ amount }),
+    });
+    return await handleResponse<any>(response);
+  },
+
+  async payLoan(installmentId: number): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/loan/pay`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ installmentId }),
+    });
+    return await handleResponse<any>(response);
   },
   
   // Session management
   clearSession() {
-    clearSession();
+    utilsClearSession();
   },
   
   // Get current token (for debugging/testing)
   getStoredToken() {
-    return getStoredToken();
+    return utilsGetStoredToken();
   }
 };
 
 // Export convenience functions for direct use
+export const api = apiClient;
 export const login = apiClient.login;
 export const register = apiClient.register;
-export const getBalance = apiClient.getBalance;
+export const getBalanceData = apiClient.getBalanceData;
 export const getLedger = apiClient.getLedger;
 export const getPaymentRequests = apiClient.getPaymentRequests;
-export const clearSession = apiClient.clearSession;
-export const getStoredToken = apiClient.getStoredToken;

@@ -98,7 +98,7 @@ const Nav = ({ radius }: any) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <Link
             style={{
-              padding: '10px 18px',
+              padding: '8px 16px',
               fontSize: 14,
               fontWeight: 500,
               background: 'transparent',
@@ -110,20 +110,20 @@ const Nav = ({ radius }: any) => {
            to="/login">Masuk</Link>
           <button
             style={{
-              padding: '10px 20px',
+              padding: '8px 20px',
               fontSize: 14,
               fontWeight: 600,
               background: '#1E40AF',
               color: 'white',
               border: 'none',
-              borderRadius: radius === 'sharp' ? 2 : 999,
+              borderRadius: radius === 'sharp' ? 2 : 8,
               cursor: 'pointer',
               transition: 'all 160ms',
             }}
             onMouseEnter={(e) => (e.currentTarget.style.background = '#3B82F6')}
             onMouseLeave={(e) => (e.currentTarget.style.background = '#1E40AF')}
           >
-            Buka Rekening
+            Daftar
           </button>
         </div>
       </div>

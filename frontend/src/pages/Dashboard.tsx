@@ -1,14 +1,21 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Coins, WalletCards, Landmark, Gauge, ReceiptText, HandCoins, Banknote, Clock3 } from "lucide-react";
+import { ArrowRight, Coins, WalletCards, Landmark, Gauge, ReceiptText, HandCoins, Banknote, Clock3, Settings2, Save, RefreshCcw } from "lucide-react";
 import { paymentRequests, moneySupplyTrend, sourceDistribution, integrations, balance, loans } from "../data";
 import { useAuth } from "../App";
 import { AreaVisual, DonutVisual, BarVisual, RecentPayments, IntegrationSnapshot } from "../components/Visuals";
-import { PageHeader, MetricCard, Panel, StatusBadge } from "../components/ui";
+import { PageHeader, MetricCard, Panel, StatusBadge, Button } from "../components/ui";
 import { formatRupiah, formatNumber, feeRules } from "../utils";
 
 export default function DashboardPage() {
   const { session } = useAuth();
-  const isAdminLike = session?.user.role === "ADMIN" || session?.user.role === "TELLER" || session?.user.role === "MANAGER";
+  const role = session?.user.role?.toUpperCase() || "NASABAH";
+  
+  const isAdmin = role === "ADMIN";
+  const isManager = role === "MANAGER";
+  const isTeller = role === "TELLER";
+  const isAdminLike = isAdmin || isManager || isTeller;
+
   const successfulRequests = paymentRequests.filter((request) => request.status === "success");
   const feeRevenue = successfulRequests.reduce(
     (sum, request) => sum + request.feeTotal + request.taxTotal,
@@ -18,10 +25,10 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader
-        title={isAdminLike ? "Admin Control Center" : "User Banking Dashboard"}
+        title={isAdminLike ? `${role} Control Center` : "User Banking Dashboard"}
         description={
           isAdminLike
-            ? "Pantau money supply, reserve, payment request, fee, pajak, loan, dan ledger dari satu layar."
+            ? `Panel kendali otoritas ${role.toLowerCase()} untuk manajemen ekosistem SmartBank.`
             : "Lihat saldo, limit harian, transaksi terbaru, pinjaman, dan status cooldown."
         }
         action={
@@ -67,12 +74,14 @@ export default function DashboardPage() {
         />
       </div>
 
+      {isAdmin && <AdminFeeManagement />}
+
       <div className="dashboard-grid">
         <Panel className="chart-panel wide">
           <div className="panel-title">
             <div>
-              <h2>{isAdminLike ? "Money supply and reserve" : "Balance movement"}</h2>
-              <p>Data mock mingguan untuk demo dashboard finansial.</p>
+              <h2>{isAdminLike ? "Economic Stability Monitor" : "Balance movement"}</h2>
+              <p>{isAdminLike ? "Pantau arus uang beredar vs cadangan bank." : "Data mock mingguan untuk demo dashboard finansial."}</p>
             </div>
             <StatusBadge status={isAdminLike ? "success" : "processing"} />
           </div>
@@ -88,7 +97,7 @@ export default function DashboardPage() {
         <Panel className="chart-panel">
           <div className="panel-title">
             <div>
-              <h2>Source mix</h2>
+              <h2>{isAdminLike ? "Revenue Source Mix" : "Source mix"}</h2>
               <p>Distribusi request ekosistem.</p>
             </div>
           </div>
@@ -109,5 +118,58 @@ export default function DashboardPage() {
         <IntegrationSnapshot />
       </div>
     </>
+  );
+}
+
+function AdminFeeManagement() {
+  const [rates, setRates] = useState([
+    { name: "Pajak Sistem (TAX_RATE)", value: 2.0, key: "tax" },
+    { name: "Fee Bank (FEE_BANK)", value: 1.0, key: "bank" },
+    { name: "Fee Gateway (FEE_GATEWAY)", value: 0.5, key: "gateway" },
+  ]);
+
+  const updateRate = (index: number, newVal: string) => {
+    const next = [...rates];
+    next[index].value = parseFloat(newVal) || 0;
+    setRates(next);
+  };
+
+  return (
+    <Panel className="fee-management-panel" style={{ marginBottom: '1rem' }}>
+      <div className="panel-title">
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--blue)' }}>
+            <Settings2 size={20} />
+            <h2 style={{ margin: 0 }}>Global Fee & Rate Management</h2>
+          </div>
+          <p>Otoritas Admin: Ubah tarif pajak dan biaya layanan seluruh ekosistem secara realtime.</p>
+        </div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button variant="secondary" style={{ minHeight: '36px', fontSize: '13px' }}>
+            <RefreshCcw size={14} /> Reset
+          </Button>
+          <Button style={{ minHeight: '36px', fontSize: '13px' }}>
+            <Save size={14} /> Simpan Perubahan
+          </Button>
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginTop: '1.5rem' }}>
+        {rates.map((rate, idx) => (
+          <div key={rate.key} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--muted-strong)' }}>{rate.name}</label>
+            <div style={{ position: 'relative' }}>
+              <input 
+                type="number" 
+                value={rate.value} 
+                onChange={(e) => updateRate(idx, e.target.value)}
+                style={{ paddingRight: '2.5rem' }}
+              />
+              <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: 'var(--muted)' }}>%</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Panel>
   );
 }

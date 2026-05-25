@@ -34,8 +34,8 @@ describe('Auth API Tests', () => {
       
       expect(res.statusCode).toEqual(201);
       expect(res.body.status).toBe('success');
-      expect(res.body.data.userId).toBe('newtestuser');
-      expect(res.body.data.balance).toBe(50000);
+      expect(res.body.user.userId).toBe('newtestuser');
+      expect(res.body.user.balance).toBe(50000);
     });
 
     it('should reject registration with duplicate userId', async () => {
@@ -90,7 +90,7 @@ describe('Auth API Tests', () => {
       expect(res.statusCode).toEqual(200);
       expect(res.body.status).toBe('success');
       expect(res.body.token).toBeDefined();
-      expect(res.body.data.userId).toBe('testuser');
+      expect(res.body.user.userId).toBe('testuser');
     });
 
     it('should reject login with wrong password', async () => {

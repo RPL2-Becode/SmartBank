@@ -211,6 +211,16 @@ exports.requestLoan = async (req, res) => {
 
         await connection.beginTransaction();
 
+        // --- Aturan: Total Money Supply maksimal 1.000.000.000 ---
+        const [supplyResult] = await connection.query('SELECT SUM(balance) as totalMoney FROM users');
+        const currentSupply = parseFloat(supplyResult[0].totalMoney) || 0;
+        
+        if (currentSupply + parseFloat(amount) > 1000000000) {
+            await connection.rollback();
+            return res.status(400).json({ status: 'error', message: 'Bank Reserve Limit tercapai! Pinjaman ditolak untuk mencegah inflasi berlebih.' });
+        }
+        // ---------------------------------------------------------
+
         const rates = await getSystemRates(connection);
 
         const [users] = await connection.query('SELECT balance, loan FROM users WHERE userId = ? FOR UPDATE', [userId]);
