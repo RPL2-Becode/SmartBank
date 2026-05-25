@@ -11,8 +11,12 @@ router.post('/payment', verifyToken, bankController.payment);
 
 router.post('/loan', verifyToken, bankController.requestLoan);
 
+router.get('/loans', verifyToken, bankController.getLoans);
+
 router.post('/loan/pay', verifyToken, bankController.payLoan);
 
 router.get('/ledger', verifyToken, bankController.getLedger);
+
+router.get('/history', verifyToken, bankController.getHistory);
 
 module.exports = router;

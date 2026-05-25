@@ -251,7 +251,7 @@ exports.requestLoan = async (req, res) => {
         const txId = generateTxId();
         await connection.query(
             'INSERT INTO transactions (refId, type, fromUserId, toUserId, baseAmount, tax, fee, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [txId, 'LOAN_DISBURSEMENT', 'SYSTEM_BANK', userId, amount, 0, 0, 'Pencairan pinjaman']
+            [txId, 'LOAN_DISBURSEMENT', null, userId, amount, 0, 0, 'Pencairan pinjaman']
         );
 
         await connection.commit();
@@ -339,7 +339,7 @@ exports.payLoan = async (req, res) => {
         const txId = generateTxId();
         const [txResult] = await connection.query(
             'INSERT INTO transactions (refId, type, fromUserId, toUserId, baseAmount, tax, fee, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [txId, 'LOAN_REPAYMENT', userId, 'SYSTEM_BANK', amountToPay, 0, penalty, isLate ? 'Pelunasan utang (Terlambat)' : 'Pelunasan utang']
+            [txId, 'LOAN_REPAYMENT', userId, null, amountToPay, 0, penalty, isLate ? 'Pelunasan utang (Terlambat)' : 'Pelunasan utang']
         );
         
         if (penalty > 0) {
@@ -353,5 +353,69 @@ exports.payLoan = async (req, res) => {
         res.status(500).json({ status: 'error', message: error.message });
     } finally {
         connection.release();
+    }
+};
+
+// 7. Get Transaction History for user with pagination
+exports.getHistory = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        // Query total count
+        const [countResult] = await db.query(
+            'SELECT COUNT(*) as total FROM transactions WHERE fromUserId = ? OR toUserId = ?',
+            [userId, userId]
+        );
+        const totalItems = countResult[0].total;
+        const totalPages = Math.ceil(totalItems / limit);
+
+        // Query transactions
+        const [transactions] = await db.query(
+            'SELECT * FROM transactions WHERE fromUserId = ? OR toUserId = ? ORDER BY created_at DESC LIMIT ? OFFSET ?',
+            [userId, userId, limit, offset]
+        );
+
+        res.status(200).json({
+            status: 'success',
+            data: {
+                transactions,
+                pagination: {
+                    currentPage: page,
+                    totalPages,
+                    totalItems,
+                    itemsPerPage: limit
+                }
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
+    }
+};
+
+// 8. Get Loans list (Admin/Developer sees all, standard User sees their own)
+exports.getLoans = async (req, res) => {
+    try {
+        const { userId, role } = req.user;
+        let queryStr = '';
+        let params = [];
+
+        if (role === 'ADMIN' || role === 'DEVELOPER') {
+            queryStr = 'SELECT * FROM loans ORDER BY created_at DESC';
+        } else {
+            queryStr = 'SELECT * FROM loans WHERE userId = ? ORDER BY created_at DESC';
+            params = [userId];
+        }
+
+        const [loans] = await db.query(queryStr, params);
+
+        res.status(200).json({
+            status: 'success',
+            data: loans
+        });
+    } catch (error) {
+        res.status(500).json({ status: 'error', message: error.message });
     }
 };
