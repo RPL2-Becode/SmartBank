@@ -205,8 +205,8 @@ exports.requestLoan = async (req, res) => {
         const userId = req.user.userId;
         const { amount } = req.body;
 
-        if (amount <= 0 || amount > 100000) {
-            return res.status(400).json({ status: 'error', message: 'Jumlah pinjaman maksimal 100.000' });
+        if (!isValidAmount(amount) || amount > 100000) {
+            return res.status(400).json({ status: 'error', message: 'Jumlah pinjaman tidak valid atau maksimal 100.000' });
         }
 
         await connection.beginTransaction();
