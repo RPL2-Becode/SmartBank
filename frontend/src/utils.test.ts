@@ -26,8 +26,8 @@ describe("SmartBank finance utilities", () => {
     expect(result.totalRepayment).toBe(88000);
   });
 
-  it("keeps ledger visible to read-only insight role but blocks transfers", () => {
-    expect(canAccess("insight_readonly", "ledger")).toBe(true);
-    expect(canAccess("insight_readonly", "transfer")).toBe(false);
+  it("keeps ledger visible to teller role but blocks transfers", () => {
+    expect(canAccess("teller", "ledger")).toBe(true);
+    expect(canAccess("teller", "transfer")).toBe(false);
   });
 });

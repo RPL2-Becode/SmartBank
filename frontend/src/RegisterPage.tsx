@@ -3,12 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { register } from './api/client';
 import { storeSession } from './utils';
 import { useAuth } from './App';
+import type { UserRole } from './types';
 
 export function RegisterPage() {
   const [userId, setUserId] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'user' | 'admin'>('user');
+  const [role, setRole] = useState<UserRole>('nasabah');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ export function RegisterPage() {
     try {
       const response = await register(userId, name, password, role);
       storeSession(response.token, response.user);
-      login(response.user.role, response.user.email);
+      login(response.user.role, response.user.email, response.user);
       navigate('/dashboard');
     } catch (err) {
       if (err instanceof Error) {
@@ -137,11 +138,13 @@ export function RegisterPage() {
               <select
                 id="role"
                 value={role}
-                onChange={(e) => setRole(e.target.value as 'user' | 'admin')}
+                onChange={(e) => setRole(e.target.value as UserRole)}
                 disabled={loading}
               >
-                <option value="user">User - Akses standar</option>
-                <option value="admin">Admin - Akses penuh</option>
+                <option value="nasabah">Nasabah - Layanan perbankan standar</option>
+                <option value="admin">Admin - Kontrol penuh sistem & fee</option>
+                <option value="teller">Teller - Validasi & review transaksi</option>
+                <option value="manager">Manager - Analitik & reporting dashboard</option>
               </select>
             </div>
 

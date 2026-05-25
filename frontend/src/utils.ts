@@ -31,11 +31,14 @@ export function formatNumber(value: number) {
   return new Intl.NumberFormat("id-ID").format(value);
 }
 
-export function formatDateTime(value: string) {
+export function formatDateTime(value: string | null | undefined) {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (isNaN(date.getTime())) return "-";
   return new Intl.DateTimeFormat("id-ID", {
     dateStyle: "medium",
     timeStyle: "short",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 export function calculateFee(
@@ -82,13 +85,13 @@ export function calculateLoan(principal: number) {
 
 export function canAccess(role: UserRole, capability: string) {
   const permissions: Record<string, UserRole[]> = {
-    balance: ["user", "admin"],
-    transfer: ["user"],
-    paymentRequests: ["admin", "developer"],
-    ledger: ["user", "admin", "developer", "insight_readonly"],
-    fees: ["admin", "developer"],
-    integrations: ["admin", "developer"],
-    docs: ["user", "admin", "developer", "insight_readonly"],
+    balance: ["nasabah", "admin", "teller", "manager"],
+    transfer: ["nasabah"],
+    paymentRequests: ["admin", "manager", "teller"],
+    ledger: ["nasabah", "admin", "teller", "manager"],
+    fees: ["admin", "manager"],
+    integrations: ["admin", "manager"],
+    docs: ["nasabah", "admin", "teller", "manager"],
   };
 
   return permissions[capability]?.includes(role) ?? false;

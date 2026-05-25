@@ -1,4 +1,4 @@
-export type UserRole = "user" | "admin" | "developer" | "insight_readonly";
+export type UserRole = "nasabah" | "admin" | "teller" | "manager";
 
 export type User = {
   id: string;

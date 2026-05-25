@@ -1,4 +1,4 @@
-import { balance as mockBalance, ledgerEntries as mockLedgerEntries, loans as mockLoans } from "./data";
+
 import type {
   BackendLoan,
   BackendTransaction,
@@ -66,22 +66,7 @@ function mapLoanStatus(loan: BackendLoan): Loan["status"] {
   return "draft";
 }
 
-export function createMockBalanceView(): BankBalanceView {
-  return {
-    userId: mockBalance.userId,
-    currentBalance: mockBalance.currentBalance,
-    availableBalance: mockBalance.availableBalance,
-    heldBalance: mockBalance.heldBalance,
-    initialBalance: mockBalance.initialBalance,
-    dailyTransactionCount: mockBalance.dailyTransactionCount,
-    dailyTransactionLimit: mockBalance.dailyTransactionLimit,
-    cooldownUntil: mockBalance.cooldownUntil ?? null,
-    lastUpdatedAt: mockBalance.lastUpdatedAt,
-    outstandingLoan: mockLoans
-      .filter((loan) => loan.status === "active" || loan.status === "overdue")
-      .reduce((sum, loan) => sum + loan.totalRepayment, 0),
-  };
-}
+
 
 export function mapBalanceResponse(userId: string, response: BalanceResponse): BankBalanceView {
   const history = response.data.history ?? [];
@@ -147,32 +132,7 @@ export function mapBackendTransactions(
   });
 }
 
-export function createMockLedgerRows(userId?: string): BankLedgerRow[] {
-  return mockLedgerEntries
-    .filter((entry) => !userId || entry.accountId === userId)
-    .map((entry) => ({
-      id: entry.id,
-      transactionId: entry.transactionId,
-      type:
-        entry.type === "loan"
-          ? "loan"
-          : entry.type === "repayment"
-            ? "repayment"
-            : entry.type === "fee" || entry.type === "tax"
-              ? "payment"
-              : "transfer",
-      fromUserId: entry.type === "credit" ? "external" : entry.accountId,
-      toUserId: entry.type === "credit" ? entry.accountId : "external",
-      amount: entry.amount,
-      fee: 0,
-      tax: 0,
-      total: entry.amount,
-      description: entry.accountName ?? entry.type,
-      createdAt: entry.createdAt,
-      direction: entry.type === "credit" || entry.type === "loan" ? "incoming" : "outgoing",
-      sourceApp: entry.sourceApp,
-    }));
-}
+
 
 export function mapBackendLoans(loans: BackendLoan[]): Loan[] {
   return loans.map((loan) => {
@@ -198,6 +158,4 @@ export function mapBackendLoans(loans: BackendLoan[]): Loan[] {
   });
 }
 
-export function createMockLoans(userId?: string): Loan[] {
-  return userId ? mockLoans.filter((loan) => loan.userId === userId) : mockLoans;
-}
+

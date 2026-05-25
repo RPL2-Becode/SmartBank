@@ -848,14 +848,12 @@ components:
     # Enum schemas
     Role:
       type: string
-      enum: [NASABAH, ADMIN, TELLER, MANAGER, user, admin, developer, insight_readonly]
+      enum: [NASABAH, ADMIN, TELLER, MANAGER]
       description: |
-        - NASABAH / user: User biasa, bisa transfer, minta loan
-        - ADMIN / admin: Full access
-        - TELLER: Transaksi kas
-        - MANAGER: Approval pinjaman
-        - developer: Full access (mapped to ADMIN)
-        - insight_readonly: Read-only access (mapped to NASABAH)
+        - NASABAH: Pengguna standar, bisa transfer dan minta pinjaman
+        - ADMIN: Akses penuh ke semua fitur sistem dan konfigurasi fee
+        - TELLER: Validasi transaksi kas dan review payment request
+        - MANAGER: Approval pinjaman, analitik, dan reporting dashboard
 
     Tier:
       type: string

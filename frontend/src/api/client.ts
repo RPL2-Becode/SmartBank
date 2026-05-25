@@ -3,6 +3,7 @@ import type {
   LoginResponse, 
   RegisterResponse, 
   User, 
+  UserRole,
   LedgerEntry, 
   PaymentRequest 
 } from "../types";
@@ -48,7 +49,7 @@ export const apiClient = {
     return data;
   },
   
-  async register(userId: string | undefined, name: string, password: string, role: 'user' | 'admin' | 'developer' | 'insight_readonly'): Promise<RegisterResponse> {
+  async register(userId: string | undefined, name: string, password: string, role: UserRole): Promise<RegisterResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: getAuthHeaders(),

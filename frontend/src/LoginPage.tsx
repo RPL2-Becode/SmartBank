@@ -24,7 +24,7 @@ export function LoginPage() {
       storeSession(response.token, response.user);
       
       // Update auth context with role and userId
-      login(response.user.role, response.user.email);
+      login(response.user.role, response.user.email, response.user);
       
       // Redirect to dashboard
       navigate("/dashboard");
