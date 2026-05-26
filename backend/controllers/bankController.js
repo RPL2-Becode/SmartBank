@@ -1,6 +1,11 @@
 const db = require('../config/db');
 
-const generateTxId = () => 'TX-' + Date.now();
+const generateTxId = () => 'TX-' + Date.now() + '-' + Math.floor(1000 + Math.random() * 9000);
+
+const isValidAmount = (amount) => {
+    const num = parseFloat(amount);
+    return !isNaN(num) && num > 0 && isFinite(num);
+};
 
 const getSystemRates = async (connection) => {
     const [rows] = await connection.query('SELECT rate_name, rate_value FROM system_rates');
@@ -42,7 +47,13 @@ exports.transfer = async (req, res) => {
         const fromUserId = req.user.userId;
         const { toUserId, amount } = req.body;
 
-        if (amount <= 0) return res.status(400).json({ status: 'error', message: 'Jumlah tidak valid' });
+        if (!isValidAmount(amount)) return res.status(400).json({ status: 'error', message: 'Jumlah tidak valid' });
+        if (!toUserId || typeof toUserId !== 'string' || toUserId.trim().length === 0) {
+            return res.status(400).json({ status: 'error', message: 'User ID penerima wajib diisi' });
+        }
+        if (fromUserId === toUserId.trim()) {
+            return res.status(400).json({ status: 'error', message: 'Tidak bisa transfer ke diri sendiri' });
+        }
 
         // --- Aturan Anti Spam & Max Limit (Rule 15 & 16) ---
         const [todayTx] = await connection.query('SELECT COUNT(*) as total FROM transactions WHERE fromUserId = ? AND DATE(created_at) = CURDATE()', [fromUserId]);
@@ -60,12 +71,20 @@ exports.transfer = async (req, res) => {
         }
         // ---------------------------------------------------
 
+        // Verify both users exist before acquiring locks
+        const [senderCheck] = await connection.query('SELECT userId FROM users WHERE userId = ?', [fromUserId]);
+        const [receiverCheck] = await connection.query('SELECT userId FROM users WHERE userId = ?', [toUserId.trim()]);
+        if (senderCheck.length === 0 || receiverCheck.length === 0) {
+            connection.release();
+            return res.status(404).json({ status: 'error', message: 'User tidak ditemukan' });
+        }
+
         await connection.beginTransaction();
 
         const rates = await getSystemRates(connection);
 
         const [senders] = await connection.query('SELECT balance FROM users WHERE userId = ? FOR UPDATE', [fromUserId]);
-        const [receivers] = await connection.query('SELECT balance FROM users WHERE userId = ? FOR UPDATE', [toUserId]);
+        const [receivers] = await connection.query('SELECT balance FROM users WHERE userId = ? FOR UPDATE', [toUserId.trim()]);
 
         if (senders.length === 0 || receivers.length === 0) {
             await connection.rollback();
@@ -84,12 +103,12 @@ exports.transfer = async (req, res) => {
 
         // Proses mutasi
         await connection.query('UPDATE users SET balance = balance - ? WHERE userId = ?', [totalDeducted, fromUserId]);
-        await connection.query('UPDATE users SET balance = balance + ? WHERE userId = ?', [amount, toUserId]);
+        await connection.query('UPDATE users SET balance = balance + ? WHERE userId = ?', [amount, toUserId.trim()]);
 
         const txId = generateTxId();
         const [txResult] = await connection.query(
             'INSERT INTO transactions (refId, type, fromUserId, toUserId, baseAmount, tax, fee, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-            [txId, 'TRANSFER', fromUserId, toUserId, amount, tax, bankFee, 'Transfer antar user']
+            [txId, 'TRANSFER', fromUserId, toUserId.trim(), amount, tax, bankFee, 'Transfer antar user']
         );
 
         if (tax > 0) {
@@ -116,7 +135,18 @@ exports.payment = async (req, res) => {
         const fromUserId = req.body.fromUserId || req.user.userId; 
         const { toUserId, amount, type, description } = req.body;
 
-        if (amount <= 0) return res.status(400).json({ status: 'error', message: 'Jumlah tidak valid' });
+        if (!isValidAmount(amount)) return res.status(400).json({ status: 'error', message: 'Jumlah tidak valid' });
+        if (!toUserId || typeof toUserId !== 'string' || toUserId.trim().length === 0) {
+            return res.status(400).json({ status: 'error', message: 'User ID penerima wajib diisi' });
+        }
+        if (fromUserId === toUserId.trim()) {
+            return res.status(400).json({ status: 'error', message: 'Tidak bisa membayar ke diri sendiri' });
+        }
+
+        const validTypes = ['PAYMENT_MARKETPLACE', 'PAYMENT_POS', 'PAYMENT_SUPPLIER', 'PAYMENT_LOGISTIC', 'PAYMENT_INSIGHT', 'PAYMENT'];
+        if (type && !validTypes.includes(type)) {
+            return res.status(400).json({ status: 'error', message: `Tipe pembayaran tidak valid. Gunakan: ${validTypes.join(', ')}` });
+        }
 
         // --- Aturan Anti Spam & Max Limit (Rule 15 & 16) ---
         const [todayTx] = await connection.query('SELECT COUNT(*) as total FROM transactions WHERE fromUserId = ? AND DATE(created_at) = CURDATE()', [fromUserId]);
