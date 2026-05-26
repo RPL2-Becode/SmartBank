@@ -20,10 +20,10 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Cleanup
+  // Cleanup test users (bank tests clean their own users)
   try {
     await db.query('DELETE FROM users WHERE userId LIKE ?', ['test%']);
-    await db.end(); // Tutup pool koneksi
+    // Note: db.end() is handled by globalTeardown to avoid pool-closed errors
   } catch (error) {
     console.error('Cleanup error:', error.message);
   }
