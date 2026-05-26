@@ -40,14 +40,19 @@ import {
   Moon,
   Sun,
   TerminalSquare,
+  TrendingUp,
   UserPlus,
   Users,
   WalletCards,
   Workflow,
   X,
+  Zap,
 } from "lucide-react";
 import { LoginPage } from "./LoginPage";
 import { RegisterPage } from "./RegisterPage";
+import { AtmCard3D } from "./components/Landing/AtmCard3D";
+import { CountUp, useGlobalReveal } from "./components/Landing/useRevealOnScroll";
+import "./components/Landing/landing.css";
 import type { LedgerEntry, PaymentRequest, SourceApp, User, UserRole } from "./types";
 import {
   createContext,
@@ -1003,183 +1008,231 @@ export function PublicHeader() {
 }
 
 function LandingPage() {
-  useLandingAnimations();
-
-  const maxVolume = Math.max(...LANDING_MONEY_TREND.map((item) => item.volume));
-  const successCount = 2; // static marketing sample
+  useGlobalReveal();
 
   return (
-    <div className="landing-page">
+    <div className="landing-page landing-redesign">
       <PublicHeader />
 
-      <section id="overview" className="landing-hero">
-        <div className="hero-shell">
-          <div className="hero-copy">
-            <span className="hero-eyebrow">
-              <Sparkles size={18} aria-hidden="true" />
-              Smart finance OS untuk transaksi UMKM
+      {/* ============== HERO ============== */}
+      <section id="overview" className="lr-hero">
+        <div className="lr-orbs" aria-hidden="true">
+          <span className="lr-orb lr-orb-1" />
+          <span className="lr-orb lr-orb-2" />
+          <span className="lr-orb lr-orb-3" />
+          <span className="lr-orb lr-orb-4" />
+          <span className="lr-orb lr-orb-5" />
+        </div>
+
+        <div className="lr-hero-grid">
+          <div className="lr-hero-copy">
+            <span className="lr-eyebrow">
+              <Sparkles size={14} aria-hidden="true" />
+              Smart finance OS untuk UMKM Indonesia
             </span>
-            <h1>Banking dashboard yang cepat, jelas, dan siap diaudit.</h1>
-            <p>
-              SmartBank menggabungkan saldo, payment request, fee engine, role guard,
-              dan ledger immutable dalam satu pengalaman yang ringan untuk
-              nasabah, admin, teller, dan manager.
+
+            <h1 className="lr-headline">
+              Banking yang <span className="lr-grad">cerdas, cepat,</span> dan
+              transparan untuk bisnismu.
+            </h1>
+
+            <p className="lr-sub">
+              {brandName} menggabungkan saldo, transfer, payment request, fee
+              engine, hingga pinjaman dalam satu dashboard yang ringan, modern,
+              dan siap diaudit.
             </p>
-            <div className="hero-actions">
-              <Link className="btn btn-primary btn-lg" to="/login">
-                Buka Demo
-                <ArrowRight size={20} />
+
+            <div className="lr-cta-row">
+              <Link to="/register" className="lr-btn-primary">
+                Buka Rekening Gratis
+                <ArrowRight size={18} aria-hidden="true" />
               </Link>
-              <Link className="btn btn-secondary btn-lg" to="/docs/api">
-                Lihat API
-                <ChevronRight size={20} />
+              <Link to="/docs/api" className="lr-btn-ghost">
+                Lihat Dokumentasi
+                <ChevronRight size={18} aria-hidden="true" />
               </Link>
             </div>
-            <div className="hero-assurance" aria-label="SmartBank assurance">
+
+            <div className="lr-trust" aria-label="SmartBank assurance">
               <span>
-                <ShieldCheck size={16} aria-hidden="true" />
+                <ShieldCheck size={15} aria-hidden="true" />
                 Reserve 98%
               </span>
               <span>
-                <Activity size={16} aria-hidden="true" />
+                <Activity size={15} aria-hidden="true" />
                 Gateway 84 ms
               </span>
               <span>
-                <Database size={16} aria-hidden="true" />
-                Ledger read-only
+                <Database size={15} aria-hidden="true" />
+                Ledger immutable
+              </span>
+              <span>
+                <LockKeyhole size={15} aria-hidden="true" />
+                Enkripsi end-to-end
               </span>
             </div>
           </div>
 
-          <div className="hero-product" aria-label="Preview produk SmartBank">
-            <div className="hero-panel hero-balance-card">
-              <div className="hero-panel-top">
-                <span>{brandName} Balance</span>
-                <StatusBadge status="online" />
+          <div className="lr-card-area">
+            <AtmCard3D
+              brand="SmartBank"
+              holderName="MITRA UMKM"
+              cardNumber="5421  ••••  ••••  9824"
+              expiry="12/29"
+            />
+
+            <div className="lr-widget lr-widget-1" aria-hidden="true">
+              <div className="lr-widget-icon is-green">
+                <ShieldCheck size={18} />
               </div>
-              <div className="hero-balance-value">
-                <span>Available balance</span>
+              <div>
+                <small>Saldo aman</small>
                 <strong>{formatRupiah(LANDING_BALANCE.availableBalance)}</strong>
               </div>
-              <div className="hero-action-grid">
-                <span>
-                  <Send size={18} aria-hidden="true" />
-                  Kirim
-                </span>
-                <span>
-                  <Download size={18} aria-hidden="true" />
-                  Terima
-                </span>
-                <span>
-                  <CreditCard size={18} aria-hidden="true" />
-                  Kartu
-                </span>
+            </div>
+
+            <div className="lr-widget lr-widget-2" aria-hidden="true">
+              <div className="lr-widget-icon">
+                <Zap size={18} />
               </div>
-              <div className="hero-chart" aria-label="Weekly transaction volume">
-                {LANDING_MONEY_TREND.map((item) => (
-                  <span key={item.day} style={{ height: `${(item.volume / maxVolume) * 100}%` }}>
-                    <b>{item.day}</b>
-                  </span>
-                ))}
+              <div>
+                <small>Transfer instan</small>
+                <strong>~84 ms</strong>
               </div>
             </div>
 
-            <div className="hero-side-panel hero-ledger-panel">
-              <div className="hero-panel-top">
-                <span>Ledger stream</span>
-                <ScrollText size={18} aria-hidden="true" />
+            <div className="lr-widget lr-widget-3" aria-hidden="true">
+              <div className="lr-widget-icon is-amber">
+                <Banknote size={18} />
               </div>
-              {LANDING_LEDGER_ENTRIES.map((entry: any, index: number) => (
-                <div
-                  className={index === 0 ? "hero-ledger-row is-active" : "hero-ledger-row"}
-                  key={entry.id}
-                >
-                  <span>{entry.id}</span>
-                  <strong>{formatRupiah(entry.amount)}</strong>
-                </div>
-              ))}
-            </div>
-
-            <div className="hero-side-panel hero-fee-panel">
-              <div className="hero-panel-top">
-                <span>Fee preview</span>
-                <BadgeCheck size={18} aria-hidden="true" />
+              <div>
+                <small>Bunga loan</small>
+                <strong>1.5% / bulan</strong>
               </div>
-              <dl>
-                <div>
-                  <dt>App fee</dt>
-                  <dd>2%</dd>
-                </div>
-                <div>
-                  <dt>Gateway</dt>
-                  <dd>0.5%</dd>
-                </div>
-                <div>
-                  <dt>Tax</dt>
-                  <dd>2%</dd>
-                </div>
-              </dl>
             </div>
           </div>
         </div>
+      </section>
 
-        <div className="hero-proof">
-          <MiniMetric label="Cadangan Bank" value="98.0%" />
-          <MiniMetric label="Payment sukses" value={`${successCount} request`} />
-          <MiniMetric label="Limit harian" value="10 trx" />
-          <MiniMetric label="Gateway" value="84 ms" />
+      {/* ============== STATS ============== */}
+      <section className="lr-section" style={{ paddingTop: 0 }}>
+        <div className="lr-stats">
+          <article className="lr-stat-card reveal-on-scroll" data-delay="1">
+            <div className="lr-stat-icon">
+              <Users size={20} aria-hidden="true" />
+            </div>
+            <span className="lr-stat-value">
+              <CountUp to={12500} suffix="+" />
+            </span>
+            <span className="lr-stat-label">UMKM aktif terdaftar</span>
+          </article>
+
+          <article className="lr-stat-card reveal-on-scroll" data-delay="2">
+            <div className="lr-stat-icon">
+              <TrendingUp size={20} aria-hidden="true" />
+            </div>
+            <span className="lr-stat-value">
+              Rp <CountUp to={84} suffix=" M+" />
+            </span>
+            <span className="lr-stat-label">Volume transaksi bulanan</span>
+          </article>
+
+          <article className="lr-stat-card reveal-on-scroll" data-delay="3">
+            <div className="lr-stat-icon">
+              <CheckCircle2 size={20} aria-hidden="true" />
+            </div>
+            <span className="lr-stat-value">
+              <CountUp to={99.98} decimals={2} suffix="%" format={false} />
+            </span>
+            <span className="lr-stat-label">Uptime layanan SLA</span>
+          </article>
+
+          <article className="lr-stat-card reveal-on-scroll" data-delay="4">
+            <div className="lr-stat-icon">
+              <ShieldCheck size={20} aria-hidden="true" />
+            </div>
+            <span className="lr-stat-value">
+              <CountUp to={5} suffix=" Layer" />
+            </span>
+            <span className="lr-stat-label">Proteksi keamanan</span>
+          </article>
         </div>
       </section>
 
-      <section id="features" className="landing-section motion-reveal">
-        <SectionHeading
-          title="Semua operasi penting terlihat sejak awal."
-          description="Landing page dibuat seperti preview produk sungguhan: status, kontrol, dan aturan finansial tampil jelas tanpa membuat layar terasa padat."
-        />
-        <div className="feature-grid">
+      {/* ============== FEATURES ============== */}
+      <section id="features" className="lr-section">
+        <div className="lr-section-head reveal-on-scroll">
+          <span className="lr-section-eyebrow">Fitur Unggulan</span>
+          <h2 className="lr-section-title">
+            Semua operasi finansial dalam satu tempat
+          </h2>
+          <p className="lr-section-desc">
+            Kontrol penuh atas saldo, payment request, fee, pajak, dan ledger.
+            Dirancang transparan agar setiap rupiah bisa dilacak.
+          </p>
+        </div>
+
+        <div className="lr-features">
           {[
             {
               icon: Shield,
-              title: "Balance guard",
-              text: "Marketplace, POS, SupplierHub, dan LogistiKita hanya mengirim payment request melalui Gateway.",
+              title: "Balance Guard",
+              text:
+                "Saldo hanya berubah setelah validasi gateway. Setiap request dicek role, limit, dan saldo sebelum eksekusi.",
             },
             {
               icon: ReceiptText,
-              title: "Fee breakdown",
-              text: "App fee, gateway fee, bank fee, pajak, dan total debit selalu terlihat sebelum transaksi dikonfirmasi.",
+              title: "Fee Breakdown",
+              text:
+                "App fee, gateway fee, bank fee, pajak, dan total debit selalu terlihat sebelum transaksi dikonfirmasi.",
             },
             {
               icon: ScrollText,
-              title: "Ledger immutable",
-              text: "Setiap debit, kredit, fee, pajak, loan, repayment, dan stimulus menjadi entry audit read-only.",
+              title: "Ledger Immutable",
+              text:
+                "Setiap debit, kredit, fee, pajak, loan, dan repayment menjadi entry audit read-only yang tidak bisa diubah.",
             },
             {
               icon: Network,
-              title: "Integration health",
-              text: "Status Gateway dan aplikasi ekosistem dipantau dengan latency, error rate, dan API logs.",
+              title: "Integration Health",
+              text:
+                "Pantau status gateway dan aplikasi ekosistem dengan latency, error rate, dan API logs realtime.",
+            },
+            {
+              icon: HandCoins,
+              title: "Loan Engine",
+              text:
+                "Limit pinjaman berbasis tier, bunga transparan, jadwal repayment, dan status aktif dalam satu tampilan.",
             },
             {
               icon: Users,
-              title: "Role-aware routes",
-              text: "Nasabah, admin, teller, dan manager mendapat akses sesuai permission matrix demo.",
-            },
-            {
-              icon: Banknote,
-              title: "Loan preview",
-              text: "Limit pinjaman, bunga, repayment, dan status aktif dibuat mudah dipindai sebelum masuk dashboard.",
+              title: "Role-aware Access",
+              text:
+                "Nasabah, admin, teller, dan manager mendapat akses sesuai permission matrix yang tegas dan teraudit.",
             },
           ].map((item, index) => {
             const Icon = item.icon;
             return (
               <article
-                className={
-                  index === 0
-                    ? "feature-card feature-card-wide stagger-item"
-                    : "feature-card stagger-item"
-                }
+                className="lr-feature reveal-on-scroll"
+                data-delay={(index % 3) + 1}
                 key={item.title}
+                onMouseMove={(event) => {
+                  const target = event.currentTarget;
+                  const rect = target.getBoundingClientRect();
+                  target.style.setProperty(
+                    "--mx",
+                    `${event.clientX - rect.left}px`,
+                  );
+                  target.style.setProperty(
+                    "--my",
+                    `${event.clientY - rect.top}px`,
+                  );
+                }}
               >
-                <Icon size={24} aria-hidden="true" />
+                <div className="lr-feature-icon">
+                  <Icon size={22} aria-hidden="true" />
+                </div>
                 <h3>{item.title}</h3>
                 <p>{item.text}</p>
               </article>
@@ -1188,79 +1241,120 @@ function LandingPage() {
         </div>
       </section>
 
-      <section id="flow" className="landing-section flow-band motion-reveal">
-        <SectionHeading
-          title="Spend, send, settle, audit."
-          description="Alur dibuat linear dan mudah dipahami di desktop maupun mobile, dengan SmartBank sebagai pusat validasi sebelum saldo bergerak."
-        />
-        <div className="flow-layout">
-          <EcosystemFlow />
-          <div className="flow-control-panel">
-            <div>
-              <Sparkles size={18} aria-hidden="true" />
-              <span>Operational posture</span>
-            </div>
-            <strong>Every request is validated before balance movement.</strong>
-            <p>
-              UI mengutamakan status, limit, dan audit trail supaya alur demo
-              tetap jelas untuk nasabah, admin, teller, dan manager.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section id="security" className="landing-section motion-reveal">
-        <SectionHeading
-          title="Security dan rule engine bukan catatan kecil."
-          description="Bagian ini memadatkan kontrol finansial menjadi kartu informasi yang rapi, sehingga pengguna paham apa yang dijaga SmartBank."
-        />
-        <div className="security-grid">
-          <article className="security-panel security-panel-large stagger-item">
-            <ShieldCheck size={28} aria-hidden="true" />
-            <h3>Every request is checked before money moves.</h3>
-            <p>
-              SmartBank menahan flow di gateway, validasi saldo, hitung fee, lalu
-              menulis ledger supaya demo tetap transparan dari awal sampai akhir.
-            </p>
-            <div className="security-rules">
-              {LANDING_FINANCIAL_RULES.slice(0, 6).map(([label, value]) => (
-                <span key={label}>
-                  <small>{label}</small>
-                  <strong>{value}</strong>
-                </span>
-              ))}
-            </div>
-          </article>
-          <article className="security-panel stagger-item">
-            <KeyRound size={24} aria-hidden="true" />
-            <h3>Mock JWT session</h3>
-            <p>Auth route tetap sederhana untuk demo, tapi status role dan guard terlihat jelas.</p>
-          </article>
-          <article className="security-panel stagger-item">
-            <LineChart size={24} aria-hidden="true" />
-            <h3>Realtime posture</h3>
-            <p>Latency, error rate, dan request state dirancang untuk cepat dipindai.</p>
-          </article>
-          <article className="security-panel stagger-item">
-            <CircleCheckBig size={24} aria-hidden="true" />
-            <h3>Audit ready</h3>
-            <p>Ledger read-only menjaga catatan debit, credit, fee, tax, dan loan.</p>
-          </article>
-        </div>
-      </section>
-
-      <section className="landing-cta motion-reveal">
-        <div className="landing-cta-brand">SmartBank</div>
-        <div>
-          <h2>Masuk ke demo dan rasakan flow end-to-end.</h2>
-          <p>
-            Jalankan demo sebagai nasabah, admin, teller, atau manager
-            untuk melihat permission matrix dan alur transaksi berbeda.
+      {/* ============== HOW IT WORKS ============== */}
+      <section id="flow" className="lr-section">
+        <div className="lr-section-head reveal-on-scroll">
+          <span className="lr-section-eyebrow">Cara Kerja</span>
+          <h2 className="lr-section-title">Mulai dalam 4 langkah sederhana</h2>
+          <p className="lr-section-desc">
+            Onboarding ringkas, validasi cepat, dan langsung bertransaksi
+            dengan keamanan kelas perbankan.
           </p>
         </div>
-        <Link className="btn btn-primary" to="/login">
+
+        <div className="lr-steps">
+          {[
+            {
+              num: "01",
+              title: "Daftar Akun",
+              desc: "Isi data UMKM, verifikasi identitas, dan dapatkan tier reguler.",
+            },
+            {
+              num: "02",
+              title: "Top-up Saldo",
+              desc: "Isi saldo melalui transfer atau gateway pembayaran terpercaya.",
+            },
+            {
+              num: "03",
+              title: "Transaksi & Bayar",
+              desc: "Transfer, terima payment request, atau bayar supplier dalam satu klik.",
+            },
+            {
+              num: "04",
+              title: "Audit & Skala",
+              desc: "Pantau ledger, ajukan loan, dan kembangkan bisnis dengan data jernih.",
+            },
+          ].map((step, index) => (
+            <div
+              className="lr-step reveal-on-scroll"
+              data-delay={index + 1}
+              key={step.num}
+            >
+              <div className="lr-step-num">{step.num}</div>
+              <h4>{step.title}</h4>
+              <p>{step.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ============== TESTIMONIALS ============== */}
+      <section className="lr-section">
+        <div className="lr-section-head reveal-on-scroll">
+          <span className="lr-section-eyebrow">Cerita Pengguna</span>
+          <h2 className="lr-section-title">Dipercaya UMKM dari seluruh Indonesia</h2>
+          <p className="lr-section-desc">
+            Pelaku usaha menjadi lebih cepat, lebih hemat, dan lebih aman dengan
+            SmartBank sebagai tulang punggung finansial mereka.
+          </p>
+        </div>
+
+        <div className="lr-testimonials">
+          {[
+            {
+              quote:
+                "Transfer ke supplier sekarang cuma hitungan detik dan rincian fee-nya jelas. Pembukuan jadi auto-rapi tanpa rekap manual.",
+              name: "Rina Hartati",
+              role: "Owner, WarungSenja",
+              initials: "RH",
+            },
+            {
+              quote:
+                "Fitur loan-nya life-saver waktu cashflow tipis. Bunganya transparan, jadwal cicilan jelas, dan approval cepat.",
+              name: "Budi Santoso",
+              role: "Founder, KopiKencana",
+              initials: "BS",
+            },
+            {
+              quote:
+                "Ledger immutable bikin tim akunting tenang waktu audit pajak. Semua jejak transaksi tinggal dipindai.",
+              name: "Citra Wulandari",
+              role: "Finance Lead, BatikLuwes",
+              initials: "CW",
+            },
+          ].map((testi, index) => (
+            <article
+              className="lr-testi reveal-on-scroll"
+              data-delay={index + 1}
+              key={testi.name}
+            >
+              <p className="lr-testi-quote">{testi.quote}</p>
+              <div className="lr-testi-author">
+                <div className="lr-testi-avatar" aria-hidden="true">
+                  {testi.initials}
+                </div>
+                <div>
+                  <span className="lr-testi-name">{testi.name}</span>
+                  <span className="lr-testi-role">{testi.role}</span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* ============== CTA BANNER ============== */}
+      <section className="lr-cta reveal-on-scroll" id="security">
+        <div className="lr-cta-text">
+          <h2>Siap kembangkan bisnis dengan banking yang transparan?</h2>
+          <p>
+            Coba demo lengkap untuk melihat alur end-to-end, lalu daftar gratis
+            untuk mulai bertransaksi dengan SmartBank.
+          </p>
+        </div>
+        <Link to="/login" className="lr-btn-cta">
           Masuk ke Demo
-          <ArrowRight size={18} />
+          <ArrowRight size={18} aria-hidden="true" />
         </Link>
       </section>
 
