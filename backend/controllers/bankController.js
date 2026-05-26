@@ -45,7 +45,8 @@ exports.transfer = async (req, res) => {
     const connection = await db.getConnection();
     try {
         const fromUserId = req.user.userId;
-        const { toUserId, amount } = req.body;
+        const source = req.validatedData || req.body || {};
+        const { toUserId, amount } = source;
 
         if (!isValidAmount(amount)) return res.status(400).json({ status: 'error', message: 'Jumlah tidak valid' });
         if (!toUserId || typeof toUserId !== 'string' || toUserId.trim().length === 0) {
@@ -129,11 +130,19 @@ exports.transfer = async (req, res) => {
 };
 
 // 3. Pembayaran dari Aplikasi (Marketplace, POS, dll)
+//
+// SECURITY: For end-user JWT requests, fromUserId is ALWAYS the
+// authenticated user from req.user.userId. We never read fromUserId from
+// the request body to prevent impersonation / debiting other users.
+// Server-to-server gateway flows that legitimately move money between
+// accounts must go through the dedicated /smartbank/gateway routes which
+// authenticate the source app separately.
 exports.payment = async (req, res) => {
     const connection = await db.getConnection();
     try {
-        const fromUserId = req.body.fromUserId || req.user.userId; 
-        const { toUserId, amount, type, description } = req.body;
+        const fromUserId = req.user.userId;
+        const source = req.validatedData || req.body || {};
+        const { toUserId, amount, type, description } = source;
 
         if (!isValidAmount(amount)) return res.status(400).json({ status: 'error', message: 'Jumlah tidak valid' });
         if (!toUserId || typeof toUserId !== 'string' || toUserId.trim().length === 0) {
@@ -233,7 +242,8 @@ exports.requestLoan = async (req, res) => {
     const connection = await db.getConnection();
     try {
         const userId = req.user.userId;
-        const { amount } = req.body;
+        const source = req.validatedData || req.body || {};
+        const { amount } = source;
 
         if (!isValidAmount(amount) || amount > 100000) {
             return res.status(400).json({ status: 'error', message: 'Jumlah pinjaman tidak valid atau maksimal 100.000' });
@@ -309,7 +319,8 @@ exports.payLoan = async (req, res) => {
     const connection = await db.getConnection();
     try {
         const userId = req.user.userId;
-        const { installmentId } = req.body; 
+        const source = req.validatedData || req.body || {};
+        const { installmentId } = source;
 
         if (!installmentId) return res.status(400).json({ status: 'error', message: 'installmentId dibutuhkan' });
 
