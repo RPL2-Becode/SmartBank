@@ -8,7 +8,12 @@ import type {
   PaymentRequest 
 } from "../types";
 
-const API_BASE_URL = "http://127.0.0.1:5000/smartbank";
+const API_BASE_URL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  "http://127.0.0.1:5000/smartbank";
+
+// Re-export so other modules and tests can read the resolved base URL.
+export { API_BASE_URL };
 
 // Helper function to get the authorization header
 function getAuthHeaders(): HeadersInit {

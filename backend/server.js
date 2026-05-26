@@ -60,6 +60,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/smartbank/auth', require('./routes/authRoutes'));
+app.use('/smartbank/gateway', require('./routes/gatewayRoutes'));
 app.use('/smartbank', require('./routes/bankRoutes'));
 
 // Export app for testing

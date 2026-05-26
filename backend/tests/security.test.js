@@ -255,9 +255,12 @@ describe('XSS Tests', () => {
           name: 'XSS UserId Test',
           password: 'Password123!'
         });
-      // userId with <> should be accepted by Zod (string().min(3).max(50) allows any chars)
-      // But it's a UNIQUE field — if this specific userId already exists, it returns 400
-      expect(res.statusCode).toBe(201);
+      // P0 fix: userId now enforces a safe character class
+      // /^[a-zA-Z0-9_-]+$/ at the validation layer, so HTML/JS payloads
+      // are REJECTED (400) instead of stored. This matches the test
+      // name's "sanitize OR reject" expectation.
+      expect(res.statusCode).toBe(400);
+      // Defensive cleanup in case an old run let the row through:
       await db.query("DELETE FROM users WHERE userId = '<script>alert(\"XSS\")</script>'");
     });
   });
