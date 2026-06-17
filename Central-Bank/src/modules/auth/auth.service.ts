@@ -1,0 +1,154 @@
+import { Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
+import { AppError } from '../../common/app-error';
+import { ErrorCode } from '../../common/error-codes';
+import { IdempotencyService } from '../idempotency/idempotency.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { SettlementService } from '../settlement/settlement.service';
+import { AuditLogService } from '../audit/audit-log.service';
+
+function jsonSafe(value: unknown) {
+  return JSON.parse(JSON.stringify(value, (_key, current) => (typeof current === 'bigint' ? current.toString() : current)));
+}
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwt: JwtService,
+    private readonly settlement: SettlementService,
+    private readonly idempotency: IdempotencyService,
+    private readonly audit: AuditLogService,
+  ) {}
+
+  async register(input: {
+    name: string;
+    email: string;
+    password: string;
+    requestId: string;
+    idempotencyKey: string;
+    requestHash: string;
+    ip: string;
+  }) {
+    const passwordHash = await bcrypt.hash(input.password, 10);
+    const userId = randomUUID();
+    const walletId = randomUUID();
+    const registerIdempotency = {
+      key: input.idempotencyKey,
+      route: 'POST /api/v1/auth/register',
+      actorId: input.email,
+      requestHash: input.requestHash,
+    };
+    const existingResponse = await this.prisma.$transaction(async (tx) => {
+      const idem = await this.idempotency.start(tx, registerIdempotency);
+      if (idem.replay) return idem.response;
+      await tx.user.create({
+        data: {
+          id: userId,
+          name: input.name,
+          email: input.email.toLowerCase().trim(),
+          passwordHash,
+          role: 'WALLET_USER',
+        },
+      });
+      await tx.walletAccount.create({
+        data: {
+          id: walletId,
+          userId,
+          accountType: 'USER_WALLET',
+          accountCode: `USER_${userId}`,
+        },
+      });
+      return null;
+    });
+    if (existingResponse) return existingResponse;
+    const distribution = await this.settlement.settleInitialDistribution({
+      walletId,
+      actorUserId: userId,
+      requestId: input.requestId,
+      idempotency: {
+        key: input.idempotencyKey,
+        route: 'INITIAL_DISTRIBUTION',
+        actorId: userId,
+        requestHash: input.requestHash,
+      },
+    });
+    const response = {
+      user_id: userId,
+      wallet_id: walletId,
+      initial_distribution: distribution,
+    };
+    await this.prisma.$transaction((tx) =>
+      this.idempotency.complete(tx, {
+        ...registerIdempotency,
+        responseBody: jsonSafe(response) as never,
+      }),
+    );
+    await this.audit.record({
+      actorUserId: userId,
+      serviceName: 'centralbank-core',
+      action: 'USER_REGISTERED',
+      targetType: 'user',
+      targetId: userId,
+      requestId: input.requestId,
+      metadata: { ip: input.ip },
+    });
+    return response;
+  }
+
+  async login(email: string, password: string, requestId: string, ip: string) {
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      include: {
+        wallets: {
+          where: { accountType: 'USER_WALLET' },
+          select: { id: true }
+        }
+      }
+    });
+    if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+      await this.audit.record({
+        serviceName: 'centralbank-core',
+        action: 'LOGIN_FAILED',
+        targetType: 'login_email',
+        targetId: normalizedEmail,
+        requestId,
+        metadata: { ip },
+      });
+      throw new AppError(ErrorCode.UNAUTHORIZED, 'Email atau password salah');
+    }
+    if (user.status === 'SUSPENDED') {
+      await this.audit.record({
+        serviceName: 'centralbank-core',
+        action: 'LOGIN_FAILED_SUSPENDED',
+        targetType: 'login_email',
+        targetId: normalizedEmail,
+        requestId,
+        metadata: { ip },
+      });
+      throw new AppError(ErrorCode.FORBIDDEN, 'Akun Anda ditangguhkan');
+    }
+    await this.audit.record({
+      actorUserId: user.id,
+      serviceName: 'centralbank-core',
+      action: 'LOGIN_SUCCESS',
+      targetType: 'user',
+      targetId: user.id,
+      requestId,
+      metadata: { ip },
+    });
+    const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role, name: user.name });
+    return {
+      access_token: token,
+      expires_in: 3600,
+      user_id: user.id,
+      name: user.name,
+      role: user.role,
+      kyc_tier: user.kycTier,
+      wallet_id: user.wallets[0]?.id || null,
+    };
+  }
+}
