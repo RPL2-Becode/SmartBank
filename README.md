@@ -50,6 +50,10 @@ Jangan commit file `.env` yang berisi kredensial asli.
 
 ## Menjalankan Aplikasi
 
+### Menjalankan di Lokal (Tanpa Docker)
+Untuk panduan lengkap menjalankan aplikasi di lingkungan lokal menggunakan Laragon (MySQL) tanpa Docker, silakan baca berkas [dokumentasi-lokal.md](./dokumentasi-lokal.md).
+
+### Menjalankan dengan Docker
 Jalankan dari root proyek:
 
 ```powershell
