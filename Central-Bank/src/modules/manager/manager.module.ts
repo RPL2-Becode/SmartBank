@@ -5,9 +5,10 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { SettlementModule } from '../settlement/settlement.module';
 import { WalletsModule } from '../wallets/wallets.module';
 import { AuditModule } from '../audit/audit.module';
+import { MoneyModule } from '../money/money.module';
 
 @Module({
-  imports: [PrismaModule, SettlementModule, WalletsModule, AuditModule],
+  imports: [PrismaModule, SettlementModule, WalletsModule, AuditModule, MoneyModule],
   controllers: [ManagerController],
   providers: [ManagerService],
 })

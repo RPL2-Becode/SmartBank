@@ -99,9 +99,20 @@ export class ManagerService {
     });
   }
 
-  async listPendingLoans() {
+  async listPendingLoans(filters?: { minAmount?: bigint; recommendedOnly?: boolean }) {
+    const where: any = { status: 'PENDING' };
+    if (filters?.minAmount !== undefined) {
+      where.principal = { gte: filters.minAmount };
+    }
+    if (filters?.recommendedOnly === true) {
+      where.recommendedBy = { not: null };
+    } else if (filters?.recommendedOnly === false) {
+      where.recommendedBy = null;
+    }
+    // undefined = no filter, tampilkan semua
+
     const loans = await this.prisma.loan.findMany({
-      where: { status: 'PENDING' },
+      where,
       orderBy: { createdAt: 'asc' },
       include: {
         borrowerWallet: {
@@ -114,6 +125,7 @@ export class ManagerService {
                 phone: true,
                 kycTier: true,
                 status: true,
+                accountNumber: true,
                 identityDocumentType: true,
                 identityDocumentNumber: true,
                 identityDocumentName: true,
@@ -125,22 +137,77 @@ export class ManagerService {
       },
     });
 
-    return loans.map((loan) => ({
-      id: loan.id,
-      borrower_wallet_id: loan.borrowerWalletId,
-      principal: loan.principal,
-      interest_amount: loan.interestAmount,
-      total_due: loan.totalDue,
-      paid_amount: loan.paidAmount,
-      status: loan.status,
-      created_at: loan.createdAt,
-      borrower: loan.borrowerWallet.user,
-      wallet: {
-        id: loan.borrowerWallet.id,
-        available_balance: loan.borrowerWallet.availableBalance,
-        status: loan.borrowerWallet.status,
+    return loans
+      .map((loan) => {
+        const user = loan.borrowerWallet.user;
+        if (!user) return null;
+        return {
+          id: loan.id,
+          borrower_wallet_id: loan.borrowerWalletId,
+          principal: loan.principal.toString(),
+          interest_amount: loan.interestAmount.toString(),
+          total_due: loan.totalDue.toString(),
+          paid_amount: loan.paidAmount.toString(),
+          status: loan.status,
+          created_at: loan.createdAt,
+          recommended_by: loan.recommendedBy,
+          recommended_at: loan.recommendedAt,
+          recommendation_note: loan.recommendationNote,
+          borrower: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            kyc_tier: user.kycTier,
+            status: user.status,
+            account_number: user.accountNumber,
+            identity_document_type: user.identityDocumentType,
+            identity_document_number: user.identityDocumentNumber,
+            identity_document_name: user.identityDocumentName,
+          },
+          wallet: {
+            id: loan.borrowerWallet.id,
+            available_balance: loan.borrowerWallet.availableBalance.toString(),
+            status: loan.borrowerWallet.status,
+          },
+        };
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+  }
+
+  /**
+   * Saldo LOAN_POOL_ACCOUNT — dana yang tersedia untuk dicairkan ke nasabah.
+   * Manager wajib lihat ini sebelum approve, karena kalau pool kosong loan
+   * tidak bisa disburse (settleLoanApproval akan tolak dengan INSUFFICIENT_BALANCE).
+   */
+  async getLoanPoolBalance() {
+    const pool = await this.prisma.walletAccount.findUnique({
+      where: { accountCode: 'LOAN_POOL_ACCOUNT' },
+      select: {
+        id: true,
+        accountCode: true,
+        accountType: true,
+        currency: true,
+        availableBalance: true,
+        holdBalance: true,
+        status: true,
       },
-    }));
+    });
+    if (!pool) {
+      throw new AppError(
+        ErrorCode.VALIDATION_ERROR,
+        'LOAN_POOL_ACCOUNT belum di-seed di database. Jalankan prisma db seed.',
+      );
+    }
+    return {
+      wallet_id: pool.id,
+      account_code: pool.accountCode,
+      account_type: pool.accountType,
+      currency: pool.currency,
+      available_balance: pool.availableBalance.toString(),
+      hold_balance: pool.holdBalance.toString(),
+      status: pool.status,
+    };
   }
 
   async rejectLoan(input: {

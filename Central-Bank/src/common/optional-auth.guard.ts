@@ -25,6 +25,15 @@ export class OptionalAuthGuard implements CanActivate {
       throw new AppError(ErrorCode.UNAUTHORIZED, 'Authorization token wajib dikirim');
     }
     const [, token] = header.split(' ');
+    // Jika token tidak berformat JWT (tidak ada 2 segment dipisah '.'),
+    // biarkan ServiceTokenGuard/controller guard lain yang memvalidasi.
+    // OptionalAuthGuard hanya memvalidasi token JWT user.
+    if (token && token.split('.').length !== 3) {
+      if (isPublic) return true;
+      // Bukan JWT dan bukan public → teruskan; guard berikutnya akan menolak
+      // kalau tidak diizinkan.
+      return true;
+    }
     try {
       req.user = this.jwt.verify(token);
       return true;

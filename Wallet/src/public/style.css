@@ -244,6 +244,38 @@ h1, h2, h3, h4, .brand h1 {
   flex-direction: column;
 }
 
+/* Phone input with static +62 prefix */
+.phone-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.phone-field input {
+  padding-left: 42px !important; /* room for "+62" prefix */
+  width: 100%;
+}
+
+.phone-prefix {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13.5px;
+  font-family: 'JetBrains Mono', 'Menlo', monospace;
+  font-weight: 600;
+  color: var(--text-secondary);
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: 0.02em;
+  z-index: 1;
+}
+
+.phone-field input:focus + .phone-prefix,
+.phone-field:focus-within .phone-prefix {
+  color: var(--primary);
+}
+
 .input-row {
   display: grid;
   grid-template-columns: 1fr auto;

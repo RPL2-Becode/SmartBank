@@ -44,6 +44,7 @@ docs/
 .hermes/
 .claude/
 .github/
+.commandcode/
 AUDIT_REPORT_v2.md
 CLAUDE.md
 AUDIT_REPORT

@@ -1,5 +1,15 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+// Load .env next to this file's package root (Wallet/.env) regardless of CWD.
+dotenv.config({ path: path.resolve(__dirname, '..', '..', '.env') });
+// Fallback to default location if not found.
+if (!process.env.JWT_SECRET) {
+  dotenv.config();
+}
 
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is required');
@@ -17,11 +27,11 @@ export const config = {
     audience: process.env.JWT_AUDIENCE || 'smartbank-clients',
   },
   db: {
-    host: process.env.DB_HOST || '127.0.0.1',
-    port: parseInt(process.env.DB_PORT || '3306', 10),
-    user: process.env.DB_USER || 'central_bank',
-    password: process.env.DB_PASSWORD || 'central_bank_password',
-    name: process.env.DB_NAME || 'central_bank_core',
+    host: process.env.DB_HOST ?? '127.0.0.1',
+    port: parseInt(process.env.DB_PORT ?? '3306', 10),
+    user: process.env.DB_USER ?? 'central_bank',
+    password: process.env.DB_PASSWORD ?? 'central_bank_password',
+    name: process.env.DB_NAME ?? 'central_bank_core',
     useInMemory: process.env.USE_IN_MEMORY_DB === 'true',
   },
   centralBank: {

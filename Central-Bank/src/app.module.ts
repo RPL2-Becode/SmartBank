@@ -16,6 +16,7 @@ import { SettlementModule } from './modules/settlement/settlement.module';
 import { WalletsModule } from './modules/wallets/wallets.module';
 import { TellerModule } from './modules/teller/teller.module';
 import { ManagerModule } from './modules/manager/manager.module';
+import { PublicModule } from './modules/public/public.module';
 import { OptionalAuthGuard } from './common/optional-auth.guard';
 import { RolesGuard } from './common/roles.guard';
 

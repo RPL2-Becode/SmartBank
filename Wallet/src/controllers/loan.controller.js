@@ -2,7 +2,25 @@ import { centralBankService } from '../services/centralBank.service.js';
 import { responseHelper } from '../utils/response.js';
 
 export const loanController = {
-  
+
+  // GET /api/v1/loans/me
+  // List active loans (PENDING/DISBURSED/PARTIAL_PAID) untuk user saat ini.
+  // Frontend pakai ini untuk render card list sehingga Nasabah tidak perlu input loanId manual.
+  // Response: { loans: [...], limit: { cap, outstanding, remaining } }
+  listMyLoans: async (req, res, next) => {
+    try {
+      const token = req.headers['authorization']?.split(' ')[1];
+      const walletId = req.user.walletId;
+      const [loans, limit] = await Promise.all([
+        centralBankService.listMyLoans(walletId, token),
+        centralBankService.getLoanLimit(token),
+      ]);
+      return responseHelper.success(res, { loans, limit });
+    } catch (err) {
+      next(err);
+    }
+  },
+
   // POST /api/v1/loans/apply
   applyLoan: async (req, res, next) => {
     try {

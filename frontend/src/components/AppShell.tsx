@@ -8,6 +8,7 @@ import { BadgeDollarSign, BookOpen, CreditCard, FileCheck2, Landmark, LayoutDash
 import OnboardingTour from "@/components/OnboardingTour";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Role, useAuthStore } from "@/store/auth";
+import { useIsClient } from "@/lib/use-is-client";
 
 type MenuItem = { name: string; href: string; icon: ReactNode };
 
@@ -56,12 +57,28 @@ const menus: Record<Role, MenuItem[]> = {
 export default function AppShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, token, logout } = useAuthStore();
+  const { user, token, logout, hydrated, rehydrate } = useAuthStore();
+  const isClient = useIsClient();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (!token || !user) router.push("/login");
-  }, [token, user, router]);
+    rehydrate();
+  }, [rehydrate]);
+
+  useEffect(() => {
+    if (isClient && hydrated && (!token || !user)) router.push("/login");
+  }, [isClient, hydrated, token, user, router]);
+
+  // Sebelum hydrate dari localStorage, render placeholder identik di SSR &
+  // client untuk menghindari hydration mismatch. Setelah hydrated, baru
+  // tentukan apakah user null (belum login) atau tampilkan UI.
+  if (!isClient || !hydrated) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-background text-sm text-muted-foreground">
+        Memuat sesi…
+      </div>
+    );
+  }
 
   if (!user) return null;
 

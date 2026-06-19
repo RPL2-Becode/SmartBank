@@ -92,7 +92,6 @@ export const walletController = {
              identity_document_name = ?,
              identity_document_data_url = ?,
              identity_document_uploaded_at = CURRENT_TIMESTAMP(3),
-             kyc_tier = CASE WHEN kyc_tier = 'VERIFIED' THEN 'VERIFIED' ELSE 'PENDING' END,
              updated_at = CURRENT_TIMESTAMP(3)
          WHERE id = ?`,
         [documentType, documentNumber.trim(), documentName.trim(), documentDataUrl, userId]
@@ -102,12 +101,16 @@ export const walletController = {
         return responseHelper.error(res, 'NOT_FOUND', 'Pengguna tidak ditemukan', 404);
       }
 
+      // Status "menunggu verifikasi Teller" ditentukan dari ada/tidaknya
+      // dokumen terupload (hasDocument) di GET /kyc-document — bukan dari
+      // kyc_tier. Kolom kyc_tier hanya berisi BASIC | VERIFIED. Teller yang
+      // mengubah ke VERIFIED lewat endpoint verifikasi terpisah.
       return responseHelper.success(res, {
         message: 'Dokumen identitas berhasil diunggah dan menunggu verifikasi Teller',
-        kycTier: 'PENDING',
         documentType,
         documentNumber: documentNumber.trim(),
         documentName: documentName.trim(),
+        hasDocument: true,
       }, 200);
     } catch (err) {
       next(err);

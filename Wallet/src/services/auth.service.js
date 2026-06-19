@@ -125,16 +125,22 @@ export const authService = {
 
           if (!userId) userId = `usr_cb_${cleanEmail.replace(/[@.]/g, '_')}`;
           if (!userName) userName = cleanEmail.split('@')[0];
-          // Fallback path: still fetch the real walletId. If absent, surface NOT_REGISTERED.
-          let cbWalletId = null;
-          try {
-            const cbWallet = await centralBankService.getWalletByUserId(userId);
-            cbWalletId = cbWallet.wallet_id ?? cbWallet.walletId ?? null;
-          } catch (e) { /* ignore; will be handled below */ }
-          if (!cbWalletId) {
-            throw new CustomError('NOT_REGISTERED', 'Wallet belum terdaftar di Central-Bank. Silakan hubungi Teller.', 403);
+          // Fallback path: staff (TELLER/MANAGER/CENTRAL_BANK_ADMIN) tidak punya
+          // customer wallet, lewati lookup. Retail tetap wajib punya wallet.
+          const isStaffFallback = ['TELLER', 'MANAGER', 'CENTRAL_BANK_ADMIN'].includes(userRole);
+          if (!isStaffFallback) {
+            let cbWalletId = null;
+            try {
+              const cbWallet = await centralBankService.getWalletByUserId(userId);
+              cbWalletId = cbWallet.wallet_id ?? cbWallet.walletId ?? null;
+            } catch (e) { /* ignore; will be handled below */ }
+            if (!cbWalletId) {
+              throw new CustomError('NOT_REGISTERED', 'Wallet belum terdaftar di Central-Bank. Silakan hubungi Teller.', 403);
+            }
+            walletId = cbWalletId;
+          } else {
+            walletId = null;
           }
-          walletId = cbWalletId;
           if (userRole === 'WALLET_USER') userRole = 'RETAIL_CUSTOMER';
 
           console.log(`✅ [AUTH] Fallback berhasil: ${cleanEmail} (role: ${userRole}, wallet: ${walletId})`);
@@ -167,21 +173,26 @@ export const authService = {
     }
 
     // Fetch associated Wallet ID from Central-Bank (SSOT), with read-cache fallback.
+    // STAFF (TELLER/MANAGER/CENTRAL_BANK_ADMIN) tidak punya customer wallet —
+    // mereka user internal untuk operasional, jadi walletId=null diperbolehkan.
+    const isStaff = ['TELLER', 'MANAGER', 'CENTRAL_BANK_ADMIN'].includes(user.role);
     let walletId = null;
-    try {
-      const cbWallet = await centralBankService.getWalletByUserId(user.id);
-      walletId = cbWallet.wallet_id ?? cbWallet.walletId ?? null;
-    } catch (e) {
-      // Central-Bank unreachable or no wallet exists. Distinguish:
-      //   - 4xx  => user is not registered in CB yet. Fall through to NOT_REGISTERED below.
-      //   - 5xx / network => propagate as 503 from caller.
-      if (e?.status && e.status >= 400 && e.status < 500) {
+    if (!isStaff) {
+      try {
+        const cbWallet = await centralBankService.getWalletByUserId(user.id);
+        walletId = cbWallet.wallet_id ?? cbWallet.walletId ?? null;
+      } catch (e) {
+        // Central-Bank unreachable or no wallet exists. Distinguish:
+        //   - 4xx  => user is not registered in CB yet. Fall through to NOT_REGISTERED below.
+        //   - 5xx / network => propagate as 503 from caller.
+        if (e?.status && e.status >= 400 && e.status < 500) {
+          throw new CustomError('NOT_REGISTERED', 'Wallet belum terdaftar di Central-Bank. Silakan hubungi Teller.', 403);
+        }
+        throw e;
+      }
+      if (!walletId) {
         throw new CustomError('NOT_REGISTERED', 'Wallet belum terdaftar di Central-Bank. Silakan hubungi Teller.', 403);
       }
-      throw e;
-    }
-    if (!walletId) {
-      throw new CustomError('NOT_REGISTERED', 'Wallet belum terdaftar di Central-Bank. Silakan hubungi Teller.', 403);
     }
 
     // Generate JWT access & refresh tokens

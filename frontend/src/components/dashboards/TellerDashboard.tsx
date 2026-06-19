@@ -1,20 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { fetchApi } from "@/lib/api";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Search, 
-  ShieldCheck, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  AlertCircle, 
-  User, 
-  Wallet, 
-  CheckCircle2, 
+import {
+  Search,
+  ShieldCheck,
+  ArrowUpRight,
+  ArrowDownLeft,
+  AlertCircle,
+  User,
+  Wallet,
+  CheckCircle2,
   Loader2,
-  Sparkles
+  Sparkles,
+  BadgeDollarSign,
 } from "lucide-react";
 
 type TellerCustomer = {
@@ -36,6 +37,31 @@ type CustomerResponse = {
   data?: TellerCustomer;
 };
 
+type SmallPendingLoan = {
+  id: string;
+  principal: number;
+  interest_amount: number;
+  total_due: number;
+  status: string;
+  created_at: string;
+  borrower: {
+    id: string;
+    name: string;
+    email: string;
+    phone?: string | null;
+    kyc_tier: string;
+    status: string;
+    account_number?: string | null;
+    identity_document_type?: string | null;
+    identity_document_number?: string | null;
+    identity_document_name?: string | null;
+  };
+  wallet: {
+    id: string;
+    available_balance: string;
+  };
+};
+
 export default function TellerDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [customer, setCustomer] = useState<TellerCustomer | null>(null);
@@ -48,6 +74,11 @@ export default function TellerDashboard() {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [reasonCode, setReasonCode] = useState("TELLER_OPERATION");
+
+  // Antrean pinjaman kecil (≤ 50.000) yang perlu di-screening Teller.
+  const [smallLoans, setSmallLoans] = useState<SmallPendingLoan[]>([]);
+  const [recommendNote, setRecommendNote] = useState<Record<string, string>>({});
+  const [recommendingId, setRecommendingId] = useState("");
 
   const presets = ["10000", "50000", "100000", "250000", "500000"];
 
@@ -149,6 +180,46 @@ export default function TellerDashboard() {
       setError(err instanceof Error ? err.message : "Penarikan gagal");
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const loadSmallLoans = async () => {
+    try {
+      const res = await fetchApi<{ data?: SmallPendingLoan[] } | SmallPendingLoan[]>("/api/bank/teller/loans/pending");
+      const data = Array.isArray(res) ? res : (res?.data || []);
+      setSmallLoans(Array.isArray(data) ? data : []);
+    } catch (err) {
+      // Tidak fatal — Teller mungkin sedang offline atau belum ada antrean
+      console.warn("Gagal memuat antrean pinjaman kecil:", err);
+      setSmallLoans([]);
+    }
+  };
+
+  useEffect(() => {
+    const t = window.setTimeout(() => void loadSmallLoans(), 0);
+    return () => window.clearTimeout(t);
+  }, []);
+
+  const handleRecommendLoan = async (loanId: string) => {
+    setRecommendingId(loanId);
+    setError("");
+    setSuccessMsg("");
+    try {
+      await fetchApi(`/api/bank/teller/loans/${loanId}/recommend`, {
+        method: "POST",
+        body: JSON.stringify({ note: recommendNote[loanId]?.trim() || undefined }),
+      });
+      setSuccessMsg(`Pinjaman ${loanId} berhasil di-rekomendasikan ke Manager.`);
+      setRecommendNote((prev) => {
+        const next = { ...prev };
+        delete next[loanId];
+        return next;
+      });
+      await loadSmallLoans();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Rekomendasi pinjaman gagal");
+    } finally {
+      setRecommendingId("");
     }
   };
 
@@ -546,6 +617,75 @@ export default function TellerDashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Antrean Pinjaman Kecil — Teller screening, Manager final-approve. */}
+      <section className="bg-card border border-border rounded-3xl p-6 shadow-md dark:shadow-black/20">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-primary/10 border border-primary/20">
+              <BadgeDollarSign className="text-primary w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="font-display font-semibold text-lg text-foreground">Antrean Pinjaman Kecil</h2>
+              <p className="text-xs text-muted-foreground">Pinjaman ≤ 50.000 perlu screening Teller sebelum Manager final-approve.</p>
+            </div>
+          </div>
+          <button
+            onClick={() => void loadSmallLoans()}
+            className="rounded-lg border border-border bg-secondary px-3 py-1.5 text-xs font-semibold hover:bg-secondary/80"
+          >
+            Segarkan
+          </button>
+        </div>
+
+        {smallLoans.length === 0 ? (
+          <p className="mt-6 rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+            Tidak ada pinjaman kecil yang menunggu screening.
+          </p>
+        ) : (
+          <div className="mt-6 space-y-4">
+            {smallLoans.map((loan) => (
+              <article key={loan.id} className="rounded-2xl border border-border bg-background p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="font-mono text-xs text-muted-foreground">{loan.id}</p>
+                    <h3 className="mt-1 font-display text-base font-semibold">{loan.borrower.name}</h3>
+                    <p className="text-xs text-muted-foreground">{loan.borrower.email} · {loan.borrower.phone || "Tanpa telepon"}</p>
+                    {loan.borrower.account_number && (
+                      <p className="mt-1 font-mono text-xs text-muted-foreground">No Rek: {loan.borrower.account_number}</p>
+                    )}
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{loan.borrower.kyc_tier}</span>
+                      <span className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold">{loan.borrower.status}</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">Pokok</p>
+                    <p className="font-mono text-lg font-semibold tabular-nums">Rp {Number(loan.principal).toLocaleString("id-ID")}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Total tagihan (10% bunga)</p>
+                    <p className="font-mono text-sm tabular-nums">Rp {Number(loan.total_due).toLocaleString("id-ID")}</p>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <input
+                    value={recommendNote[loan.id] ?? ""}
+                    onChange={(e) => setRecommendNote((prev) => ({ ...prev, [loan.id]: e.target.value }))}
+                    placeholder="Catatan (opsional, mis. 'Nasabah rutin, KYC lengkap')"
+                    className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-xs font-mono outline-none focus:border-primary"
+                  />
+                  <button
+                    onClick={() => void handleRecommendLoan(loan.id)}
+                    disabled={recommendingId === loan.id}
+                    className="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {recommendingId === loan.id ? "Mengirim..." : "Rekomendasikan ke Manager"}
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

@@ -6,6 +6,9 @@ export const jwtMiddleware = (req, res, next) => {
   const publicRoutes = new Set([
     '/api/bank/auth/login',
     '/api/bank/auth/register',
+    '/api/bank/health',
+    '/api/bank/public/stats',
+    '/api/bank/public/landing',
     '/api/wallet/v1/auth/login',
     '/api/wallet/v1/auth/register',
   ]);

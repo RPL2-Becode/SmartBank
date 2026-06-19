@@ -134,6 +134,7 @@ model User {
   // Extra fields for Wallet compatibility
   phone        String?         @unique @db.VarChar(50)
   pinHash      String?         @map("pin_hash") @db.VarChar(191)
+  accountNumber String?        @unique @map("account_number") @db.VarChar(16)
   identityDocumentType       String?   @map("identity_document_type") @db.VarChar(32)
   identityDocumentNumber     String?   @map("identity_document_number") @db.VarChar(64)
   identityDocumentName       String?   @map("identity_document_name") @db.VarChar(191)
@@ -278,9 +279,17 @@ model Loan {
   createdAt        DateTime      @default(now()) @map("created_at")
   disbursedAt      DateTime?     @map("disbursed_at")
   dueAt            DateTime?     @map("due_at")
+  // Teller screening: Teller merekomendasikan pinjaman kecil agar Manager
+  // tidak perlu review manual dari awal. Status PENDING + recommendedBy != null
+  // artinya sudah discreen Teller. Manager final-approve via endpoint existing.
+  recommendedBy      String?   @map("recommended_by") @db.Char(36)
+  recommendedAt      DateTime? @map("recommended_at")
+  recommendationNote String?   @map("recommendation_note") @db.VarChar(512)
   borrowerWallet   WalletAccount @relation(fields: [borrowerWalletId], references: [id])
 
   @@index([borrowerWalletId])
+  @@index([status])
+  @@index([recommendedBy])
   @@map("loans")
 }
 
