@@ -47,7 +47,7 @@ const cbState = {
 };
 
 export const centralBankService = {
-  
+
   // 1. CREATE ACCOUNT / REGISTER USER
   createAccount: async (name, email, password) => {
     if (!config.centralBank.mock) {
@@ -82,6 +82,9 @@ export const centralBankService = {
     const walletId = `wal_${crypto.randomBytes(6).toString('hex')}`;
     const initialBalance = 50000;
     const userId = `usr_${crypto.randomUUID()}`;
+    // Account number mock: 9 random digit + 1 Luhn checksum digit
+    const nineDigits = String(crypto.randomInt(100000000, 1000000000));
+    const mockAccountNumber = nineDigits + luhnMockChecksum(nineDigits);
 
     const reserve = cbState.wallets["wal_system_reserve"];
     if (reserve.available_balance < initialBalance) {
@@ -93,6 +96,7 @@ export const centralBankService = {
       wallet_id: walletId,
       user_id: userId,
       name: name,
+      account_number: mockAccountNumber,
       available_balance: initialBalance,
       hold_balance: 0,
       daily_transaction_count: 0,
@@ -118,6 +122,196 @@ export const centralBankService = {
 
     console.log(`🏦 [CB SIMULATION] Wallet ${walletId} berhasil dibuat untuk user ${name} dengan saldo awal 50.000`);
     return { user_id: userId, wallet_id: walletId, initial_balance: initialBalance };
+  },
+
+  // 1d. LIST MY LOANS (proxy ke Central-Bank /loans/me)
+  // Dipakai Nasabah untuk lihat daftar pinjaman aktif tanpa input loanId manual.
+  // Return shape sudah di-normalize: bigint → number, date → ISO string.
+  // `walletId` dipakai di mock mode untuk filter loan by current user.
+  // Di real mode, JWT di-token sudah identify user, jadi walletId tidak dipakai.
+  listMyLoans: async (walletId, token) => {
+    if (!config.centralBank.mock) {
+      const response = await fetch(`${config.centralBank.url}/api/v1/loans/me`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Service-Name': 'WalletApp'
+        }
+      });
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        const err = new Error(errBody.error?.message || 'Gagal mengambil daftar pinjaman');
+        err.status = response.status;
+        err.code = errBody.error?.code || 'BAD_REQUEST';
+        throw err;
+      }
+      const envelope = await response.json();
+      const list = envelope.data || [];
+      return (Array.isArray(list) ? list : []).map((l) => ({
+        id: l.id,
+        principal: parseInt(l.principal, 10),
+        interest_amount: parseInt(l.interest_amount, 10),
+        total_due: parseInt(l.total_due, 10),
+        paid_amount: parseInt(l.paid_amount, 10),
+        remaining: parseInt(l.remaining, 10),
+        status: l.status,
+        created_at: l.created_at,
+        disbursed_at: l.disbursed_at,
+        due_at: l.due_at,
+        recommended_by: l.recommended_by,
+        recommended_at: l.recommended_at,
+        recommendation_note: l.recommendation_note,
+      }));
+    }
+
+    // Simulation Engine Mock: return loans filtered by current wallet
+    return Object.values(cbState.loans || {})
+      .filter((l) => l.borrower_wallet_id === walletId)
+      .map((l) => ({
+        id: l.id,
+        principal: l.principal,
+        interest_amount: l.interest_amount,
+        total_due: l.total_due,
+        paid_amount: l.paid_amount,
+        remaining: l.total_due - l.paid_amount,
+        status: l.status,
+        created_at: l.created_at,
+        disbursed_at: l.disbursed_at,
+        due_at: l.due_at,
+        recommended_by: l.recommended_by || null,
+        recommended_at: l.recommended_at || null,
+        recommendation_note: l.recommendation_note || null,
+      }));
+  },
+
+  // 1e. GET MY LOAN LIMIT (proxy ke Central-Bank /loans/me/limit)
+  // Return: { cap, outstanding, remaining } sebagai number (string bigint di-parse).
+  getLoanLimit: async (token) => {
+    if (!config.centralBank.mock) {
+      const response = await fetch(`${config.centralBank.url}/api/v1/loans/me/limit`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-Service-Name': 'WalletApp'
+        }
+      });
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        const err = new Error(errBody.error?.message || 'Gagal mengambil limit pinjaman');
+        err.status = response.status;
+        err.code = errBody.error?.code || 'BAD_REQUEST';
+        throw err;
+      }
+      const envelope = await response.json();
+      const data = envelope.data || envelope;
+      return {
+        cap: parseInt(data.cap, 10),
+        outstanding: parseInt(data.outstanding, 10),
+        remaining: parseInt(data.remaining, 10),
+      };
+    }
+
+    // Simulation Engine Mock: simple computation
+    const CAP = 100000;
+    return {
+      cap: CAP,
+      outstanding: 0,
+      remaining: CAP,
+    };
+  },
+
+  // 1c. RESOLVE ACCOUNT NUMBER → WALLET (service-to-service via Central-Bank)
+  // Dipakai saat customer mengisi nomor rekening di form transfer.
+  // Returns minimal info: account_number, holder_name, wallet_id. No balance.
+  getWalletByAccountNumber: async (accountNumber) => {
+    if (!config.centralBank.mock) {
+      const response = await fetch(
+        `${config.centralBank.url}/api/v1/users/by-account/${encodeURIComponent(accountNumber)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${process.env.JWT_SECRET}`,
+            'X-Service-Name': 'WalletApp'
+          }
+        }
+      );
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        const status = response.status;
+        const err = new Error(errBody.error?.message || `Gagal lookup rekening ${accountNumber}`);
+        err.status = status;
+        err.code = errBody.error?.code || 'BAD_REQUEST';
+        throw err;
+      }
+      const envelope = await response.json();
+      return envelope.data || envelope;
+    }
+
+    // Simulation Engine Mock: account number → user lookup di mock db
+    const digits = String(accountNumber).replace(/\D/g, '');
+    if (!/^\d{10}$/.test(digits)) {
+      const err = new Error('Nomor rekening tidak valid (harus 10 digit)');
+      err.status = 400;
+      err.code = 'BAD_REQUEST';
+      throw err;
+    }
+    // Cari wallet mock yang punya account_number cocok dengan mock user store.
+    // Di mode mock, accountNumber diserialisasi ke field `account_number` wallet
+    // saat wallet dibuat (lihat createAccount mock di atas). Fallback: scan.
+    const match = Object.values(cbState.wallets).find((w) => w.account_number === digits);
+    if (!match) {
+      const err = new Error(`Nomor rekening ${digits} tidak ditemukan`);
+      err.status = 404;
+      err.code = 'NOT_FOUND';
+      throw err;
+    }
+    return {
+      user_id: match.user_id,
+      account_number: digits,
+      holder_name: match.name || 'Pengguna',
+      wallet_id: match.wallet_id,
+    };
+  },
+
+  // 1b. GET WALLET BY USER ID (service-to-service, dipakai saat login)
+  getWalletByUserId: async (userId) => {
+    if (!config.centralBank.mock) {
+      const response = await fetch(`${config.centralBank.url}/api/v1/users/${encodeURIComponent(userId)}/wallet`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${process.env.JWT_SECRET}`,
+          'X-Service-Name': 'WalletApp'
+        }
+      });
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        const status = response.status;
+        const err = new Error(errBody.error?.message || `Gagal lookup wallet untuk user ${userId}`);
+        err.status = status;
+        err.code = errBody.error?.code || 'BAD_REQUEST';
+        throw err;
+      }
+      const envelope = await response.json();
+      const data = envelope.data || envelope;
+      return {
+        wallet_id: data.wallet_id,
+        account_number: data.account_number || null,
+        holder_name: data.holder_name || null,
+        currency: data.currency || 'CBDC_IDR',
+        available_balance: parseInt(data.available_balance, 10),
+        hold_balance: parseInt(data.hold_balance || '0', 10)
+      };
+    }
+
+    // Simulation Engine Mock
+    const wallet = Object.values(cbState.wallets).find((w) => w.user_id === userId);
+    if (!wallet) throw Object.assign(new Error('Wallet untuk user tidak ditemukan'), { status: 404, code: 'NOT_FOUND' });
+    return {
+      wallet_id: wallet.wallet_id,
+      account_number: wallet.account_number || null,
+      holder_name: wallet.name || null,
+      currency: 'CBDC_IDR',
+      available_balance: wallet.available_balance,
+      hold_balance: wallet.hold_balance
+    };
   },
 
   // 2. GET BALANCE
@@ -148,6 +342,8 @@ export const centralBankService = {
 
       return {
         wallet_id: data.wallet_id,
+        account_number: data.account_number || null,
+        holder_name: data.holder_name || null,
         currency: data.currency || 'CBDC_IDR',
         available_balance: parseInt(data.available_balance, 10),
         hold_balance: parseInt(data.hold_balance, 10)
@@ -162,6 +358,8 @@ export const centralBankService = {
 
     return {
       wallet_id: wallet.wallet_id,
+      account_number: wallet.account_number || null,
+      holder_name: wallet.name || null,
       currency: 'CBDC_IDR',
       available_balance: wallet.available_balance,
       hold_balance: wallet.hold_balance,
@@ -898,4 +1096,20 @@ function maskName(name) {
     return part.substring(0, 2) + '*'.repeat(part.length - 2);
   });
   return maskedParts.join(' ');
+}
+
+// Luhn checksum digit (mod-10) — dipakai Simulation Engine untuk generate
+// mock account number yang 10 digit dan tervalidasi. Harus mirror dengan
+// Central-Bank/src/common/account-number.ts agar mock & real konsisten.
+function luhnMockChecksum(digits) {
+  let sum = 0;
+  for (let i = digits.length - 1, pos = 0; i >= 0; i--, pos++) {
+    let d = parseInt(digits[i], 10);
+    if (pos % 2 === 0) {
+      d *= 2;
+      if (d > 9) d -= 9;
+    }
+    sum += d;
+  }
+  return String((10 - (sum % 10)) % 10);
 }

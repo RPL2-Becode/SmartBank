@@ -4,8 +4,10 @@ import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { AppError } from '../../common/app-error';
 import { ErrorCode } from '../../common/error-codes';
+import { generateAccountNumber } from '../../common/account-number';
 import { IdempotencyService } from '../idempotency/idempotency.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { SettlementService } from '../settlement/settlement.service';
 import { AuditLogService } from '../audit/audit-log.service';
 
@@ -44,15 +46,35 @@ export class AuthService {
     const existingResponse = await this.prisma.$transaction(async (tx) => {
       const idem = await this.idempotency.start(tx, registerIdempotency);
       if (idem.replay) return idem.response;
-      await tx.user.create({
-        data: {
-          id: userId,
-          name: input.name,
-          email: input.email.toLowerCase().trim(),
-          passwordHash,
-          role: 'WALLET_USER',
-        },
-      });
+      // Generate a unique account number; retry on collision (10^9 space,
+      // collision chance is negligible but we must handle P2002 cleanly).
+      let accountNumber: string | null = null;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const candidate = generateAccountNumber();
+        try {
+          await tx.user.create({
+            data: {
+              id: userId,
+              name: input.name,
+              email: input.email.toLowerCase().trim(),
+              passwordHash,
+              role: 'WALLET_USER',
+              accountNumber: candidate,
+            },
+          });
+          accountNumber = candidate;
+          break;
+        } catch (err) {
+          if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
+            // Collision on accountNumber; regenerate.
+            continue;
+          }
+          throw err;
+        }
+      }
+      if (!accountNumber) {
+        throw new AppError(ErrorCode.DATABASE_TRANSACTION_FAILED, 'Gagal menghasilkan nomor rekening unik');
+      }
       await tx.walletAccount.create({
         data: {
           id: walletId,
@@ -75,9 +97,16 @@ export class AuthService {
         requestHash: input.requestHash,
       },
     });
+    // Fetch the assigned accountNumber from the freshly created user.
+    const created = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { accountNumber: true },
+    });
+
     const response = {
       user_id: userId,
       wallet_id: walletId,
+      account_number: created.accountNumber,
       initial_distribution: distribution,
     };
     await this.prisma.$transaction((tx) =>

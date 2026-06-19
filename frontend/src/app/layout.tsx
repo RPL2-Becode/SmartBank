@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 export const metadata: Metadata = {
   title: "SmartBank CBDC Ecosystem",
@@ -18,13 +17,7 @@ export default function RootLayout({
       <body
         className="antialiased selection:bg-primary selection:text-primary-foreground min-h-screen flex flex-col bg-background text-foreground"
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <ThemeToggle />
+        <ThemeProvider>
           {children}
         </ThemeProvider>
       </body>

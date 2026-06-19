@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { Request } from 'express';
 import { CurrentUser, RequestUser } from '../../common/current-user.decorator';
 import { requireIdempotencyKey, requestHash, requestId } from '../../common/request-utils';
@@ -19,6 +19,26 @@ export class LoansController {
     private readonly money: MoneyService,
     private readonly loans: LoanService,
   ) {}
+
+  /**
+   * GET /loans/me — list active loans (PENDING/DISBURSED/PARTIAL_PAID) untuk user saat ini.
+   * Frontend pakai ini untuk render card list sehingga Nasabah tidak perlu input loanId manual.
+   */
+  @Get('me')
+  async myLoans(@CurrentUser() user: RequestUser) {
+    const wallet = await this.wallets.getPrimaryWallet(user.sub);
+    return this.loans.listLoansForWallet(wallet.id);
+  }
+
+  /**
+   * GET /loans/me/limit — cap 100.000, outstanding saat ini, remaining.
+   * Frontend pakai ini untuk progress bar di card "Limit Pinjaman".
+   */
+  @Get('me/limit')
+  async myLimit(@CurrentUser() user: RequestUser) {
+    const wallet = await this.wallets.getPrimaryWallet(user.sub);
+    return this.loans.getLoanLimitInfo(wallet.id);
+  }
 
   @Post('apply')
   async apply(@Body() dto: ApplyLoanDto, @Req() req: Request, @CurrentUser() user: RequestUser) {

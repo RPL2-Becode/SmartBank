@@ -71,7 +71,11 @@
 
         <div class="input-group">
           <label for="reg-phone"><i class="fa-solid fa-phone"></i> Nomor HP</label>
-          <input type="tel" id="reg-phone" placeholder="08123456789">
+          <div class="phone-field">
+            <span class="phone-prefix">+62</span>
+            <input type="tel" id="reg-phone" placeholder="8123456789" inputmode="numeric" pattern="[0-9]*">
+          </div>
+          <small class="form-tip">Ketik nomor tanpa awalan 0 (contoh: 8123456789)</small>
         </div>
 
 
@@ -260,7 +264,10 @@
               </div>
               <div class="input-group">
                 <label for="settings-phone"><i class="fa-solid fa-phone"></i> Nomor HP</label>
-                <input type="tel" id="settings-phone" placeholder="Nomor HP">
+                <div class="phone-field">
+                  <span class="phone-prefix">+62</span>
+                  <input type="tel" id="settings-phone" placeholder="8123456789" inputmode="numeric" pattern="[0-9]*">
+                </div>
               </div>
               <button type="submit" class="btn btn-primary btn-block btn-small">
                 Simpan Profil <i class="fa-solid fa-floppy-disk"></i>

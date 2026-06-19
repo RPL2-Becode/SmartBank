@@ -23,6 +23,62 @@ export class LoanService {
     return this.prisma.loan.findUniqueOrThrow({ where: { id } });
   }
 
+  /**
+   * List active loans (PENDING, DISBURSED, PARTIAL_PAID) untuk wallet tertentu.
+   * Digunakan oleh endpoint /loans/me agar Nasabah tidak perlu input manual loanId.
+   * Return shape bigint → string (JSON-safe) supaya frontend tidak perlu BigInt polyfill.
+   */
+  async listLoansForWallet(walletId: string) {
+    const loans = await this.prisma.loan.findMany({
+      where: {
+        borrowerWalletId: walletId,
+        status: { in: ['PENDING', 'DISBURSED', 'PARTIAL_PAID'] },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return loans.map((l) => ({
+      id: l.id,
+      principal: l.principal.toString(),
+      interest_amount: l.interestAmount.toString(),
+      total_due: l.totalDue.toString(),
+      paid_amount: l.paidAmount.toString(),
+      remaining: (l.totalDue - l.paidAmount).toString(),
+      status: l.status,
+      created_at: l.createdAt,
+      disbursed_at: l.disbursedAt,
+      due_at: l.dueAt,
+      recommended_by: l.recommendedBy,
+      recommended_at: l.recommendedAt,
+      recommendation_note: l.recommendationNote,
+    }));
+  }
+
+  /**
+   * Hitung limit pinjam: outstanding (PENDING+DISBURSED+PARTIAL_PAID) vs cap 100.000.
+   * Cap di-declare sebagai konstanta agar konsisten antara apply & UI.
+   */
+  static readonly LOAN_CAP = 100_000n;
+
+  async getLoanLimitInfo(walletId: string) {
+    const outstanding = await this.prisma.loan.aggregate({
+      where: {
+        borrowerWalletId: walletId,
+        status: { in: ['PENDING', 'DISBURSED', 'PARTIAL_PAID'] },
+      },
+      _sum: { principal: true, paidAmount: true },
+    });
+
+    const used = (outstanding._sum.principal ?? 0n) - (outstanding._sum.paidAmount ?? 0n);
+    const cap = LoanService.LOAN_CAP;
+
+    return {
+      cap: cap.toString(),
+      outstanding: used.toString(),
+      remaining: (cap - used).toString(),
+    };
+  }
+
   async applyLoan(input: {
     borrowerWalletId: string;
     amount: bigint;

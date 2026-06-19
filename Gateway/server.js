@@ -73,10 +73,10 @@ app.use((req, _res, next) => {
 app.options('/api/bank', (req, res) => { res.status(204).end(); });
 app.options('/api/wallet', (req, res) => { res.status(204).end(); });
 
-// Parse bodies explicitly to validate size
-app.use(express.json({ limit: '2mb' }));
-app.use(express.urlencoded({ limit: '2mb', extended: false }));
-
+// Parse bodies explicitly to validate size.
+// IMPORTANT: body parsers must run AFTER the proxies. http-proxy-middleware
+// needs the raw request stream to forward upstream. If express.json() runs
+// first, it drains the body and the proxy hangs (30s timeout → 502).
 // Proxy to Central Bank
 app.use('/api/bank', jwtMiddleware, createProxyMiddleware({
   target: CENTRAL_BANK_URL,
@@ -86,8 +86,11 @@ app.use('/api/bank', jwtMiddleware, createProxyMiddleware({
     error: proxyErrorHandler,
     proxyReq: (proxyReq) => proxyReq.setTimeout(30000)
   },
-  pathRewrite: {
-    '^/api/bank': '/api/v1', // rewrite path
+  pathRewrite: (path, req) => {
+    // Same v3 quirk: mount path already stripped. Restore /api/v1 prefix
+    // that Central-Bank uses.
+    const rewritten = '/api/v1' + path;
+    return rewritten;
   },
 }));
 
@@ -100,10 +103,22 @@ app.use('/api/wallet', jwtMiddleware, createProxyMiddleware({
     error: proxyErrorHandler,
     proxyReq: (proxyReq) => proxyReq.setTimeout(30000)
   },
-  pathRewrite: {
-    '^/api/wallet': '/api', // rewrite path
+  pathRewrite: (path, req) => {
+    // In http-proxy-middleware@3 the path passed in is ALREADY stripped of
+    // the mount path. So when request was POST /api/wallet/v1/auth/login,
+    // `path` here is just '/v1/auth/login'. Prepend the /api prefix that
+    // Wallet expects.
+    const rewritten = '/api' + path;
+    return rewritten;
   },
 }));
+
+// Body parsers must be registered AFTER the proxies so that
+// http-proxy-middleware@3 can forward the raw request body upstream.
+// Otherwise the body is drained before the proxy reads it and the
+// upstream connection waits 30s for content → 502 UPSTREAM_UNAVAILABLE.
+app.use(express.json({ limit: '2mb' }));
+app.use(express.urlencoded({ limit: '2mb', extended: false }));
 
 // Health check
 app.get('/health', (req, res) => {

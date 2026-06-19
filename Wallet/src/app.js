@@ -78,6 +78,10 @@ app.get('/api/v1/wallets/me/transactions', walletController.getTransactions);
 app.get('/api/v1/wallets/me/kyc-document', walletController.getKycDocument);
 app.put('/api/v1/wallets/me/kyc-document', walletController.updateKycDocument);
 
+// Lookup nomor rekening tujuan → holder name + wallet_id (tanpa saldo).
+// Dipakai form transfer untuk konfirmasi sebelum submit.
+app.get('/api/v1/wallets/lookup', authMiddleware, requireRole('WALLET_USER'), transferController.lookupRecipient);
+
 // P0 Security: Gate test invoice helper to development environment only
 if (config.nodeEnv !== 'production') {
   app.post('/api/v1/wallets/me/invoice/generate-test', authMiddleware, requireRole('MANAGER', 'TELLER', 'CENTRAL_BANK_ADMIN'), walletController.generateTestInvoice);
@@ -100,6 +104,7 @@ app.post('/api/v1/transfers', authMiddleware, requireRole('WALLET_USER'), idempo
 app.post('/api/v1/payment-requests/:id/pay', authMiddleware, requireRole('WALLET_USER'), idempotencyMiddleware, pinMiddleware, paymentController.payInvoice);
 
 // Loans Subsystem: Requires JWT Auth + Idempotency Protection + RBAC
+app.get('/api/v1/loans/me', authMiddleware, requireRole('WALLET_USER'), loanController.listMyLoans);
 app.post('/api/v1/loans/apply', authMiddleware, requireRole('WALLET_USER'), idempotencyMiddleware, loanController.applyLoan);
 app.post('/api/v1/loans/:loan_id/repay', authMiddleware, requireRole('WALLET_USER'), idempotencyMiddleware, loanController.repayLoan);
 
