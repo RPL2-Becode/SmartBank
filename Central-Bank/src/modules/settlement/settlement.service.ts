@@ -530,8 +530,187 @@ export class SettlementService {
           reasonCode: input.reasonCode ?? 'CASH_WITHDRAWAL',
           metadata: asJson({ transaction_id: transactionId, amount: input.amount }),
         });
-        
+
         const response = { transaction_id: transactionId, status: 'SETTLED', amount: input.amount };
+        await this.idempotency.complete(tx, { ...input.idempotency, responseBody: asJson(response) });
+        return response;
+      }),
+    );
+  }
+
+  async issueCurrency(input: {
+    targetWalletId: string;
+    amount: bigint;
+    reasonCode: string;
+    note?: string;
+    idempotency: IdempotencyInput;
+    requestId: string;
+    actorUserId: string;
+  }) {
+    return this.withDeadlockRetry(() =>
+      this.prisma.$transaction(async (tx) => {
+        const idem = await this.idempotency.start(tx, input.idempotency);
+        if (idem.replay) return idem.response;
+        this.money.assertPositive(input.amount);
+
+        const reserve = await tx.walletAccount.findUniqueOrThrow({ where: { accountCode: 'CENTRAL_RESERVE' } });
+        const targetWallet = await tx.walletAccount.findUniqueOrThrow({ where: { id: input.targetWalletId } });
+
+        await this.lockAccounts(tx, [reserve.id, targetWallet.id]);
+        this.ensureDebitAllowed(reserve, input.amount);
+
+        const totalSupply = BigInt(process.env.TOTAL_MONEY_SUPPLY ?? '1000000000');
+        if (reserve.availableBalance - input.amount < 0n) {
+          throw new AppError(
+            ErrorCode.ISSUANCE_EXCEEDS_TOTAL_SUPPLY,
+            `Issuance melebihi saldo reserve. Reserve: ${reserve.availableBalance.toString()}`,
+          );
+        }
+
+        const transactionId = randomUUID();
+        const entries: LedgerPost[] = [
+          { accountId: reserve.id, direction: 'DEBIT', amount: input.amount, description: `Issuance to wallet ${targetWallet.id}` },
+          { accountId: targetWallet.id, direction: 'CREDIT', amount: input.amount, description: 'Received issuance from reserve' },
+        ];
+
+        await tx.transaction.create({
+          data: {
+            id: transactionId,
+            transactionType: 'ISSUANCE',
+            status: 'SETTLED',
+            sourceApp: 'CENTRAL_BANK_CORE',
+            payerWalletId: reserve.id,
+            payeeWalletId: targetWallet.id,
+            grossAmount: input.amount,
+            totalDebit: input.amount,
+            idempotencyKey: input.idempotency.key,
+            metadata: asJson({ reason_code: input.reasonCode, note: input.note ?? null, total_supply_cap: totalSupply.toString() }),
+            settledAt: new Date(),
+          },
+        });
+
+        await this.ledger.post(tx, {
+          transactionId,
+          entries: await this.applyEntries(tx, entries),
+        });
+
+        await tx.monetaryPolicyEvent.create({
+          data: {
+            id: randomUUID(),
+            eventType: 'ISSUANCE',
+            amount: input.amount,
+            reason: input.reasonCode,
+            createdBy: input.actorUserId,
+          },
+        });
+
+        await this.audit.record({
+          tx,
+          actorUserId: input.actorUserId,
+          serviceName: 'centralbank-core',
+          action: 'ISSUANCE_SETTLED',
+          targetType: 'transaction',
+          targetId: transactionId,
+          requestId: input.requestId,
+          reasonCode: input.reasonCode,
+          metadata: asJson({ target_wallet_id: targetWallet.id, note: input.note ?? null }),
+        });
+
+        const response = {
+          transaction_id: transactionId,
+          target_wallet_id: targetWallet.id,
+          amount: input.amount,
+          status: 'SETTLED',
+        };
+        await this.idempotency.complete(tx, { ...input.idempotency, responseBody: asJson(response) });
+        return response;
+      }),
+    );
+  }
+
+  async burnCurrency(input: {
+    sourceWalletId: string;
+    amount: bigint;
+    reasonCode: string;
+    note?: string;
+    idempotency: IdempotencyInput;
+    requestId: string;
+    actorUserId: string;
+  }) {
+    return this.withDeadlockRetry(() =>
+      this.prisma.$transaction(async (tx) => {
+        const idem = await this.idempotency.start(tx, input.idempotency);
+        if (idem.replay) return idem.response;
+        this.money.assertPositive(input.amount);
+
+        const sourceWallet = await tx.walletAccount.findUniqueOrThrow({ where: { id: input.sourceWalletId } });
+        const sink = await tx.walletAccount.findUniqueOrThrow({ where: { accountCode: 'BURN_OR_SINK_ACCOUNT' } });
+
+        if (sourceWallet.accountType !== 'USER_WALLET' && sourceWallet.accountType !== 'MERCHANT_WALLET') {
+          throw new AppError(
+            ErrorCode.BURN_ACCOUNT_INVALID,
+            `Burn hanya diperbolehkan dari USER_WALLET atau MERCHANT_WALLET, akun ini ${sourceWallet.accountType}`,
+          );
+        }
+
+        await this.lockAccounts(tx, [sourceWallet.id, sink.id]);
+        this.ensureDebitAllowed(sourceWallet, input.amount);
+
+        const transactionId = randomUUID();
+        const entries: LedgerPost[] = [
+          { accountId: sourceWallet.id, direction: 'DEBIT', amount: input.amount, description: 'Burn to sink' },
+          { accountId: sink.id, direction: 'CREDIT', amount: input.amount, description: 'Received burned CBDC' },
+        ];
+
+        await tx.transaction.create({
+          data: {
+            id: transactionId,
+            transactionType: 'BURN',
+            status: 'SETTLED',
+            sourceApp: 'CENTRAL_BANK_CORE',
+            payerWalletId: sourceWallet.id,
+            payeeWalletId: sink.id,
+            grossAmount: input.amount,
+            totalDebit: input.amount,
+            idempotencyKey: input.idempotency.key,
+            metadata: asJson({ reason_code: input.reasonCode, note: input.note ?? null }),
+            settledAt: new Date(),
+          },
+        });
+
+        await this.ledger.post(tx, {
+          transactionId,
+          entries: await this.applyEntries(tx, entries),
+        });
+
+        await tx.monetaryPolicyEvent.create({
+          data: {
+            id: randomUUID(),
+            eventType: 'BURN',
+            amount: input.amount,
+            reason: input.reasonCode,
+            createdBy: input.actorUserId,
+          },
+        });
+
+        await this.audit.record({
+          tx,
+          actorUserId: input.actorUserId,
+          serviceName: 'centralbank-core',
+          action: 'BURN_SETTLED',
+          targetType: 'transaction',
+          targetId: transactionId,
+          requestId: input.requestId,
+          reasonCode: input.reasonCode,
+          metadata: asJson({ source_wallet_id: sourceWallet.id, note: input.note ?? null }),
+        });
+
+        const response = {
+          transaction_id: transactionId,
+          source_wallet_id: sourceWallet.id,
+          amount: input.amount,
+          status: 'SETTLED',
+        };
         await this.idempotency.complete(tx, { ...input.idempotency, responseBody: asJson(response) });
         return response;
       }),

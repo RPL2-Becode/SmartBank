@@ -60,6 +60,8 @@ enum TransactionType {
   LOAN_DISBURSEMENT
   LOAN_REPAYMENT
   REVERSAL
+  ISSUANCE
+  BURN
 }
 
 enum TransactionStatus {
@@ -107,6 +109,11 @@ enum IdempotencyStatus {
   PROCESSING
   COMPLETED
   FAILED
+}
+
+enum FeeMode {
+  FLAT
+  PERCENT
 }
 
 enum MonetaryPolicyEventType {
@@ -291,6 +298,22 @@ model Loan {
   @@index([status])
   @@index([recommendedBy])
   @@map("loans")
+}
+
+model FeeConfiguration {
+  id        String          @id @db.Char(36)
+  type      TransactionType
+  mode      FeeMode
+  value     BigInt
+  minFee    BigInt?         @map("min_fee")
+  maxFee    BigInt?         @map("max_fee")
+  isActive  Boolean         @default(true) @map("is_active")
+  updatedBy String?         @map("updated_by") @db.Char(36)
+  createdAt DateTime        @default(now()) @map("created_at")
+  updatedAt DateTime        @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([type])
+  @@map("fee_configurations")
 }
 
 model AuditLog {
