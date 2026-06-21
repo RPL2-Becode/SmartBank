@@ -20,6 +20,10 @@ const STATUS_BY_CODE: Partial<Record<ErrorCode, HttpStatus>> = {
   [ErrorCode.REVERSAL_NOT_ALLOWED]: HttpStatus.BAD_REQUEST,
   [ErrorCode.DATABASE_TRANSACTION_FAILED]: HttpStatus.INTERNAL_SERVER_ERROR,
   [ErrorCode.DEADLOCK_RETRY_EXCEEDED]: HttpStatus.CONFLICT,
+  [ErrorCode.ISSUANCE_EXCEEDS_TOTAL_SUPPLY]: HttpStatus.BAD_REQUEST,
+  [ErrorCode.BURN_ACCOUNT_INVALID]: HttpStatus.BAD_REQUEST,
+  [ErrorCode.FEE_CONFIGURATION_NOT_FOUND]: HttpStatus.NOT_FOUND,
+  [ErrorCode.FEE_VALUE_INVALID]: HttpStatus.BAD_REQUEST,
 };
 
 export class AppError extends HttpException {

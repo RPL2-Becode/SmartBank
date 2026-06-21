@@ -4,7 +4,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { BadgeDollarSign, BookOpen, CreditCard, FileCheck2, Landmark, LayoutDashboard, LogOut, Menu, ScrollText, ShieldAlert, Users, X } from "lucide-react";
+import { BadgeDollarSign, BookOpen, ClipboardList, CreditCard, FileCheck2, Flame, Landmark, LayoutDashboard, LogOut, Menu, Receipt, ScrollText, ShieldAlert, Users, X } from "lucide-react";
 import OnboardingTour from "@/components/OnboardingTour";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Role, useAuthStore } from "@/store/auth";
@@ -46,11 +46,19 @@ const menus: Record<Role, MenuItem[]> = {
     { name: "Operasi Bank Sentral", href: "/admin", icon: <Landmark size={19} /> },
     { name: "Ledger", href: "/admin/ledger", icon: <ScrollText size={19} /> },
     { name: "Reversal", href: "/admin/reversal", icon: <ShieldAlert size={19} /> },
+    { name: "Issuance", href: "/admin/issuance", icon: <BadgeDollarSign size={19} /> },
+    { name: "Burn", href: "/admin/burn", icon: <Flame size={19} /> },
+    { name: "Fee", href: "/admin/fee", icon: <Receipt size={19} /> },
+    { name: "Audit Log", href: "/admin/audit", icon: <ClipboardList size={19} /> },
   ],
   CENTRAL_BANK_ADMIN: [
     { name: "Operasi Bank Sentral", href: "/admin", icon: <Landmark size={19} /> },
     { name: "Ledger", href: "/admin/ledger", icon: <ScrollText size={19} /> },
     { name: "Reversal", href: "/admin/reversal", icon: <ShieldAlert size={19} /> },
+    { name: "Issuance", href: "/admin/issuance", icon: <BadgeDollarSign size={19} /> },
+    { name: "Burn", href: "/admin/burn", icon: <Flame size={19} /> },
+    { name: "Fee", href: "/admin/fee", icon: <Receipt size={19} /> },
+    { name: "Audit Log", href: "/admin/audit", icon: <ClipboardList size={19} /> },
   ],
 };
 
