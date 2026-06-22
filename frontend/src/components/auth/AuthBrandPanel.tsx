@@ -1,10 +1,31 @@
 "use client";
 
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { Building2, ShieldCheck } from "lucide-react";
+import {
+  Building2,
+  Database,
+  Eye,
+  Fingerprint,
+  KeyRound,
+  Layers,
+  Lock,
+  ShieldCheck,
+} from "lucide-react";
+import { CreditCard3D } from "@/components/landing/CreditCard3D";
+import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
+
+const FEATURES = [
+  { icon: KeyRound, label: "Idempotent" },
+  { icon: Database, label: "Append-only" },
+  { icon: Eye, label: "KYC masked" },
+  { icon: Fingerprint, label: "JWT + PIN" },
+  { icon: Lock, label: "AES-256" },
+  { icon: Layers, label: "Multi-tier" },
+];
 
 export default function AuthBrandPanel() {
-  // Parallax tilt -- useMotionValue di luar React render cycle, sesuai skill rule
+  // Parallax tilt for 3D card
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const rotateX = useTransform(y, [-100, 100], [10, -10]);
@@ -23,132 +44,119 @@ export default function AuthBrandPanel() {
   };
 
   return (
-    <div className="relative h-full min-h-dvh bg-gradient-to-br from-primary/10 via-card to-emerald-500/5 border-r border-border overflow-hidden flex flex-col p-6 lg:p-8">
-      {/* Ambient blobs */}
-      <div className="absolute top-0 left-0 w-[300px] h-[300px] bg-primary/10 blur-[100px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[260px] h-[260px] bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none" />
+    <div
+      className="relative h-full min-h-dvh bg-gradient-to-br from-blue-50/70 via-white to-cyan-50/70 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950/30 border-r border-border overflow-hidden flex flex-col p-6 lg:p-8 [perspective:1500px]"
+    >
+      {/* Subtle ambient blobs */}
+      <div className="absolute top-0 left-0 w-[420px] h-[420px] bg-blue-500/12 dark:bg-primary/15 blur-[130px] rounded-full pointer-events-none animate-[float_20s_ease-in-out_infinite]" />
+      <div className="absolute bottom-0 right-0 w-[340px] h-[340px] bg-cyan-500/12 dark:bg-cyan-500/12 blur-[130px] rounded-full pointer-events-none animate-[float_25s_ease-in-out_infinite_reverse]" />
 
-      {/* Brand row */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="relative z-10 flex items-center gap-2 shrink-0"
-      >
-        <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-          <Building2 className="w-4 h-4" />
+      {/* Grid overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.04] dark:opacity-[0.06] pointer-events-none"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+
+      {/* ---- TOP: Logo (→ landing) + Live + Theme toggle ---- */}
+      <div className="relative z-10 flex items-center justify-between gap-2.5 shrink-0">
+        <Link
+          href="/"
+          className="group flex items-center gap-2.5 rounded-lg px-2 py-1.5 -mx-2 transition-colors hover:bg-secondary/40"
+          aria-label="Kembali ke landing page"
+        >
+          <div className="relative size-9 rounded-xl bg-gradient-to-br from-primary to-blue-700 dark:from-blue-500 dark:to-blue-700 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/25 transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
+            <Building2 className="w-4 h-4" />
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-transparent to-white/20 pointer-events-none" />
+          </div>
+          <div>
+            <p className="font-display font-bold text-foreground text-base leading-none tracking-tight">
+              SmartBank
+            </p>
+            <p className="text-[9px] font-mono uppercase tracking-widest text-muted-foreground mt-0.5">
+              v1.0.0
+            </p>
+          </div>
+        </Link>
+
+        <div className="flex items-center gap-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 backdrop-blur-sm">
+            <span className="relative flex size-1.5">
+              <span className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-75" />
+              <span className="relative inline-flex size-1.5 rounded-full bg-emerald-500" />
+            </span>
+            <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-700 dark:text-emerald-400 font-semibold">
+              Live
+            </span>
+          </div>
+          <ThemeToggle />
         </div>
-        <span className="font-display font-semibold text-base text-foreground">SmartBank</span>
-        <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground border border-border rounded px-1.5 py-0.5">
-          CBDC
-        </span>
-      </motion.div>
+      </div>
 
-      {/* Tagline (compact) */}
+      {/* ---- TAGLINE (compact) ---- */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
-        className="relative z-10 space-y-1.5 mt-6 shrink-0"
+        className="relative z-10 mt-6 shrink-0 space-y-1.5"
       >
         <p className="text-[10px] font-mono text-primary uppercase tracking-widest">
-          Two-Tier Architecture
+          Two-Tier CBDC
         </p>
-        <h2 className="text-xl lg:text-2xl font-display font-semibold text-foreground leading-[1.15]">
-          Akses terminal ke jaringan uang digital.
+        <h2 className="text-xl lg:text-2xl font-display font-semibold text-foreground leading-[1.15] tracking-tight">
+          Akses terminal ke{" "}
+          <span className="bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 dark:from-blue-400 dark:via-blue-500 dark:to-cyan-400 bg-clip-text text-transparent">
+            jaringan uang digital.
+          </span>
         </h2>
       </motion.div>
 
-      {/* 3D Card mockup (smaller, fits narrow column) */}
+      {/* ---- 3D CREDIT CARD (hero element) ---- */}
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
-        className="relative z-10 mt-5"
-        style={{ perspective: "1000px" }}
+        initial={{ opacity: 0, y: 24, rotateX: 12 }}
+        animate={{ opacity: 1, y: 0, rotateX: 0 }}
+        transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 mt-6 mb-6 flex-1 min-h-0 flex items-center justify-center [perspective:1500px]"
         onMouseMove={handleMove}
         onMouseLeave={handleLeave}
       >
         <motion.div
-          style={{
-            rotateX: springX,
-            rotateY: springY,
-            transformStyle: "preserve-3d",
-          }}
-          animate={{ y: [0, -5, 0] }}
-          transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-          className="relative aspect-[1.6/1] w-full max-w-[260px] rounded-xl bg-gradient-to-br from-primary via-primary/85 to-emerald-600 p-4 shadow-xl shadow-primary/30 overflow-hidden"
+          style={{ rotateX: springX, rotateY: springY, transformStyle: "preserve-3d" }}
+          animate={{ y: [0, -6, 0] }}
+          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         >
-          {/* Inner refraction */}
-          <div className="absolute inset-0 border border-white/15 rounded-xl pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent pointer-events-none" />
-
-          {/* Chip */}
-          <div className="relative z-10 w-9 h-7 rounded-md bg-gradient-to-br from-amber-300/80 to-amber-500/80 border border-amber-700/30 mb-3 shadow-inner">
-            <div className="absolute inset-1 grid grid-cols-3 gap-px">
-              {Array.from({ length: 9 }).map((_, i) => (
-                <div key={i} className="bg-amber-700/30 rounded-sm" />
-              ))}
-            </div>
-          </div>
-
-          {/* CBDC mark top-right */}
-          <div className="absolute top-3 right-4 z-10 text-right">
-            <p className="font-display text-sm font-semibold text-white tracking-tight">CBDC</p>
-            <p className="text-[7px] text-white/60 uppercase tracking-widest font-mono">Tier-2</p>
-          </div>
-
-          {/* Card number */}
-          <div className="relative z-10 font-mono text-xs text-white tracking-[0.16em] mb-3 mt-1">
-            <span className="opacity-50">****</span>{" "}
-            <span className="opacity-50">****</span>{" "}
-            <span className="opacity-50">****</span>{" "}
-            <span>8472</span>
-          </div>
-
-          {/* Bottom row */}
-          <div className="relative z-10 flex items-end justify-between">
-            <div>
-              <p className="text-[7px] text-white/55 uppercase tracking-widest font-mono">
-                Pemegang
-              </p>
-              <p className="font-mono text-[10px] text-white mt-0.5">A. WIJAYA K.</p>
-            </div>
-            <div className="text-right">
-              <p className="text-[7px] text-white/55 uppercase tracking-widest font-mono">
-                Berlaku
-              </p>
-              <p className="font-mono text-[10px] text-white mt-0.5">12/28</p>
-            </div>
-          </div>
+          <CreditCard3D
+            width={320}
+            variant="blue"
+            holderName="A. WIJAYA K."
+            last4="8472"
+            validThru="12/28"
+          />
         </motion.div>
       </motion.div>
 
-      {/* Spacer pushes footer to bottom */}
-      <div className="flex-1 min-h-3" />
-
-      {/* Trust line + status footer (compact) */}
+      {/* ---- FEATURE PILLS (slim, no clutter) ---- */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="relative z-10 shrink-0 space-y-2.5 pt-4 border-t border-border/50"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="relative z-10 shrink-0"
       >
-        <div className="flex items-center gap-1.5 text-[11px] text-foreground/80">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-          Idempotent · Append-only audit · KYC masked
-        </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-            </span>
-            <span className="text-[10px] font-mono text-muted-foreground">
-              Sistem Aktif · v1.0.0
-            </span>
-          </div>
-          <p className="text-[9px] text-muted-foreground">RPL 2</p>
+        <div className="flex flex-wrap gap-1.5">
+          {FEATURES.map((f) => (
+            <div
+              key={f.label}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 dark:border-white/10 bg-white/70 dark:bg-slate-900/40 backdrop-blur-sm"
+            >
+              <f.icon className="w-3 h-3 text-primary" />
+              <span className="text-[10px] font-mono text-foreground/80 tracking-wide">
+                {f.label}
+              </span>
+            </div>
+          ))}
         </div>
       </motion.div>
     </div>

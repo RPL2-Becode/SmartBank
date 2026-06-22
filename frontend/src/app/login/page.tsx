@@ -10,6 +10,7 @@ import { fetchApi } from "@/lib/api";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AuthInput } from "@/components/auth/AuthInput";
 import AuthBrandPanel from "@/components/auth/AuthBrandPanel";
+import { MeshBackground } from "@/components/landing/MeshBackground";
 
 type LoginResponse = {
   data: {
@@ -25,10 +26,26 @@ const QUICK_ACCOUNTS = [
 ];
 
 const TONE_ACTIVE = {
-  blue: "bg-blue-500/10 border-blue-500/40 text-blue-500",
-  amber: "bg-amber-500/10 border-amber-500/40 text-amber-500",
-  rose: "bg-rose-500/10 border-rose-500/40 text-rose-500",
+  blue: "bg-blue-500/15 border-blue-500/50 text-blue-700 dark:text-blue-400",
+  amber: "bg-amber-500/15 border-amber-500/50 text-amber-700 dark:text-amber-400",
+  rose: "bg-rose-500/15 border-rose-500/50 text-rose-700 dark:text-rose-400",
 } as const;
+
+const TONE_INACTIVE =
+  "bg-white dark:bg-slate-900/60 border-slate-200 dark:border-border/60 text-muted-foreground hover:text-foreground hover:border-primary/40";
+
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
+};
+
+const item = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] as const } },
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -74,15 +91,25 @@ export default function LoginPage() {
 
   return (
     // overflow-hidden prevents body scroll. grid-cols-2 gives clean 50:50 split.
-    <main className="h-dvh overflow-hidden grid lg:grid-cols-2 bg-background">
+    <main className="relative h-dvh overflow-hidden grid lg:grid-cols-2 bg-background [perspective:1500px]">
+      {/* Page-level MeshBackground (behind both panels) */}
+      <div className="absolute inset-0 z-0 lg:hidden">
+        <MeshBackground />
+      </div>
+
       {/* Left brand panel -- 50/50 cols (info-rich side) */}
-      <div className="hidden lg:block min-h-0">
+      <div className="hidden lg:block min-h-0 relative z-10">
         <AuthBrandPanel />
       </div>
 
       {/* Right form panel -- 50/50 cols (form-focused) */}
-      <div className="relative flex items-center justify-center p-6 md:p-8 lg:p-10 min-h-0 overflow-y-auto">
-        <div className="absolute top-4 right-4 z-30">
+      <div className="relative z-10 flex items-center justify-center p-6 md:p-8 lg:p-10 min-h-0 overflow-y-auto">
+        {/* Mesh background only on small screens (desktop has brand panel) */}
+        <div className="absolute inset-0 -z-10 hidden lg:block">
+          <MeshBackground />
+        </div>
+
+        <div className="absolute top-4 right-4 z-30 hidden">
           <ThemeToggle />
         </div>
 
@@ -94,108 +121,132 @@ export default function LoginPage() {
           <span className="font-display font-semibold text-sm text-foreground">SmartBank</span>
         </div>
 
+        {/* Glassmorphic form container */}
         <motion.div
-          className="w-full max-w-md space-y-4 mt-12 lg:mt-0"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="relative w-full max-w-md mt-12 lg:mt-0"
+          variants={container}
+          initial="hidden"
+          animate="show"
         >
-          {/* Header */}
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-mono text-primary uppercase tracking-widest">Masuk</p>
-            <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground leading-tight">
-              Access Terminal
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Masukkan kredensial Anda untuk mengakses jaringan CBDC.
-            </p>
-          </div>
+          {/* Inner refraction line */}
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/60 dark:via-white/15 to-transparent rounded-t-3xl pointer-events-none z-10" />
 
-          {/* Quick-pick demo accounts */}
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
-              Akun dummy · klik untuk isi otomatis
-            </p>
-            <div className="grid grid-cols-3 gap-1.5">
-              {QUICK_ACCOUNTS.map((acc) => {
-                const isActive = email === acc.email;
-                return (
-                  <button
-                    key={acc.email}
-                    type="button"
-                    onClick={() => quickPick(acc)}
-                    className={`px-2 py-1.5 text-[11px] font-medium rounded-md border transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                      isActive
-                        ? TONE_ACTIVE[acc.tone]
-                        : "bg-secondary/40 border-border text-muted-foreground hover:text-foreground hover:bg-secondary/60"
-                    }`}
-                  >
-                    {acc.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              className="bg-destructive/10 border border-destructive/30 text-destructive text-xs p-2.5 rounded-lg flex items-start gap-2"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0 mt-1.5" />
-              <span>{error}</span>
+          <div className="relative rounded-3xl border border-slate-200 dark:border-white/10 bg-white/85 dark:bg-slate-900/60 backdrop-blur-2xl shadow-[0_30px_80px_-20px_rgba(37,99,235,0.25),inset_0_1px_0_rgba(255,255,255,0.6)] dark:shadow-[0_30px_80px_-20px_rgba(0,0,0,0.5)] p-8 md:p-10">
+            {/* Header */}
+            <motion.div variants={item} className="space-y-2 mb-6">
+              <p className="text-[10px] font-mono text-primary uppercase tracking-widest">
+                Masuk
+              </p>
+              <h1 className="text-2xl lg:text-3xl font-display font-semibold text-foreground leading-tight tracking-tight">
+                Access Terminal
+              </h1>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Masukkan kredensial Anda untuk mengakses jaringan CBDC.
+              </p>
             </motion.div>
-          )}
 
-          {/* Form */}
-          <form onSubmit={handleLogin} className="space-y-3">
-            <AuthInput
-              label="Email"
-              icon={LogIn}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="anda@email.com"
-              autoComplete="email"
-              required
-            />
-            <AuthInput
-              label="Password"
-              icon={KeyRound}
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Min. 6 karakter"
-              autoComplete="current-password"
-              required
-              hint={email.endsWith("@test.com") ? "Default: password" : undefined}
-            />
+            {/* Quick-pick demo accounts */}
+            <motion.div variants={item} className="space-y-2 mb-5">
+              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+                Akun dummy · klik untuk isi otomatis
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {QUICK_ACCOUNTS.map((acc) => {
+                  const isActive = email === acc.email;
+                  return (
+                    <button
+                      key={acc.email}
+                      type="button"
+                      onClick={() => quickPick(acc)}
+                      className={`px-2 py-2 text-[11px] font-medium rounded-md border transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] ${
+                        isActive ? TONE_ACTIVE[acc.tone] : TONE_INACTIVE
+                      }`}
+                    >
+                      {acc.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
 
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground py-2.5 rounded-lg font-semibold hover:bg-primary/90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none mt-1"
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="bg-destructive/10 border border-destructive/30 text-destructive text-xs p-2.5 rounded-lg flex items-start gap-2 mb-3"
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0 mt-1.5" />
+                <span>{error}</span>
+              </motion.div>
+            )}
+
+            {/* Form */}
+            <motion.form
+              variants={item}
+              onSubmit={handleLogin}
+              className="space-y-3"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Mengautentikasi...
-                </>
-              ) : (
-                <>
-                  Masuk Aman
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
+              <AuthInput
+                label="Email"
+                icon={LogIn}
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="anda@email.com"
+                autoComplete="email"
+                required
+              />
+              <AuthInput
+                label="Password"
+                icon={KeyRound}
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Min. 6 karakter"
+                autoComplete="current-password"
+                required
+                hint={email.endsWith("@test.com") ? "Default: password" : undefined}
+              />
 
-          <div className="text-center text-xs text-muted-foreground pt-2 border-t border-border/50">
-            Belum punya akun retail?{" "}
-            <Link href="/register" className="text-primary font-medium hover:underline">
-              Daftar di sini
-            </Link>
+              {/* CTA — landing pattern (shimmer + gradient shadow + scale) */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="group relative w-full flex items-center justify-center gap-2 overflow-hidden rounded-xl bg-primary text-primary-foreground py-3 font-semibold transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none mt-2 shadow-[0_10px_30px_-10px_rgba(37,99,235,0.5),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_15px_40px_-10px_rgba(37,99,235,0.7),inset_0_1px_0_rgba(255,255,255,0.2)]"
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Mengautentikasi...
+                    </>
+                  ) : (
+                    <>
+                      Masuk Aman
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                    </>
+                  )}
+                </span>
+                {/* Shimmer sweep on hover */}
+                {!isLoading && (
+                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                )}
+              </button>
+            </motion.form>
+
+            <motion.div
+              variants={item}
+              className="text-center text-xs text-muted-foreground pt-4 mt-4 border-t border-border/40"
+            >
+              Belum punya akun retail?{" "}
+              <Link
+                href="/register"
+                className="text-primary font-medium hover:underline inline-flex items-center gap-1 group"
+              >
+                Daftar di sini
+                <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </motion.div>
           </div>
         </motion.div>
       </div>

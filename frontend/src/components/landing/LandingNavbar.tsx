@@ -28,25 +28,32 @@ export default function LandingNavbar() {
 
   return (
     <motion.header
-      initial={{ y: -16, opacity: 0 }}
+      initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
         scrolled
-          ? "bg-background/75 backdrop-blur-xl border-b border-border shadow-sm shadow-black/5"
+          ? "bg-background/75 backdrop-blur-2xl border-b border-border/60 shadow-[0_8px_32px_-12px_rgba(2,6,23,0.12)] dark:shadow-[0_8px_32px_-12px_rgba(0,0,0,0.6)]"
           : "bg-transparent"
       }`}
+      style={{
+        WebkitBackdropFilter: "blur(20px) saturate(180%)",
+      }}
     >
-      <nav className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
+      {/* Liquid glass inner refraction border */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent pointer-events-none" />
+
+      <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between gap-4">
         {/* Brand */}
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="size-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+          <div className="relative size-9 rounded-xl bg-gradient-to-br from-primary to-blue-700 dark:from-blue-500 dark:to-blue-700 flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/25 transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
             <Building2 className="w-4 h-4" />
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-t from-transparent to-white/20 pointer-events-none" />
           </div>
-          <span className="font-display font-semibold text-foreground text-base">
+          <span className="font-display font-semibold text-foreground text-base tracking-tight">
             SmartBank
           </span>
-          <span className="hidden sm:inline-block text-[10px] font-mono uppercase tracking-widest text-muted-foreground border border-border rounded px-1.5 py-0.5">
+          <span className="hidden sm:inline-block text-[10px] font-mono uppercase tracking-widest text-muted-foreground border border-border/60 rounded px-1.5 py-0.5 backdrop-blur-sm">
             CBDC
           </span>
         </Link>
@@ -57,9 +64,10 @@ export default function LandingNavbar() {
             <li key={s.href}>
               <a
                 href={s.href}
-                className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors"
+                className="relative px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200 group"
               >
                 {s.label}
+                <span className="absolute inset-x-3 bottom-1 h-px bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
               </a>
             </li>
           ))}
@@ -82,9 +90,10 @@ export default function LandingNavbar() {
           </Link>
           <Link
             href="/register"
-            className="inline-flex items-center px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm shadow-primary/20"
+            className="group relative inline-flex items-center px-4 py-2 rounded-md text-sm font-semibold bg-primary text-primary-foreground transition-all duration-300 hover:scale-[1.03] active:scale-[0.97] shadow-md shadow-primary/30 hover:shadow-lg hover:shadow-primary/40"
           >
-            Daftar
+            <span className="relative z-10">Daftar</span>
+            <div className="absolute inset-0 rounded-md bg-gradient-to-t from-transparent to-white/15 pointer-events-none" />
           </Link>
           <button
             type="button"
@@ -105,10 +114,10 @@ export default function LandingNavbar() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18 }}
-            className="lg:hidden border-t border-border bg-background/95 backdrop-blur-xl"
+            transition={{ duration: 0.2 }}
+            className="lg:hidden border-t border-border/60 bg-background/85 backdrop-blur-2xl"
           >
-            <ul className="max-w-6xl mx-auto px-6 py-3 flex flex-col gap-1">
+            <ul className="max-w-7xl mx-auto px-6 py-3 flex flex-col gap-1">
               {sections.map((s) => (
                 <li key={s.href}>
                   <a

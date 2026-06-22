@@ -139,7 +139,7 @@ export default function AdminAudit() {
                             <p><span className="font-semibold text-muted-foreground">Request ID:</span> <span className="font-mono">{log.requestId}</span></p>
                             <p><span className="font-semibold text-muted-foreground">Target ID:</span> <span className="font-mono">{log.targetId}</span></p>
                             {log.actorUserId && <p><span className="font-semibold text-muted-foreground">Actor:</span> <span className="font-mono">{log.actorUserId}</span></p>}
-                            {log.metadata && (
+                            {log.metadata !== null && log.metadata !== undefined && (
                               <details className="mt-2">
                                 <summary className="cursor-pointer font-semibold text-muted-foreground">Metadata</summary>
                                 <pre className="mt-1 max-h-48 overflow-auto rounded-lg bg-background p-3 font-mono text-xs">{JSON.stringify(log.metadata, null, 2)}</pre>

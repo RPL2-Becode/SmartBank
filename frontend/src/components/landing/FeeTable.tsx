@@ -20,131 +20,165 @@ const exampleTotal = exampleAmount + exampleFee;
 
 export default function FeeTable() {
   return (
-    <section className="px-6 py-20">
-      <div className="max-w-6xl mx-auto">
+    <section className="relative px-6 py-24 overflow-hidden">
+      <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12 space-y-3"
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6 }}
+          className="max-w-2xl mb-14 space-y-3"
         >
           <p className="text-xs font-mono text-primary uppercase tracking-widest">
             Struktur Biaya
           </p>
-          <h2 className="text-3xl md:text-4xl font-display font-semibold text-foreground">
-            Transparan, dihitung otomatis saat konfirmasi
+          <h2 className="text-3xl md:text-5xl font-display font-semibold text-foreground leading-[1.1] tracking-tight">
+            Transparan, dihitung{" "}
+            <span className="bg-gradient-to-br from-blue-500 to-cyan-500 bg-clip-text text-transparent">
+              otomatis
+            </span>{" "}
+            saat konfirmasi
           </h2>
-          <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm text-muted-foreground max-w-[55ch] leading-relaxed">
             Fee menggunakan basis points (1% = 100 bps). Total potongan ditampilkan sebelum PIN.
           </p>
         </motion.div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid lg:grid-cols-[1.4fr_1fr] gap-5 [perspective:2000px]">
+          {/* Fee table — 3D card */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4 }}
-            className="lg:col-span-2 bg-card/60 backdrop-blur-md border border-border rounded-2xl overflow-hidden"
+            initial={{ opacity: 0, y: 24, rotateX: -8 }}
+            whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.6 }}
+            className="relative [transform-style:preserve-3d]"
           >
-            <div className="px-5 py-3 border-b border-border flex items-center gap-2">
-              <Percent className="w-4 h-4 text-primary" />
-              <span className="text-sm font-display font-semibold text-foreground">
-                Tabel Fee per Sumber
-              </span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-xs font-mono uppercase tracking-wider text-muted-foreground bg-secondary/30">
-                    <th className="text-left px-5 py-3">Sumber</th>
-                    <th className="text-left px-5 py-3">Aplikasi</th>
-                    <th className="text-right px-5 py-3">bps</th>
-                    <th className="text-right px-5 py-3">%</th>
-                    <th className="text-left px-5 py-3">Keterangan</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((r) => (
-                    <tr
-                      key={r.source}
-                      className="border-t border-border/50 hover:bg-secondary/20 transition-colors"
-                    >
-                      <td className="px-5 py-3 font-medium text-foreground">{r.source}</td>
-                      <td className="px-5 py-3 text-muted-foreground">{r.app}</td>
-                      <td className="px-5 py-3 text-right font-mono tabular-nums text-foreground">
-                        {r.bps}
-                      </td>
-                      <td className="px-5 py-3 text-right font-mono tabular-nums text-foreground">
-                        {(r.bps / 100).toFixed(2)}%
-                      </td>
-                      <td className="px-5 py-3 text-xs text-muted-foreground">{r.note}</td>
+            <div className="relative rounded-3xl border border-slate-200 dark:border-border/60 bg-white dark:bg-card/60 backdrop-blur-xl overflow-hidden shadow-[0_20px_60px_-20px_rgba(2,6,23,0.1),inset_0_1px_0_rgba(255,255,255,0.6)]">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 dark:via-white/10 to-transparent" />
+
+              <div className="px-6 py-4 border-b border-border/40 flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                  <Percent className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-display font-semibold text-foreground tracking-tight">
+                  Tabel Fee per Sumber
+                </span>
+                <span className="ml-auto text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
+                  {rows.length} sumber
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground bg-secondary/30">
+                      <th className="text-left px-5 py-3">Sumber</th>
+                      <th className="text-left px-5 py-3">Aplikasi</th>
+                      <th className="text-right px-5 py-3">bps</th>
+                      <th className="text-right px-5 py-3">%</th>
+                      <th className="text-left px-5 py-3">Keterangan</th>
                     </tr>
-                  ))}
-                  <tr className="bg-primary/5 border-t-2 border-primary/30">
-                    <td className="px-5 py-3 font-semibold text-foreground" colSpan={2}>
-                      Total komulatif (semua sumber aktif)
-                    </td>
-                    <td className="px-5 py-3 text-right font-mono font-bold tabular-nums text-primary">
-                      {totalBps}
-                    </td>
-                    <td className="px-5 py-3 text-right font-mono font-bold tabular-nums text-primary">
-                      {(totalBps / 100).toFixed(2)}%
-                    </td>
-                    <td className="px-5 py-3 text-xs text-muted-foreground">Maks debit</td>
-                  </tr>
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {rows.map((r, i) => (
+                      <motion.tr
+                        key={r.source}
+                        initial={{ opacity: 0, x: -8 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.04 }}
+                        className="border-t border-border/30 hover:bg-primary/[0.03] transition-colors"
+                      >
+                        <td className="px-5 py-3 font-medium text-foreground">{r.source}</td>
+                        <td className="px-5 py-3 text-muted-foreground font-mono text-xs">
+                          {r.app}
+                        </td>
+                        <td className="px-5 py-3 text-right font-mono tabular-nums text-foreground">
+                          {r.bps}
+                        </td>
+                        <td className="px-5 py-3 text-right font-mono tabular-nums text-foreground">
+                          {(r.bps / 100).toFixed(2)}%
+                        </td>
+                        <td className="px-5 py-3 text-xs text-muted-foreground">{r.note}</td>
+                      </motion.tr>
+                    ))}
+                    <tr className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-t-2 border-primary/30">
+                      <td className="px-5 py-3 font-semibold text-foreground" colSpan={2}>
+                        Total kumulatif (semua sumber aktif)
+                      </td>
+                      <td className="px-5 py-3 text-right font-mono font-bold tabular-nums text-primary">
+                        {totalBps}
+                      </td>
+                      <td className="px-5 py-3 text-right font-mono font-bold tabular-nums text-primary">
+                        {(totalBps / 100).toFixed(2)}%
+                      </td>
+                      <td className="px-5 py-3 text-xs text-muted-foreground">Maks debit</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </motion.div>
 
+          {/* Simulator card — 3D card */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            className="bg-card/60 backdrop-blur-md border border-border rounded-2xl p-5"
+            initial={{ opacity: 0, y: 24, rotateX: -8 }}
+            whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="relative [transform-style:preserve-3d]"
           >
-            <div className="flex items-center gap-2 mb-4">
-              <Calculator className="w-4 h-4 text-emerald-500" />
-              <span className="text-sm font-display font-semibold text-foreground">
-                Contoh Simulasi
-              </span>
+            <div className="relative h-full rounded-3xl border border-slate-200 dark:border-border/60 bg-white dark:bg-card/60 backdrop-blur-xl p-6 shadow-[0_20px_60px_-20px_rgba(2,6,23,0.1),inset_0_1px_0_rgba(255,255,255,0.6)]">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 dark:via-white/10 to-transparent" />
+
+              {/* Corner glow */}
+              <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-emerald-500/15 blur-3xl" />
+
+              <div className="relative z-10">
+                <div className="flex items-center gap-2.5 mb-5">
+                  <div className="p-1.5 rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-600 text-white shadow-lg shadow-emerald-500/30">
+                    <Calculator className="w-4 h-4" />
+                  </div>
+                  <span className="text-sm font-display font-semibold text-foreground tracking-tight">
+                    Contoh Simulasi
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mb-5 leading-relaxed">
+                  Nominal transfer{" "}
+                  <span className="text-foreground font-medium">Rp 100.000</span>:
+                </p>
+                <dl className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Nominal utama</dt>
+                    <dd className="font-mono tabular-nums text-foreground">
+                      Rp {exampleAmount.toLocaleString("id-ID")}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Total fee</dt>
+                    <dd className="font-mono tabular-nums text-foreground">
+                      Rp {exampleFee.toLocaleString("id-ID")}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between border-t border-border/40 pt-3 mt-3">
+                    <dt className="font-semibold text-foreground">Total debit payer</dt>
+                    <dd className="font-mono font-bold tabular-nums text-primary">
+                      Rp {exampleTotal.toLocaleString("id-ID")}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Diterima penerima</dt>
+                    <dd className="font-mono tabular-nums text-foreground">
+                      Rp {exampleAmount.toLocaleString("id-ID")}
+                    </dd>
+                  </div>
+                </dl>
+                <p className="text-[10px] text-muted-foreground italic mt-5 leading-relaxed">
+                  * Setiap sumber fee punya flag aktif/nonaktif di tabel fee_rules. Wallet
+                  menghitung ulang saat konfirmasi transfer menggunakan endpoint{" "}
+                  <code className="text-primary font-mono">GET /api/v1/fees/quote</code>.
+                </p>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground mb-4">
-              Nominal transfer <span className="text-foreground font-medium">Rp 100.000</span>:
-            </p>
-            <dl className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Nominal utama</dt>
-                <dd className="font-mono tabular-nums text-foreground">
-                  Rp {exampleAmount.toLocaleString("id-ID")}
-                </dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Total fee</dt>
-                <dd className="font-mono tabular-nums text-foreground">
-                  Rp {exampleFee.toLocaleString("id-ID")}
-                </dd>
-              </div>
-              <div className="flex justify-between border-t border-border pt-2 mt-2">
-                <dt className="font-medium text-foreground">Total debit payer</dt>
-                <dd className="font-mono font-bold tabular-nums text-primary">
-                  Rp {exampleTotal.toLocaleString("id-ID")}
-                </dd>
-              </div>
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Diterima penerima</dt>
-                <dd className="font-mono tabular-nums text-foreground">
-                  Rp {exampleAmount.toLocaleString("id-ID")}
-                </dd>
-              </div>
-            </dl>
-            <p className="text-[10px] text-muted-foreground italic mt-4 leading-relaxed">
-              * Setiap sumber fee punya flag aktif/nonaktif di tabel fee_rules. Wallet
-              menghitung ulang saat konfirmasi transfer menggunakan endpoint{" "}
-              <code className="text-primary">GET /api/v1/fees/quote</code>.
-            </p>
           </motion.div>
         </div>
       </div>
