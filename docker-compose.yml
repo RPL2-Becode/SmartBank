@@ -12,7 +12,7 @@ services:
       MYSQL_USER: ${MYSQL_USER:-central_bank}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set in .env}
     ports:
-      - "3306:3306"
+      - "3301:3301"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -32,7 +32,7 @@ services:
     init: true
     restart: unless-stopped
     environment:
-      DATABASE_URL: mysql://${MYSQL_USER:-central_bank}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE:-central_bank_core}
+      DATABASE_URL: mysql://${MYSQL_USER:-central_bank}:${MYSQL_PASSWORD}@mysql:3301/${MYSQL_DATABASE:-central_bank_core}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env}
       JWT_ISSUER: ${JWT_ISSUER:-smartbank}
       JWT_AUDIENCE: ${JWT_AUDIENCE:-smartbank-clients}
@@ -75,7 +75,7 @@ services:
       JWT_ACCESS_EXPIRES: ${WALLET_JWT_ACCESS_EXPIRES:-3600}
       JWT_REFRESH_EXPIRES: ${WALLET_JWT_REFRESH_EXPIRES:-604800}
       DB_HOST: mysql
-      DB_PORT: 3306
+      DB_PORT: 3301
       DB_USER: ${MYSQL_USER:-central_bank}
       DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set in .env}
       DB_NAME: ${MYSQL_DATABASE:-central_bank_core}
