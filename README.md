@@ -24,6 +24,7 @@
 - [🎯 Tentang Proyek](#-tentang-proyek)
 - [✨ Highlights v2.0 — Fitur Baru](#-highlights-v20--fitur-baru)
 - [🏗️ Arsitektur](#-arsitektur)
+- [📚 Dokumentasi Service](#-dokumentasi-service)
 - [🚀 Quick Start](#-quick-start)
 - [📋 Prasyarat](#-prasyarat)
 - [🔐 Akun Pengujian](#-akun-pengujian)
@@ -107,6 +108,32 @@ dan Swagger lokal.
 | **Central Bank** | NestJS, Prisma ORM, MySQL 8, class-validator |
 | **Database** | MySQL 8 dengan Prisma migrations |
 | **Container** | Docker Compose (multi-stage build) |
+
+---
+
+## 📚 Dokumentasi Service
+
+Dokumentasi detail per service dan operational guide. README utama ini hanya high-level overview — lihat doc terkait untuk deep-dive.
+
+| Doc | Isi | Untuk siapa |
+|---|---|---|
+| [`Central-Bank/README.md`](./Central-Bank/README.md) | Arsitektur, financial invariants, endpoint list, Prisma migration guide, schema, local setup | Backend developer / Prisma contributor |
+| [`DOCKER_SETUP.md`](./DOCKER_SETUP.md) | Full Docker Compose deployment (5 service), env vars, Prisma di Docker, troubleshooting, production hardening | DevOps / deployer / hosting |
+| [`dokumentasi-lokal.md`](./dokumentasi-lokal.md) | Setup tanpa Docker (Laragon + MySQL lokal Windows) | Frontend-only developer / akademik |
+| [`AUDIT_REPORT.md`](./AUDIT_REPORT.md) | Audit keamanan & kualitas kode | Reviewer / auditor |
+| [`PR.md`](./PR.md) | Ringkasan PR & changelog | Maintainer / kontributor |
+
+### Per-Service
+
+| Service | Tech | Port | Dokumentasi |
+|---|---|---|---|
+| **Central-Bank** | NestJS + Prisma | 3000 | [`Central-Bank/README.md`](./Central-Bank/README.md) + [`AGENTS.md`](./Central-Bank/AGENTS.md) |
+| **Wallet** | Express + mysql2 | 6969 | Belum ada README — lihat source di [`Wallet/`](./Wallet/) (entrypoint: `server.js`) |
+| **Gateway** | Express | 4000 | Belum ada README — lihat source di [`Gateway/`](./Gateway/) (entrypoint: `server.js`) |
+| **Frontend** | Next.js 14 | 3001 | Belum ada README — lihat source di [`frontend/src/`](./frontend/src/) |
+| **MySQL** | mysql:8.0 | 3301 | Config via [`docker-compose.yml`](./docker-compose.yml) |
+
+> **Tip:** Wallet/Gateway/Frontend belum punya README service-level. Kalau mau kontribusi, buat `README.md` di masing-masing folder mengikuti template Central-Bank/README.md (Architecture → Setup → API → Schema).
 
 ---
 
