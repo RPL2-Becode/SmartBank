@@ -8,11 +8,11 @@ export const authController = {
     try {
       const { name, email, phone, password, pin, role } = req.body;
 
-      if (typeof name !== 'string' || name.length > 120 || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof password !== 'string' || password.length < 8 || password.length > 128 || !/^\d{6}$/.test(String(pin))) {
+      if (typeof name !== 'string' || name.length > 120 || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof password !== 'string' || password.length < 8 || !/^\d{6}$/.test(String(pin))) {
         return responseHelper.error(
           res,
           'BAD_REQUEST',
-          'Data registrasi tidak valid. Gunakan email valid, password 8-128 karakter, dan PIN 6 digit.',
+          'Data registrasi tidak valid. Gunakan email valid, password minimal 8 karakter, dan PIN 6 digit.',
           400
         );
       }
@@ -36,7 +36,7 @@ export const authController = {
     try {
       const { email, password } = req.body;
 
-      if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof password !== 'string' || password.length > 128) {
+      if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof password !== 'string' || password.length === 0) {
         return responseHelper.error(
           res, 
           'BAD_REQUEST', 

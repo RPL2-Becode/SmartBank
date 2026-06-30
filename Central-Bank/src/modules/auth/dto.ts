@@ -12,7 +12,6 @@ export class RegisterDto {
 
   @IsString()
   @MinLength(8)
-  @MaxLength(128)
   password!: string;
 }
 
@@ -23,6 +22,5 @@ export class LoginDto {
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(128)
   password!: string;
 }

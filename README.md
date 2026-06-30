@@ -26,6 +26,8 @@
 - [🏗️ Arsitektur](#-arsitektur)
 - [📚 Dokumentasi Service](#-dokumentasi-service)
 - [🚀 Quick Start](#-quick-start)
+- [Clone / Duplikasi Project dari GitHub](#clone--duplikasi-project-dari-github)
+- [Menjalankan Android Wallet](#menjalankan-android-wallet)
 - [📋 Prasyarat](#-prasyarat)
 - [🔐 Akun Pengujian](#-akun-pengujian)
 - [🎛️ Fitur Admin Bank Sentral](#-fitur-admin-bank-sentral)
@@ -57,6 +59,7 @@ menggabungkan empat service独立 ke dalam satu platform terorkestrasi:
 | **API Gateway** | Express.js      | 4000 | Pintu masuk tunggal, routing, rate limit, validasi header |
 | **Wallet Backend** | Express.js   | 6969 | Akun, transfer, payment request, loan |
 | **Central Bank Core** | NestJS + Prisma | 3000 | Settlement engine, monetary policy, audit trail |
+| **Android Wallet** | Kotlin + Jetpack Compose | Emulator / device | Client mobile untuk user retail |
 
 > ⚠️ **Proyek ini ditujukan untuk simulasi akademis dan bukan sistem perbankan produksi.**
 
@@ -84,6 +87,7 @@ Lihat [🎛️ Fitur Admin Bank Sentral](#-fitur-admin-bank-sentral) untuk detai
 
 ```mermaid
 flowchart LR
+    A["Android Wallet"] --> G
     U["User / API Client"] --> F["Frontend :3001"]
     U --> G["API Gateway :4000"]
     F --> G
@@ -103,6 +107,7 @@ dan Swagger lokal.
 | Layer | Tools |
 |-------|-------|
 | **Frontend** | Next.js 14, React, TypeScript, Tailwind CSS, Framer Motion, Lucide Icons |
+| **Android Wallet** | Kotlin, Jetpack Compose, Material 3, MVVM, Retrofit, OkHttp, Gson, DataStore |
 | **API Gateway** | Express.js, Axios, Rate Limiting |
 | **Wallet Backend** | Express.js, JWT, bcrypt, Multer, Swagger |
 | **Central Bank** | NestJS, Prisma ORM, MySQL 8, class-validator |
@@ -131,6 +136,7 @@ Dokumentasi detail per service dan operational guide. README utama ini hanya hig
 | **Wallet** | Express + mysql2 | 6969 | Belum ada README — lihat source di [`Wallet/`](./Wallet/) (entrypoint: `server.js`) |
 | **Gateway** | Express | 4000 | Belum ada README — lihat source di [`Gateway/`](./Gateway/) (entrypoint: `server.js`) |
 | **Frontend** | Next.js 14 | 3001 | Belum ada README — lihat source di [`frontend/src/`](./frontend/src/) |
+| **Android Wallet** | Kotlin + Jetpack Compose | Emulator / device | Source di [`android-wallet/`](./android-wallet/) |
 | **MySQL** | mysql:8.0 | 3301 | Config via [`docker-compose.yml`](./docker-compose.yml) |
 
 > **Tip:** Wallet/Gateway/Frontend belum punya README service-level. Kalau mau kontribusi, buat `README.md` di masing-masing folder mengikuti template Central-Bank/README.md (Architecture → Setup → API → Schema).
@@ -163,13 +169,200 @@ Lihat [`dokumentasi-lokal.md`](./dokumentasi-lokal.md) untuk panduan lengkap.
 
 ---
 
+## Clone / Duplikasi Project dari GitHub
+
+Bagian ini dapat dipakai oleh anggota kelompok atau penguji lain yang ingin menyalin project dari GitHub lalu mencoba SmartBank di laptop masing-masing.
+
+### 1. Clone repository
+
+```powershell
+git clone https://github.com/RPL2-Becode/SmartBank.git
+cd SmartBank
+```
+
+Jika repository sudah di-fork ke akun sendiri, gunakan URL fork:
+
+```powershell
+git clone https://github.com/<username-kamu>/SmartBank.git
+cd SmartBank
+```
+
+### 2. Buat file `.env`
+
+Di Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Isi minimal `.env` untuk development lokal:
+
+```dotenv
+MYSQL_ROOT_PASSWORD=rootpassword
+MYSQL_DATABASE=central_bank_core
+MYSQL_USER=central_bank
+MYSQL_PASSWORD=centralbankpass
+
+JWT_SECRET=smartbank_local_development_secret_minimal_32_chars
+JWT_ISSUER=smartbank
+JWT_AUDIENCE=smartbank-clients
+
+ENABLE_STAFF_SEED=true
+NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
+```
+
+File `.env` tidak di-commit karena berisi konfigurasi lokal/rahasia. Setiap laptop yang melakukan clone perlu membuat `.env` sendiri dari `.env.example`.
+
+### 3. Jalankan backend SmartBank
+
+```powershell
+docker compose up -d --build
+```
+
+Cek status container:
+
+```powershell
+docker compose ps
+```
+
+Pastikan service berikut berjalan:
+
+| Service | URL lokal |
+|---|---|
+| API Gateway | http://localhost:4000/health |
+| Wallet Backend | http://localhost:6969 |
+| Central Bank | http://localhost:3000/api/v1/health |
+| Frontend Web | http://localhost:3001 |
+| MySQL host port | localhost:3301 |
+
+### 4. Stop backend
+
+```powershell
+docker compose down
+```
+
+Jika ingin reset database dan menghapus volume:
+
+```powershell
+docker compose down -v
+```
+
+Gunakan `down -v` hanya jika data testing memang boleh dihapus.
+
+---
+
+## Menjalankan Android Wallet
+
+Project Android berada di folder:
+
+```text
+android-wallet/
+```
+
+Android Wallet adalah client mobile. Saldo, ledger, transaksi, fee, audit, loan, dan settlement tetap berasal dari Central-Bank melalui jalur:
+
+```text
+Android Wallet -> API Gateway :4000 -> Wallet Backend :6969 -> Central-Bank :3000 -> MySQL
+```
+
+### Prasyarat Android
+
+- Android Studio terbaru
+- Emulator Android atau device fisik
+- Backend SmartBank sudah berjalan dengan `docker compose up -d --build`
+
+### Cara membuka di Android Studio
+
+1. Buka Android Studio.
+2. Pilih **Open**.
+3. Pilih folder `android-wallet` di dalam hasil clone.
+4. Tunggu **Gradle Sync** selesai.
+5. Pilih emulator, misalnya **Medium Phone**.
+6. Pilih run configuration **app**.
+7. Klik tombol **Run**.
+
+Android Studio akan membuat file `android-wallet/local.properties` secara otomatis sesuai lokasi Android SDK di laptop masing-masing. File ini sengaja di-ignore oleh Git dan tidak perlu dikirim ke repository.
+
+Contoh path pada mesin lokal:
+
+```text
+D:\Projects\SmartBank\android-wallet
+```
+
+### Base URL Android Emulator
+
+Android emulator tidak memakai `localhost` untuk mengakses host Windows. Karena itu Android Wallet memakai:
+
+```text
+http://10.0.2.2:4000/
+```
+
+Konfigurasi ada di:
+
+```text
+android-wallet/app/build.gradle.kts
+```
+
+```kotlin
+buildConfigField("String", "SMARTBANK_BASE_URL", "\"http://10.0.2.2:4000/\"")
+```
+
+### Fitur Android Wallet saat ini
+
+- Splash screen Smart Bank
+- Login dan register
+- Dashboard saldo
+- Sembunyikan/tampilkan saldo dengan ikon mata
+- Mutasi transaksi
+- Kirim dana
+- Payment request
+- Top up simulasi
+- Inbox
+- Akun/Profile
+- Edit profil
+- Ubah PIN
+- Ubah password
+- Pusat bantuan/chat banking
+- Logout
+
+### Build dari terminal
+
+```powershell
+cd android-wallet
+.\gradlew.bat :app:assembleDebug
+```
+
+APK debug berada di:
+
+```text
+android-wallet/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Install ke emulator/device:
+
+```powershell
+.\gradlew.bat :app:installDebug
+```
+
+### Troubleshooting Android
+
+| Masalah | Solusi |
+|---|---|
+| `Token tidak valid` saat app baru dibuka | Logout/login ulang, atau uninstall app dari emulator agar DataStore token lama terhapus |
+| Tidak bisa login/register | Pastikan backend aktif dan `http://localhost:4000/health` berhasil |
+| Android tidak bisa akses backend | Pastikan base URL emulator `http://10.0.2.2:4000/`, bukan `localhost` |
+| Gradle error unresolved reference padahal build terminal sukses | Android Studio: **File > Sync Project with Gradle Files**, lalu **Invalidate Caches and Restart** |
+| Docker container name conflict | Jalankan `docker compose down`, atau hapus container lama dengan `docker rm -f <nama-container>` |
+
+---
+
 ## 📋 Prasyarat
 
 - **Docker Desktop** dengan Docker Compose (untuk full stack)
 - **PowerShell** untuk menjalankan contoh API pada README ini
 - **Node.js 20.x+** dan **pnpm 9.x** (untuk development tanpa Docker)
 - **MySQL 8.x** (untuk development tanpa Docker)
-- Port `3000`, `3001`, `3306`, `4000`, `6969` tidak sedang dipakai
+- Port `3000`, `3001`, `3301`, `4000`, `6969` tidak sedang dipakai
 
 ### Environment Variables
 

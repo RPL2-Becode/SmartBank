@@ -243,8 +243,8 @@ export const walletController = {
       }
       
       if (password) {
-        if (typeof password !== 'string' || password.length < 8 || password.length > 128) {
-          return responseHelper.error(res, 'BAD_REQUEST', 'Password harus 8-128 karakter', 400);
+        if (typeof password !== 'string' || password.length < 8) {
+          return responseHelper.error(res, 'BAD_REQUEST', 'Password minimal 8 karakter', 400);
         }
         const passwordHash = bcrypt.hashSync(password, 10);
         await db.query(

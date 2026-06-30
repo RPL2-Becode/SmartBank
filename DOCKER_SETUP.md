@@ -203,13 +203,13 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:4000
 
 ```yaml
 image: mysql:8.0
-command: --default-authentication-plugin=mysql_native_password --port=3301
-ports: ["3301:3301"]
+command: --default-authentication-plugin=mysql_native_password
+ports: ["3301:3306"]
 volumes: [mysql_data:/var/lib/mysql]
 ```
 
 - **Volume `mysql_data`** persist data antar restart container
-- **Port 3301** (bukan default 3306) — untuk hindari konflik Laragon/XAMPP lokal
+- **Host port 3301** dipetakan ke **container port 3306** — untuk hindari konflik Laragon/XAMPP lokal
 - **Healthcheck** = `mysqladmin ping` setiap 5s, max 20 retry
 - Akses dari host: `mysql -h 127.0.0.1 -P 3301 -u central_bank -p central_bank_core`
 
@@ -217,7 +217,7 @@ volumes: [mysql_data:/var/lib/mysql]
 
 ```yaml
 build: ./Central-Bank
-DATABASE_URL: mysql://central_bank:${MYSQL_PASSWORD}@mysql:3301/central_bank_core
+DATABASE_URL: mysql://central_bank:${MYSQL_PASSWORD}@mysql:3306/central_bank_core
 ```
 
 - **Multi-stage Dockerfile**: build → runtime (alpine, node user)
@@ -229,7 +229,7 @@ DATABASE_URL: mysql://central_bank:${MYSQL_PASSWORD}@mysql:3301/central_bank_cor
 ```yaml
 build: ./Wallet
 DB_HOST: mysql
-DB_PORT: 3301
+DB_PORT: 3306
 USE_IN_MEMORY_DB: "false"
 ```
 
@@ -387,7 +387,7 @@ docker system prune -a          # Cleanup unused (HATI-HATI)
 Error: bind: address already in use
 ```
 
-Fix: edit `docker-compose.yml:15` ganti `"3301:3301"` ke port lain (mis. `"3307:3301"`), lalu update `DATABASE_URL` di Central-Bank & Wallet env.
+Fix: edit `docker-compose.yml:15` ganti `"3301:3306"` ke port host lain (mis. `"3307:3306"`). `DATABASE_URL` dan `DB_PORT` antar-container tetap memakai `mysql:3306`.
 
 ### Migration gagal di boot
 

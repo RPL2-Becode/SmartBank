@@ -1,9 +1,9 @@
-name: smartbank
+name: smartbank_android
 
 services:
   mysql:
     image: mysql:8.0
-    container_name: smartbank-mysql
+    container_name: smartbank-android-mysql
     command: --default-authentication-plugin=mysql_native_password
     restart: unless-stopped
     environment:
@@ -12,7 +12,7 @@ services:
       MYSQL_USER: ${MYSQL_USER:-central_bank}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set in .env}
     ports:
-      - "3301:3301"
+      - "3301:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -28,11 +28,11 @@ services:
     build:
       context: ./Central-Bank
       dockerfile: Dockerfile
-    container_name: smartbank-central-bank
+    container_name: smartbank-android-central-bank
     init: true
     restart: unless-stopped
     environment:
-      DATABASE_URL: mysql://${MYSQL_USER:-central_bank}:${MYSQL_PASSWORD}@mysql:3301/${MYSQL_DATABASE:-central_bank_core}
+      DATABASE_URL: mysql://${MYSQL_USER:-central_bank}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE:-central_bank_core}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set in .env}
       JWT_ISSUER: ${JWT_ISSUER:-smartbank}
       JWT_AUDIENCE: ${JWT_AUDIENCE:-smartbank-clients}
@@ -63,7 +63,7 @@ services:
     build:
       context: ./Wallet
       dockerfile: Dockerfile
-    container_name: smartbank-wallet
+    container_name: smartbank-android-wallet
     init: true
     restart: unless-stopped
     environment:
@@ -75,7 +75,7 @@ services:
       JWT_ACCESS_EXPIRES: ${WALLET_JWT_ACCESS_EXPIRES:-3600}
       JWT_REFRESH_EXPIRES: ${WALLET_JWT_REFRESH_EXPIRES:-604800}
       DB_HOST: mysql
-      DB_PORT: 3301
+      DB_PORT: 3306
       DB_USER: ${MYSQL_USER:-central_bank}
       DB_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD must be set in .env}
       DB_NAME: ${MYSQL_DATABASE:-central_bank_core}
@@ -106,7 +106,7 @@ services:
     build:
       context: ./Gateway
       dockerfile: Dockerfile
-    container_name: smartbank-gateway
+    container_name: smartbank-android-gateway
     init: true
     restart: unless-stopped
     environment:
@@ -140,7 +140,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:4000}
-    container_name: smartbank-frontend
+    container_name: smartbank-android-frontend
     init: true
     restart: unless-stopped
     environment:
